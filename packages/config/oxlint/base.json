@@ -1,0 +1,38 @@
+{
+	"categories": {
+		"correctness": "error",
+		"suspicious": "warn",
+		"perf": "warn"
+	},
+	"plugins": ["typescript", "unicorn", "import"],
+	"env": {
+		"browser": true,
+		"node": true,
+		"es2022": true
+	},
+	"ignorePatterns": [
+		"**/.svelte-kit/**",
+		"**/build/**",
+		"**/dist/**",
+		"**/node_modules/**",
+		"**/storybook-static/**"
+	],
+	"rules": {
+		"no-console": "warn",
+		"unicorn/prefer-node-protocol": "error"
+	},
+	"overrides": [
+		{
+			"files": ["**/*.svelte", "**/.storybook/*.ts"],
+			"rules": {
+				"import/no-unassigned-import": "off"
+			}
+		},
+		{
+			"files": ["**/*.stories.ts"],
+			"rules": {
+				"no-console": "off"
+			}
+		}
+	]
+}

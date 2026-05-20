@@ -6,6 +6,8 @@ build/
 .next/
 out/
 coverage/
+storybook-static/
+.svelte-kit/
 
 .env
 .env.*

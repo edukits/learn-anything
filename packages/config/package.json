@@ -1,0 +1,18 @@
+{
+	"name": "@learn-anything/config",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./oxlint": "./oxlint/base.json",
+		"./prettier": "./prettier/index.js",
+		"./vite/sveltekit": "./vite/sveltekit.js"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "^2.60.1",
+		"oxlint": "^1.66.0",
+		"prettier": "^3.8.3",
+		"prettier-plugin-svelte": "^4.0.0",
+		"vite": "^8.0.13"
+	}
+}

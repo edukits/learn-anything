@@ -1,0 +1,30 @@
+{
+	"name": "@learn-anything/demo",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "pnpm --filter @learn-anything/ui build && vite dev --host 127.0.0.1",
+		"build": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"lint": "oxlint src",
+		"test": "pnpm run check"
+	},
+	"dependencies": {
+		"@learn-anything/tokens": "workspace:*",
+		"@learn-anything/ui": "workspace:*",
+		"@sveltejs/adapter-auto": "^7.0.1",
+		"@sveltejs/kit": "^2.60.1",
+		"svelte": "^5.55.9",
+		"vite": "^8.0.13"
+	},
+	"devDependencies": {
+		"@learn-anything/config": "workspace:*",
+		"@sveltejs/vite-plugin-svelte": "^7.1.2",
+		"@types/node": "^25.9.1",
+		"oxlint": "^1.66.0",
+		"svelte-check": "^4.4.8",
+		"typescript": "^6.0.3"
+	}
+}
