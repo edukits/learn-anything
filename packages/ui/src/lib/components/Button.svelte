@@ -50,8 +50,8 @@
 		border-radius: var(--radius-md);
 		cursor: pointer;
 		display: inline-flex;
-		font-family: var(--font-sans);
-		font-weight: 650;
+		font-family: var(--font-display);
+		font-weight: 600;
 		justify-content: center;
 		line-height: 1;
 		min-inline-size: max-content;
