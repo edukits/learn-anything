@@ -41,17 +41,17 @@
 <style>
 	main {
 		min-block-size: 100vh;
-		padding: var(--la-space-8);
+		padding: var(--space-8);
 	}
 
 	.hero {
 		align-items: center;
 		display: grid;
-		gap: var(--la-space-10);
+		gap: var(--space-10);
 		grid-template-columns: minmax(0, 1fr) minmax(18rem, 26rem);
 		margin-inline: auto;
 		max-inline-size: 72rem;
-		min-block-size: calc(100vh - var(--la-space-8) * 2);
+		min-block-size: calc(100vh - var(--space-8) * 2);
 	}
 
 	.copy {
@@ -59,22 +59,22 @@
 	}
 
 	.eyebrow {
-		color: var(--la-color-accent);
+		color: var(--color-accent);
 		font-size: 0.875rem;
 		font-weight: 700;
-		margin-block: 0 var(--la-space-3);
+		margin-block: 0 var(--space-3);
 		text-transform: uppercase;
 	}
 
 	h1 {
 		font-size: clamp(2.5rem, 7vw, 5.5rem);
 		line-height: 0.94;
-		margin-block: 0 var(--la-space-5);
+		margin-block: 0 var(--space-5);
 		max-inline-size: 12ch;
 	}
 
 	.summary {
-		color: var(--la-color-text-muted);
+		color: var(--color-text-muted);
 		font-size: 1.125rem;
 		line-height: 1.65;
 		margin-block: 0;
@@ -84,43 +84,43 @@
 	.actions {
 		display: flex;
 		flex-wrap: wrap;
-		gap: var(--la-space-3);
-		margin-block-start: var(--la-space-8);
+		gap: var(--space-3);
+		margin-block-start: var(--space-8);
 	}
 
 	.panel {
-		background: var(--la-color-surface);
-		border: 1px solid var(--la-color-border);
-		border-radius: var(--la-radius-lg);
-		box-shadow: var(--la-shadow-md);
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-md);
 		display: grid;
-		gap: var(--la-space-4);
-		padding: var(--la-space-5);
+		gap: var(--space-4);
+		padding: var(--space-5);
 	}
 
 	.panel div {
-		background: var(--la-color-surface-raised);
-		border-radius: var(--la-radius-md);
+		background: var(--color-surface-raised);
+		border-radius: var(--radius-md);
 		display: grid;
-		gap: var(--la-space-1);
-		padding: var(--la-space-4);
+		gap: var(--space-1);
+		padding: var(--space-4);
 	}
 
 	.panel span {
-		color: var(--la-color-text-muted);
+		color: var(--color-text-muted);
 		font-size: 0.8125rem;
 		font-weight: 700;
 		text-transform: uppercase;
 	}
 
 	.panel strong {
-		font-family: var(--la-font-mono);
+		font-family: var(--font-mono);
 		font-size: 0.9375rem;
 	}
 
 	@media (max-width: 760px) {
 		main {
-			padding: var(--la-space-5);
+			padding: var(--space-5);
 		}
 
 		.hero {

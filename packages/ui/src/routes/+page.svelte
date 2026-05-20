@@ -22,7 +22,7 @@
 <style>
 	main {
 		min-block-size: 100vh;
-		padding: var(--la-space-10);
+		padding: var(--space-10);
 	}
 
 	section {
@@ -30,22 +30,22 @@
 	}
 
 	.eyebrow {
-		color: var(--la-color-accent);
+		color: var(--color-accent);
 		font-size: 0.875rem;
 		font-weight: 700;
-		margin-block: 0 var(--la-space-3);
+		margin-block: 0 var(--space-3);
 		text-transform: uppercase;
 	}
 
 	h1 {
 		font-size: clamp(2.25rem, 7vw, 4.5rem);
 		line-height: 0.95;
-		margin-block: 0 var(--la-space-5);
+		margin-block: 0 var(--space-5);
 		max-inline-size: 11ch;
 	}
 
 	p {
-		color: var(--la-color-text-muted);
+		color: var(--color-text-muted);
 		font-size: 1.125rem;
 		line-height: 1.6;
 		margin-block: 0;
@@ -55,7 +55,7 @@
 	.actions {
 		display: flex;
 		flex-wrap: wrap;
-		gap: var(--la-space-3);
-		margin-block-start: var(--la-space-8);
+		gap: var(--space-3);
+		margin-block-start: var(--space-8);
 	}
 </style>
