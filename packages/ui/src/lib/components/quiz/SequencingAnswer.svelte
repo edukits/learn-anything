@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { ArrowDown, ArrowUp, Check, GripVertical, X } from '@lucide/svelte';
+	import { flip } from 'svelte/animate';
+	import { cubicOut } from 'svelte/easing';
 	import Button from '../Button.svelte';
 	import RichText from './RichText.svelte';
 	import type { Sortable, SortableStopEvent } from '@shopify/draggable';
@@ -39,11 +41,30 @@
 	let sortable: Sortable | undefined;
 	let sortableSetupId = 0;
 
-	let itemByValue = $derived(new Map(items.map((item) => [item.value, item])));
+	let uniqueItems = $derived.by(() => {
+		const seenValues = new Set<string>();
+
+		return items.filter((item) => {
+			if (seenValues.has(item.value)) {
+				return false;
+			}
+
+			seenValues.add(item.value);
+			return true;
+		});
+	});
+	let itemByValue = $derived(new Map(uniqueItems.map((item) => [item.value, item])));
 	let orderedItems = $derived.by(() => {
-		const orderedValues = value.filter((itemValue) => itemByValue.has(itemValue));
-		const seenValues = new Set(orderedValues);
-		const missingValues = items
+		const seenValues = new Set<string>();
+		const orderedValues = value.filter((itemValue) => {
+			if (!itemByValue.has(itemValue) || seenValues.has(itemValue)) {
+				return false;
+			}
+
+			seenValues.add(itemValue);
+			return true;
+		});
+		const missingValues = uniqueItems
 			.map((item) => item.value)
 			.filter((itemValue) => !seenValues.has(itemValue));
 
@@ -161,6 +182,7 @@
 						isLocked && 'locked',
 						item.disabled && !isLocked && 'disabled'
 					]}
+					animate:flip={{ duration: 220, easing: cubicOut }}
 					role="listitem"
 					data-value={item.value}
 				>
@@ -283,8 +305,7 @@
 		transition:
 			background 150ms ease-out,
 			border-color 150ms ease-out,
-			box-shadow 150ms ease-out,
-			transform 100ms ease-out;
+			box-shadow 150ms ease-out;
 	}
 
 	.sequence-item:hover:not(.disabled):not(.locked) {
