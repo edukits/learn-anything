@@ -1,5 +1,7 @@
 node_modules/
 .turbo/
+.corepack/
+.pnpm-store/
 
 dist/
 build/
