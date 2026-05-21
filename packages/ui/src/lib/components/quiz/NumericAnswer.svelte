@@ -1,8 +1,11 @@
 <script lang="ts">
-	import { Check, ChevronDown, X } from '@lucide/svelte';
+	import { Check, ChevronDown } from '@lucide/svelte';
+	import { tick } from 'svelte';
 	import { Select } from 'bits-ui';
 	import type { HTMLInputAttributes } from 'svelte/elements';
 	import Button from '../Button.svelte';
+	import { celebrateCorrectAnswer } from './celebration';
+	import GradingIndicator from './GradingIndicator.svelte';
 	import {
 		buildNumericSubmitResult,
 		coerceNumericEvaluation,
@@ -32,6 +35,7 @@
 		grader?: (answer: NumericAnswerValue) => NumericAnswerEvaluation;
 		showSubmitButton?: boolean;
 		submitLabel?: string;
+		celebrations?: boolean;
 		minLength?: number;
 		autocomplete?: HTMLInputAttributes['autocomplete'];
 		class?: string;
@@ -52,6 +56,7 @@
 		grader,
 		showSubmitButton = true,
 		submitLabel = 'Submit answer',
+		celebrations = true,
 		minLength = 1,
 		autocomplete = 'off',
 		class: className = '',
@@ -60,6 +65,9 @@
 	}: NumericAnswerProps = $props();
 
 	let submittedResult = $state<NumericAnswerSubmitResult | null>(null);
+	let gradingIndicatorElement = $state<HTMLElement>();
+	let hasTrackedInputState = $state(false);
+	let previousInputState = $state('neutral');
 	let unitMode = $derived(unitConfig.mode ?? 'none');
 	let unitSide = $derived(unitConfig.side ?? 'right');
 	let unitOptions = $derived(unitConfig.mode === 'select' ? unitConfig.options : []);
@@ -86,6 +94,21 @@
 				? 'incorrect'
 				: 'neutral'
 	);
+
+	$effect(() => {
+		if (!hasTrackedInputState) {
+			hasTrackedInputState = true;
+			previousInputState = inputState;
+			return;
+		}
+
+		const previous = previousInputState;
+		previousInputState = inputState;
+
+		if (celebrations && inputState === 'correct' && previous !== 'correct') {
+			void tick().then(() => celebrateCorrectAnswer(gradingIndicatorElement));
+		}
+	});
 
 	function getActiveUnit() {
 		if (unitConfig.mode === 'fixed') {
@@ -262,13 +285,13 @@
 					}}
 				/>
 				{#if inputState === 'correct'}
-					<span class="state-icon" aria-label="Correct">
-						<Check size={14} strokeWidth={4} />
-					</span>
+					<GradingIndicator
+						bind:element={gradingIndicatorElement}
+						class="state-icon"
+						state="correct"
+					/>
 				{:else if inputState === 'incorrect'}
-					<span class="state-icon" aria-label="Incorrect">
-						<X size={14} strokeWidth={4} />
-					</span>
+					<GradingIndicator class="state-icon" state="incorrect" />
 				{/if}
 			</span>
 			{#if unitMode !== 'none' && unitSide === 'right'}
@@ -308,10 +331,16 @@
 
 	.field.correct {
 		--answer-accent: var(--color-correct);
+		--answer-accent-h: var(--color-correct-h);
+		--answer-accent-s: var(--color-correct-s);
+		--answer-accent-l: var(--color-correct-l);
 	}
 
 	.field.incorrect {
 		--answer-accent: var(--color-incorrect);
+		--answer-accent-h: var(--color-incorrect-h);
+		--answer-accent-s: var(--color-incorrect-s);
+		--answer-accent-l: var(--color-incorrect-l);
 	}
 
 	.label {
@@ -433,6 +462,13 @@
 			0 8px 20px color-mix(in srgb, var(--answer-accent), transparent 86%);
 	}
 
+	.correct .input,
+	.incorrect .input {
+		color: hsl(
+			var(--answer-accent-h) calc(var(--answer-accent-s) + 25%) calc(var(--answer-accent-l) - 35%)
+		);
+	}
+
 	.input:disabled,
 	.unit-input:disabled,
 	:global(.numeric-unit-trigger:disabled),
@@ -486,18 +522,10 @@
 		border-inline-start: 0;
 	}
 
-	.state-icon {
+	.number-wrap :global(.state-icon) {
 		align-self: center;
-		background: var(--answer-accent);
-		border-radius: 999px;
-		color: var(--color-surface);
-		display: grid;
-		inline-size: 1.5rem;
-		aspect-ratio: 1;
 		justify-self: end;
 		margin-inline-end: var(--space-4);
-		place-items: center;
-		pointer-events: none;
 		position: absolute;
 	}
 

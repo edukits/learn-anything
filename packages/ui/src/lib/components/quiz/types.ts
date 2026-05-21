@@ -197,6 +197,7 @@ export type QuizQuestionResponse =
 			matchMode?: ShortAnswerMatchMode;
 			normalizer?: (value: string) => string;
 			grader?: (value: string) => ShortAnswerEvaluation;
+			celebrations?: boolean;
 	  }
 	| {
 			type: 'numeric';
@@ -206,6 +207,7 @@ export type QuizQuestionResponse =
 			placeholder?: string;
 			acceptedValues?: NumericAnswerAcceptedValue[] | null;
 			grader?: (answer: NumericAnswerValue) => NumericAnswerEvaluation;
+			celebrations?: boolean;
 	  }
 	| {
 			type: 'math';
@@ -216,12 +218,14 @@ export type QuizQuestionResponse =
 			acceptedValues?: MathAnswerAcceptedValue[] | null;
 			matchMode?: MathAnswerMatchMode;
 			grader?: (answer: MathAnswerValue) => MathAnswerEvaluation;
+			celebrations?: boolean;
 	  }
 	| {
 			type: 'sequencing';
 			items: SequencingItemData[];
 			value?: string[];
 			correctOrder?: string[] | null;
+			celebrations?: boolean;
 	  };
 
 export type QuizQuestionData = {

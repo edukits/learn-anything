@@ -29,10 +29,17 @@ function getCssVariableColorHex(variableName: string, fallback: string) {
 	probe.style.color = `var(${variableName})`;
 	document.documentElement.appendChild(probe);
 
-	const { r, g, b } = getComputedStyle(probe);
+	const color = getComputedStyle(probe).color;
 	probe.remove();
 
-	const channels = [r, g, b].map((value) => Number.parseFloat(value));
+	const channels = color
+		.match(/[\d.]+/g)
+		?.slice(0, 3)
+		.map((value) => Number.parseFloat(value));
+	if (!channels || channels.length < 3) {
+		return fallback;
+	}
+
 	if (channels.some((value) => Number.isNaN(value))) {
 		return fallback;
 	}
@@ -75,7 +82,7 @@ function delay(milliseconds: number) {
 	});
 }
 
-export async function celebrateCorrectMultipleChoice(sourceElement?: HTMLElement) {
+export async function celebrateCorrectAnswer(sourceElement?: HTMLElement) {
 	const { default: confetti } = await import('canvas-confetti');
 	const { canvas, pixelRatio } = createHiDpiConfettiCanvas();
 	const fireConfetti = confetti.create(canvas, {
@@ -105,6 +112,8 @@ export async function celebrateCorrectMultipleChoice(sourceElement?: HTMLElement
 		}, 1000);
 	}
 }
+
+export const celebrateCorrectMultipleChoice = celebrateCorrectAnswer;
 
 export async function celebrateCorrectMultipleSelect(sourceElements: HTMLElement[]) {
 	const { default: confetti } = await import('canvas-confetti');

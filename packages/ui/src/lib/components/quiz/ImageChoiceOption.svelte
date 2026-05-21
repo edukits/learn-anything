@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Check, X } from '@lucide/svelte';
+	import GradingIndicator from './GradingIndicator.svelte';
 	import RichText from './RichText.svelte';
 	import type { MultipleChoiceOptionState } from './types';
 
@@ -63,19 +63,16 @@
 		<img src={imageSrc} alt={imageAlt ?? accessibleLabel} loading="lazy" />
 	</span>
 
-	<span class="status" aria-hidden="true">
-		{#if optionState === 'correct'}
-			<span class="icon icon-animated">
-				<Check size={16} strokeWidth={4} />
-			</span>
-		{:else if optionState === 'incorrect'}
-			<span class="icon">
-				<X size={16} strokeWidth={4} />
-			</span>
-		{:else if selected}
-			<span class="selected-dot"></span>
-		{/if}
-	</span>
+	<GradingIndicator
+		class="status"
+		state={optionState}
+		{selected}
+		selectedMark="dot"
+		size="1.75rem"
+		dotSize="0.625rem"
+		iconSize={16}
+		ariaLabel=""
+	/>
 
 	{#if hasLabel && label}
 		<span class="label">
@@ -125,10 +122,17 @@
 
 	.correct {
 		--accent: var(--color-correct);
+		color: hsl(
+			var(--color-correct-h) calc(var(--color-correct-s) + 25%) calc(var(--color-correct-l) - 35%)
+		);
 	}
 
 	.incorrect {
 		--accent: var(--color-incorrect);
+		color: hsl(
+			var(--color-incorrect-h) calc(var(--color-incorrect-s) + 25%)
+				calc(var(--color-incorrect-l) - 35%)
+		);
 	}
 
 	.selected,
@@ -178,71 +182,10 @@
 		pointer-events: none;
 	}
 
-	.status {
-		background: var(--color-surface);
-		border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text-muted) 18%);
-		border-radius: 999px;
-		box-shadow: 0 1px 1px rgb(0 0 0 / 0.08) inset;
-		display: grid;
+	.option :global(.status) {
 		inset-block-start: var(--space-3);
 		inset-inline-end: var(--space-3);
-		min-block-size: 1.75rem;
-		min-inline-size: 1.75rem;
-		padding: 0.25rem;
-		place-items: center;
 		position: absolute;
-		transition:
-			background 180ms ease-out,
-			border-color 180ms ease-out,
-			box-shadow 180ms ease-out,
-			transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
-	}
-
-	.selected .status,
-	.correct .status,
-	.incorrect .status {
-		border-color: color-mix(in srgb, var(--accent), black 12%);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent), transparent 82%);
-	}
-
-	.correct .status,
-	.incorrect .status {
-		background: var(--accent);
-	}
-
-	.selected-dot {
-		background: var(--accent);
-		border-radius: 999px;
-		display: block;
-		inline-size: 0.625rem;
-		aspect-ratio: 1;
-	}
-
-	.icon {
-		color: var(--color-surface);
-		display: grid;
-		place-items: center;
-		transform-origin: center;
-	}
-
-	.correct .icon.icon-animated {
-		animation: icon-in 500ms cubic-bezier(0.16, 1, 0.3, 1);
-		animation-delay: 180ms;
-		animation-fill-mode: both;
-	}
-
-	@keyframes icon-in {
-		from {
-			filter: blur(1px);
-			opacity: 0;
-			transform: scale(1.5);
-		}
-
-		to {
-			filter: blur(0);
-			opacity: 1;
-			transform: scale(1);
-		}
 	}
 
 	.input:focus-visible + .image-frame {

@@ -39,6 +39,7 @@ export type ShortAnswerQuestionResponse = {
 	matchMode?: ShortAnswerMatchMode;
 	normalizer?: (value: string) => string;
 	grader?: (value: string) => ShortAnswerEvaluation;
+	celebrations?: boolean;
 };
 
 export type NumericAnswerQuestionResponse = {
@@ -49,6 +50,7 @@ export type NumericAnswerQuestionResponse = {
 	placeholder?: string;
 	acceptedValues?: NumericAnswerAcceptedValue[] | null;
 	grader?: (answer: NumericAnswerValue) => NumericAnswerEvaluation;
+	celebrations?: boolean;
 };
 
 export type MathAnswerQuestionResponse = {
@@ -60,6 +62,7 @@ export type MathAnswerQuestionResponse = {
 	acceptedValues?: MathAnswerAcceptedValue[] | null;
 	matchMode?: MathAnswerMatchMode;
 	grader?: (answer: MathAnswerValue) => MathAnswerEvaluation;
+	celebrations?: boolean;
 };
 
 export type SequencingQuestionResponse = {
@@ -67,6 +70,7 @@ export type SequencingQuestionResponse = {
 	items: SequencingItemData[];
 	value?: string[];
 	correctOrder?: string[] | null;
+	celebrations?: boolean;
 };
 
 export type QuestionResponse =

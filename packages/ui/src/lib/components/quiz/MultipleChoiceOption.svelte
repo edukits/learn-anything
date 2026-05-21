@@ -161,12 +161,17 @@
 
 	.correct {
 		--accent: var(--color-correct);
-        color: hsl(var(--color-correct-h) calc(var(--color-correct-s) + 25%) calc(var(--color-correct-l) - 35%));
+		color: hsl(
+			var(--color-correct-h) calc(var(--color-correct-s) + 25%) calc(var(--color-correct-l) - 35%)
+		);
 	}
 
 	.incorrect {
 		--accent: var(--color-incorrect);
-        color: hsl(var(--color-incorrect-h) calc(var(--color-incorrect-s) + 25%) calc(var(--color-incorrect-l) - 35%));
+		color: hsl(
+			var(--color-incorrect-h) calc(var(--color-incorrect-s) + 25%)
+				calc(var(--color-incorrect-l) - 35%)
+		);
 	}
 
 	.selected,
@@ -261,10 +266,6 @@
 		transform: rotate(45deg);
 	}
 
-	.option-checkbox.correct .control {
-		transform: none;
-	}
-
 	.selected .control::after {
 		opacity: 1;
 		transform: scale(1);
@@ -286,11 +287,6 @@
 		transform: rotate(-45deg);
 	}
 
-	.option-checkbox .icon,
-	.option-checkbox.correct .icon {
-		transform: none;
-	}
-
 	.correct .icon.icon-animated {
 		animation: icon-in 500ms cubic-bezier(0.16, 1, 0.3, 1);
 		animation-delay: 180ms;
@@ -308,24 +304,6 @@
 			filter: blur(0);
 			opacity: 1;
 			transform: rotate(-45deg) scale(1);
-		}
-	}
-
-	.option-checkbox.correct .icon.icon-animated {
-		animation-name: checkbox-icon-in;
-	}
-
-	@keyframes checkbox-icon-in {
-		from {
-			filter: blur(1px);
-			opacity: 0;
-			transform: scale(1.5);
-		}
-
-		to {
-			filter: blur(0);
-			opacity: 1;
-			transform: scale(1);
 		}
 	}
 
@@ -361,8 +339,8 @@
 		line-height: 1.25;
 	}
 
-    .correct .description,
-    .incorrect .description {
-        color: color-mix(in srgb, var(--accent), var(--color-text-muted) 70%);
-    }
+	.correct .description,
+	.incorrect .description {
+		color: color-mix(in srgb, var(--accent), var(--color-text-muted) 70%);
+	}
 </style>

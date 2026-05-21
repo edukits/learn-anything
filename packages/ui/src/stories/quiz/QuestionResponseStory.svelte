@@ -107,6 +107,7 @@
 		grader={response.grader}
 		{showSubmitButton}
 		{submitLabel}
+		celebrations={response.celebrations ?? true}
 	/>
 {:else if response.type === 'math'}
 	<MathAnswer
@@ -123,6 +124,7 @@
 		grader={response.grader}
 		{showSubmitButton}
 		{submitLabel}
+		celebrations={response.celebrations ?? true}
 	/>
 {:else if response.type === 'short-answer'}
 	<ShortAnswer
@@ -138,6 +140,7 @@
 		grader={response.grader}
 		{showSubmitButton}
 		{submitLabel}
+		celebrations={response.celebrations ?? true}
 	/>
 {:else if response.type === 'sequencing'}
 	<SequencingAnswer
@@ -149,6 +152,7 @@
 		correctOrder={response.correctOrder ?? null}
 		{showSubmitButton}
 		{submitLabel}
+		celebrations={response.celebrations ?? true}
 		{legend}
 	/>
 {:else if response.type === 'multiple-select'}

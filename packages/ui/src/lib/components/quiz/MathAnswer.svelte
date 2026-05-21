@@ -1,9 +1,11 @@
 <script lang="ts">
-	import { Check, X } from '@lucide/svelte';
+	import { tick } from 'svelte';
 	import type { MathfieldElement, MathfieldOptions, OutputFormat } from 'mathlive';
 	import 'mathlive';
 	import 'mathlive/fonts.css';
 	import Button from '../Button.svelte';
+	import { celebrateCorrectAnswer } from './celebration';
+	import GradingIndicator from './GradingIndicator.svelte';
 	import {
 		buildEmptyMathPrompts,
 		buildMathSubmitResult,
@@ -35,6 +37,7 @@
 		promptFormat?: OutputFormat;
 		showSubmitButton?: boolean;
 		submitLabel?: string;
+		celebrations?: boolean;
 		class?: string;
 		oninput?: (answer: MathAnswerValue) => void;
 		onsubmit?: (result: MathAnswerSubmitResult) => void;
@@ -60,6 +63,7 @@
 		promptFormat = 'latex',
 		showSubmitButton = true,
 		submitLabel = 'Submit answer',
+		celebrations = true,
 		class: className = '',
 		oninput,
 		onsubmit
@@ -68,15 +72,15 @@
 	let mathfield = $state<MathfieldElement | null>(null);
 	let mathliveReady = $state(false);
 	let submittedResult = $state<MathAnswerSubmitResult | null>(null);
+	let gradingIndicatorElement = $state<HTMLElement>();
+	let hasTrackedInputState = $state(false);
+	let previousInputState = $state('neutral');
 	let lastRenderedValue = $state('');
 	let hasAnswer = $derived(isMathAnswered(getAnswer()));
 	let isLocked = $derived(disabled || submitted);
 	let hasMathPlaceholder = $derived((mathPlaceholder ?? '').trim().length > 0);
 	let showTextPlaceholder = $derived(
-		!hasMathPlaceholder &&
-			!template &&
-			value.trim().length === 0 &&
-			placeholder.trim().length > 0
+		!hasMathPlaceholder && !template && value.trim().length === 0 && placeholder.trim().length > 0
 	);
 	let displayResult = $derived(
 		submitted && hasAnswer
@@ -92,6 +96,21 @@
 				? 'incorrect'
 				: 'neutral'
 	);
+
+	$effect(() => {
+		if (!hasTrackedInputState) {
+			hasTrackedInputState = true;
+			previousInputState = inputState;
+			return;
+		}
+
+		const previous = previousInputState;
+		previousInputState = inputState;
+
+		if (celebrations && inputState === 'correct' && previous !== 'correct') {
+			void tick().then(() => celebrateCorrectAnswer(gradingIndicatorElement));
+		}
+	});
 
 	$effect(() => {
 		let cancelled = false;
@@ -136,10 +155,9 @@
 		}
 
 		const promptValues = Object.fromEntries(
-			mathfield.getPrompts().map((promptId) => [
-				promptId,
-				mathfield?.getPromptValue(promptId, promptFormat) ?? ''
-			])
+			mathfield
+				.getPrompts()
+				.map((promptId) => [promptId, mathfield?.getPromptValue(promptId, promptFormat) ?? ''])
 		);
 
 		return Object.keys(promptValues).length > 0
@@ -223,13 +241,13 @@
 				<span class="text-placeholder" aria-hidden="true">{placeholder}</span>
 			{/if}
 			{#if inputState === 'correct'}
-				<span class="state-icon" aria-label="Correct">
-					<Check size={14} strokeWidth={4} />
-				</span>
+				<GradingIndicator
+					bind:element={gradingIndicatorElement}
+					class="state-icon"
+					state="correct"
+				/>
 			{:else if inputState === 'incorrect'}
-				<span class="state-icon" aria-label="Incorrect">
-					<X size={14} strokeWidth={4} />
-				</span>
+				<GradingIndicator class="state-icon" state="incorrect" />
 			{/if}
 		</span>
 	</label>
@@ -265,10 +283,16 @@
 
 	.field.correct {
 		--answer-accent: var(--color-correct);
+		--answer-accent-h: var(--color-correct-h);
+		--answer-accent-s: var(--color-correct-s);
+		--answer-accent-l: var(--color-correct-l);
 	}
 
 	.field.incorrect {
 		--answer-accent: var(--color-incorrect);
+		--answer-accent-h: var(--color-incorrect-h);
+		--answer-accent-s: var(--color-incorrect-s);
+		--answer-accent-l: var(--color-incorrect-l);
 	}
 
 	.label {
@@ -352,6 +376,13 @@
 			0 8px 20px color-mix(in srgb, var(--answer-accent), transparent 86%);
 	}
 
+	.correct .input,
+	.incorrect .input {
+		color: hsl(
+			var(--answer-accent-h) calc(var(--answer-accent-s) + 25%) calc(var(--answer-accent-l) - 35%)
+		);
+	}
+
 	.input[disabled] {
 		cursor: not-allowed;
 		opacity: 0.58;
@@ -383,18 +414,10 @@
 		white-space: nowrap;
 	}
 
-	.state-icon {
+	.control-wrap :global(.state-icon) {
 		align-self: center;
-		background: var(--answer-accent);
-		border-radius: 999px;
-		color: var(--color-surface);
-		display: grid;
-		inline-size: 1.5rem;
-		aspect-ratio: 1;
 		justify-self: end;
 		margin-inline-end: var(--space-4);
-		place-items: center;
-		pointer-events: none;
 		position: absolute;
 	}
 

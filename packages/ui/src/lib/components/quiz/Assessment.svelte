@@ -261,10 +261,7 @@
 		onquestionresult?.(result);
 	}
 
-	function recordMathQuestionResult(
-		question: QuizQuestionData,
-		result: MathAnswerSubmitResult
-	) {
+	function recordMathQuestionResult(question: QuizQuestionData, result: MathAnswerSubmitResult) {
 		mathAnswers[question.id] = {
 			latex: result.latex,
 			prompts: result.prompts
@@ -398,6 +395,7 @@
 							grader={question.response.grader}
 							showSubmitButton={mode === 'quiz'}
 							submitLabel="Submit answer"
+							celebrations={question.response.celebrations ?? celebrations}
 							onsubmit={() => recordQuestionResult(question)}
 						/>
 					{:else if question.response.type === 'math'}
@@ -415,6 +413,7 @@
 							grader={question.response.grader}
 							showSubmitButton={mode === 'quiz'}
 							submitLabel="Submit answer"
+							celebrations={question.response.celebrations ?? celebrations}
 							oninput={(answer) => {
 								mathAnswers[question.id] = answer;
 							}}
@@ -434,6 +433,7 @@
 							grader={question.response.grader}
 							showSubmitButton={mode === 'quiz'}
 							submitLabel="Submit answer"
+							celebrations={question.response.celebrations ?? celebrations}
 							onsubmit={() => recordQuestionResult(question)}
 						/>
 					{:else if question.response.type === 'sequencing'}
@@ -446,6 +446,7 @@
 							correctOrder={question.response.correctOrder ?? null}
 							showSubmitButton={mode === 'quiz'}
 							submitLabel="Submit answer"
+							celebrations={question.response.celebrations ?? celebrations}
 							legend={question.question}
 							onsubmit={() => recordQuestionResult(question)}
 						/>

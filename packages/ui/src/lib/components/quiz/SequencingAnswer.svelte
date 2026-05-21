@@ -1,8 +1,11 @@
 <script lang="ts">
-	import { ArrowDown, ArrowUp, Check, GripVertical, X } from '@lucide/svelte';
+	import { ArrowDown, ArrowUp, GripVertical } from '@lucide/svelte';
 	import { flip } from 'svelte/animate';
 	import { cubicOut } from 'svelte/easing';
+	import { tick } from 'svelte';
 	import Button from '../Button.svelte';
+	import { celebrateCorrectMultipleSelect } from './celebration';
+	import GradingIndicator from './GradingIndicator.svelte';
 	import RichText from './RichText.svelte';
 	import type { Sortable, SortableStopEvent } from '@shopify/draggable';
 	import type { SequencingItemData, SequencingSubmitResult } from './types';
@@ -17,6 +20,7 @@
 		submitted?: boolean;
 		showSubmitButton?: boolean;
 		submitLabel?: string;
+		celebrations?: boolean;
 		class?: string;
 		onreorder?: (value: string[]) => void;
 		onsubmit?: (result: SequencingSubmitResult) => void;
@@ -32,12 +36,16 @@
 		submitted = $bindable(false),
 		showSubmitButton = false,
 		submitLabel = 'Submit answer',
+		celebrations = true,
 		class: className = '',
 		onreorder,
 		onsubmit
 	}: SequencingAnswerProps = $props();
 
 	let listElement = $state<HTMLElement | undefined>();
+	let gradingIndicatorElements = $state<Record<string, HTMLElement>>({});
+	let hasTrackedSequenceState = $state(false);
+	let previousSequenceState = $state('neutral');
 	let sortable: Sortable | undefined;
 	let sortableSetupId = 0;
 
@@ -75,6 +83,9 @@
 	let isLocked = $derived(disabled || submitted);
 	let canSubmit = $derived(!disabled && !submitted && orderedItems.length > 0);
 	let listId = $derived(`${name}-list`);
+	let sequenceState = $derived(
+		submitted && hasAnswerKey ? (hasCorrectOrder() ? 'correct' : 'incorrect') : 'neutral'
+	);
 
 	$effect(() => {
 		const setupId = ++sortableSetupId;
@@ -106,6 +117,27 @@
 			sortable?.destroy();
 			sortable = undefined;
 		};
+	});
+
+	$effect(() => {
+		if (!hasTrackedSequenceState) {
+			hasTrackedSequenceState = true;
+			previousSequenceState = sequenceState;
+			return;
+		}
+
+		const previous = previousSequenceState;
+		previousSequenceState = sequenceState;
+
+		if (celebrations && sequenceState === 'correct' && previous !== 'correct') {
+			void tick().then(() => {
+				celebrateCorrectMultipleSelect(
+					orderedValues
+						.map((itemValue) => gradingIndicatorElements[itemValue])
+						.filter((element): element is HTMLElement => element !== undefined)
+				);
+			});
+		}
 	});
 
 	function getItemLabel(item: SequencingItemData) {
@@ -210,13 +242,12 @@
 					</div>
 
 					{#if submitted && hasAnswerKey}
-						<span class={['result-icon', positionState]} aria-hidden="true">
-							{#if positionState === 'correct'}
-								<Check size={14} strokeWidth={4} />
-							{:else}
-								<X size={14} strokeWidth={4} />
-							{/if}
-						</span>
+						<GradingIndicator
+							bind:element={gradingIndicatorElements[item.value]}
+							class="result-icon"
+							state={positionState}
+							size="1.25rem"
+						/>
 					{/if}
 
 					<div class="keyboard-controls">
@@ -332,10 +363,12 @@
 
 	.sequence-item-correct {
 		--accent: var(--color-correct);
+		color: hsl(var(--color-correct-h) calc(var(--color-correct-s) + 25%) calc(var(--color-correct-l) - 35%));
 	}
 
 	.sequence-item-incorrect {
 		--accent: var(--color-incorrect);
+		color: hsl(var(--color-incorrect-h) calc(var(--color-incorrect-s) + 25%) calc(var(--color-incorrect-l) - 35%));
 	}
 
 	.disabled {
@@ -419,15 +452,9 @@
 		line-height: 1.45;
 	}
 
-	.result-icon {
-		align-items: center;
-		background: var(--accent);
-		border-radius: 999px;
-		color: var(--color-surface);
-		display: inline-flex;
-		justify-content: center;
-		block-size: 1.25rem;
-		inline-size: 1.25rem;
+	.sequence-item-correct .description,
+	.sequence-item-incorrect .description {
+		color: color-mix(in srgb, var(--accent), var(--color-text-muted) 70%);
 	}
 
 	.keyboard-controls {
@@ -461,7 +488,7 @@
 			grid-template-columns: 2rem 1.75rem minmax(0, 1fr) auto;
 		}
 
-		.result-icon {
+		.sequence-item :global(.result-icon) {
 			grid-column: 2;
 		}
 
