@@ -7,6 +7,7 @@
 		title?: string;
 		pages?: QuizPageLayout;
 		questionsPerPage?: number;
+		celebrations?: boolean;
 		class?: string;
 		onquestionresult?: (result: QuizQuestionResult) => void;
 		oncomplete?: (results: QuizQuestionResult[]) => void;
@@ -17,6 +18,7 @@
 		title,
 		pages,
 		questionsPerPage = 1,
+		celebrations = true,
 		class: className = '',
 		onquestionresult,
 		oncomplete
@@ -29,6 +31,7 @@
 	{title}
 	{pages}
 	{questionsPerPage}
+	{celebrations}
 	class={className}
 	{onquestionresult}
 	{oncomplete}

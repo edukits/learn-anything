@@ -16,6 +16,7 @@ export type MultipleChoiceQuestionResponse = {
 	value?: string | null;
 	correctValue?: string | null;
 	interactionMode?: MultipleChoiceInteractionMode;
+	celebrations?: boolean;
 };
 
 export type MultipleSelectQuestionResponse = {
@@ -23,6 +24,7 @@ export type MultipleSelectQuestionResponse = {
 	options: MultipleChoiceOptionData[];
 	value?: string[];
 	correctValues?: string[] | null;
+	celebrations?: boolean;
 };
 
 export type ShortAnswerQuestionResponse = {

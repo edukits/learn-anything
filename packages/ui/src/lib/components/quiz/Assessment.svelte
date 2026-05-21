@@ -44,6 +44,7 @@
 		title?: string;
 		pages?: QuizPageLayout;
 		questionsPerPage?: QuestionsPerPage;
+		celebrations?: boolean;
 		class?: string;
 		onquestionresult?: (result: QuizQuestionResult) => void;
 		oncomplete?: (results: QuizQuestionResult[]) => void;
@@ -55,6 +56,7 @@
 		title,
 		pages: configuredPages,
 		questionsPerPage,
+		celebrations = true,
 		class: className = '',
 		onquestionresult,
 		oncomplete
@@ -382,6 +384,7 @@
 							correctValues={getMultipleSelectCorrectValues(question.response)}
 							showSubmitButton={mode === 'quiz'}
 							submitLabel="Submit answer"
+							celebrations={question.response.celebrations ?? celebrations}
 							legend={question.question}
 							onsubmit={() => recordQuestionResult(question)}
 						/>
@@ -397,6 +400,7 @@
 							interactionMode={mode === 'quiz' ? 'instant-submit' : 'submit'}
 							correctValue={getMultipleChoiceCorrectValue(question.response)}
 							showSubmitButton={false}
+							celebrations={question.response.celebrations ?? celebrations}
 							legend={question.question}
 							onsubmit={() => recordQuestionResult(question)}
 						/>

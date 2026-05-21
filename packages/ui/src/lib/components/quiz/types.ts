@@ -131,12 +131,14 @@ export type QuizQuestionResponse =
 			value?: string | null;
 			correctValue?: string | null;
 			interactionMode?: MultipleChoiceInteractionMode;
+			celebrations?: boolean;
 	  }
 	| {
 			type: 'multiple-select';
 			options: MultipleChoiceOptionData[];
 			value?: string[];
 			correctValues?: string[] | null;
+			celebrations?: boolean;
 	  }
 	| {
 			type: 'short-answer';

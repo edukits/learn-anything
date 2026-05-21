@@ -7,6 +7,7 @@
 		title?: string;
 		pages?: QuizPageLayout;
 		questionsPerPage?: number | 'all';
+		celebrations?: boolean;
 		class?: string;
 		oncomplete?: (results: QuizQuestionResult[]) => void;
 	};
@@ -16,6 +17,7 @@
 		title,
 		pages,
 		questionsPerPage = 'all',
+		celebrations = true,
 		class: className = '',
 		oncomplete
 	}: ExamProps = $props();
@@ -27,6 +29,7 @@
 	{title}
 	{pages}
 	{questionsPerPage}
+	{celebrations}
 	class={className}
 	{oncomplete}
 />

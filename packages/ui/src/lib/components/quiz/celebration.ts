@@ -64,6 +64,12 @@ function getCelebrationOrigin(sourceElement?: HTMLElement) {
 	};
 }
 
+function delay(milliseconds: number) {
+	return new Promise<void>((resolve) => {
+		window.setTimeout(resolve, milliseconds);
+	});
+}
+
 export async function celebrateCorrectMultipleChoice(sourceElement?: HTMLElement) {
 	const { default: confetti } = await import('canvas-confetti');
 	const { canvas, pixelRatio } = createHiDpiConfettiCanvas();
@@ -93,4 +99,39 @@ export async function celebrateCorrectMultipleChoice(sourceElement?: HTMLElement
 			canvas.remove();
 		}, 1000);
 	}
+}
+
+export async function celebrateCorrectMultipleSelect(sourceElements: HTMLElement[]) {
+	const { default: confetti } = await import('canvas-confetti');
+	const { canvas, pixelRatio } = createHiDpiConfettiCanvas();
+	const fireConfetti = confetti.create(canvas, {
+		disableForReducedMotion: true
+	});
+	const animations = sourceElements.map(async (sourceElement, index) => {
+		await delay(index * 100);
+
+		return fireConfetti({
+			colors: getCorrectConfettiColors(),
+			decay: 0.91,
+			disableForReducedMotion: true,
+			gravity: 2 * pixelRatio,
+			origin: getCelebrationOrigin(sourceElement),
+			particleCount: 34,
+			scalar: 0.62 * pixelRatio,
+			spread: 54,
+			startVelocity: 26 * pixelRatio,
+			ticks: 46
+		});
+	});
+
+	if (animations.length > 0) {
+		void Promise.all(animations).finally(() => {
+			canvas.remove();
+		});
+		return;
+	}
+
+	window.setTimeout(() => {
+		canvas.remove();
+	}, 1000);
 }

@@ -38,6 +38,9 @@ const meta = {
 	argTypes: {
 		disabled: {
 			control: 'boolean'
+		},
+		celebrations: {
+			control: 'boolean'
 		}
 	}
 } satisfies Meta<typeof MultipleSelect>;

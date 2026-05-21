@@ -37,6 +37,9 @@ const meta = {
 		},
 		disabled: {
 			control: 'boolean'
+		},
+		celebrations: {
+			control: 'boolean'
 		}
 	}
 } satisfies Meta<typeof MultipleChoice>;

@@ -142,6 +142,7 @@
 		correctValues={multipleSelectCorrectValues}
 		{showSubmitButton}
 		{submitLabel}
+		celebrations={response.celebrations ?? true}
 		{legend}
 	/>
 {:else}
@@ -155,6 +156,7 @@
 		correctValue={multipleChoiceCorrectValue}
 		{showSubmitButton}
 		{submitLabel}
+		celebrations={response.celebrations ?? true}
 		{legend}
 	/>
 {/if}

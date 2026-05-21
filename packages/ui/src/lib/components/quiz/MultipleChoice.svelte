@@ -20,6 +20,7 @@
 		submitted?: boolean;
 		showSubmitButton?: boolean;
 		submitLabel?: string;
+		celebrations?: boolean;
 		class?: string;
 		onselect?: (value: string, option: MultipleChoiceOptionData) => void;
 		onsubmit?: (result: MultipleChoiceSubmitResult) => void;
@@ -36,6 +37,7 @@
 		submitted = $bindable(false),
 		showSubmitButton = false,
 		submitLabel = 'Submit answer',
+		celebrations = true,
 		class: className = '',
 		onselect,
 		onsubmit
@@ -47,15 +49,27 @@
 	let hasAnswerKey = $derived(resolvedCorrectValue !== null);
 	let isLocked = $derived(disabled || submitted);
 
-	function getRadioControlElement(event?: Event) {
-		const input = event?.currentTarget;
-
+	function getRadioControlElement(input: EventTarget | null | undefined) {
 		if (!(input instanceof HTMLInputElement)) {
 			return undefined;
 		}
 
 		const control = input.nextElementSibling;
 		return control instanceof HTMLElement ? control : input;
+	}
+
+	function getOptionControlElement(optionValue: string | null) {
+		if (optionValue === null) {
+			return undefined;
+		}
+
+		const input = document.getElementById(`${name}-${optionValue}`);
+
+		if (!(input instanceof HTMLInputElement)) {
+			return undefined;
+		}
+
+		return getRadioControlElement(input);
 	}
 
 	function getOptionState(option: MultipleChoiceOptionData): MultipleChoiceOptionState {
@@ -87,8 +101,8 @@
 			correct: isCorrect
 		});
 
-		if (interactionMode === 'instant-submit' && isCorrect) {
-			void celebrateCorrectMultipleChoice(sourceElement);
+		if (celebrations && isCorrect) {
+			void celebrateCorrectMultipleChoice(sourceElement ?? getOptionControlElement(value));
 		}
 	}
 
@@ -97,7 +111,7 @@
 			return;
 		}
 
-		const sourceElement = getRadioControlElement(event);
+		const sourceElement = getRadioControlElement(event?.currentTarget);
 		value = option.value;
 		onselect?.(option.value, option);
 

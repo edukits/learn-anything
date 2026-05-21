@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Button from '../Button.svelte';
+	import { celebrateCorrectMultipleSelect } from './celebration';
 	import MultipleChoiceOption from './MultipleChoiceOption.svelte';
 	import type {
 		MultipleChoiceOptionData,
@@ -17,6 +18,7 @@
 		submitted?: boolean;
 		showSubmitButton?: boolean;
 		submitLabel?: string;
+		celebrations?: boolean;
 		class?: string;
 		onselect?: (value: string[], option: MultipleChoiceOptionData) => void;
 		onsubmit?: (result: MultipleSelectSubmitResult) => void;
@@ -32,6 +34,7 @@
 		submitted = $bindable(false),
 		showSubmitButton = false,
 		submitLabel = 'Submit answer',
+		celebrations = true,
 		class: className = '',
 		onselect,
 		onsubmit
@@ -52,6 +55,24 @@
 	let selectedValues = $derived(new Set(value));
 	let correctValueSet = $derived(new Set(resolvedCorrectValues ?? []));
 	let isLocked = $derived(disabled || submitted);
+
+	function getOptionControlElement(optionValue: string) {
+		const input = document.getElementById(`${name}-${optionValue}`);
+
+		if (!(input instanceof HTMLInputElement)) {
+			return undefined;
+		}
+
+		const control = input.nextElementSibling;
+		return control instanceof HTMLElement ? control : input;
+	}
+
+	function getCorrectOptionControlElements() {
+		return options
+			.filter((option) => correctValueSet.has(option.value))
+			.map((option) => getOptionControlElement(option.value))
+			.filter((element): element is HTMLElement => element !== undefined);
+	}
 
 	function getOptionState(option: MultipleChoiceOptionData): MultipleChoiceOptionState {
 		if (!submitted || !hasAnswerKey) {
@@ -93,6 +114,10 @@
 			value,
 			correct: isCorrect
 		});
+
+		if (celebrations && isCorrect) {
+			void celebrateCorrectMultipleSelect(getCorrectOptionControlElements());
+		}
 	}
 
 	function toggleOption(option: MultipleChoiceOptionData) {
