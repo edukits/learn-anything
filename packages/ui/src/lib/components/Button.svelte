@@ -150,13 +150,32 @@
 	}
 
 	.la-button--secondary {
-		background: var(--color-surface);
-		border-color: var(--color-border);
+		--btn-accent-l-top: 98%;
+		--btn-accent-l-bottom: 93%;
+		--btn-accent-l-border: 82%;
+		--btn-accent-l-inset: 100%;
+		background: linear-gradient(
+			to bottom,
+			hsl(var(--color-accent-h) 20% var(--btn-accent-l-top)),
+			hsl(var(--color-accent-h) 20% var(--btn-accent-l-bottom))
+		);
+		border-color: hsl(var(--color-accent-h) 22% var(--btn-accent-l-border));
+		box-shadow: 0 2px 1px inset
+			hsl(var(--color-accent-h) 15% var(--btn-accent-l-inset));
 		color: var(--color-text);
+		transition:
+			--btn-accent-l-top 100ms ease-out,
+			--btn-accent-l-bottom 100ms ease-out,
+			--btn-accent-l-border 100ms ease-out,
+			--btn-accent-l-inset 100ms ease-out,
+			transform 150ms ease-out;
 	}
 
 	.la-button--secondary:hover:not(:disabled) {
-		background: var(--color-surface-raised);
+		--btn-accent-l-top: 96%;
+		--btn-accent-l-bottom: 90%;
+		--btn-accent-l-border: 78%;
+		--btn-accent-l-inset: 100%;
 	}
 
 	.la-button--ghost {
