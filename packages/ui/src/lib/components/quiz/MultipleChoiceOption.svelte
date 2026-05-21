@@ -54,30 +54,30 @@
 		aria-label={accessibleLabel}
 	/>
 	<span class="la-choice-option__control" aria-hidden="true"></span>
-	<span
+	<div
 		class={[
 			'la-choice-option__content',
 			!hasLabel && hasDescription && 'la-choice-option__content--description-only'
 		]}
 	>
 		{#if hasLabel && label}
-			<span class="la-choice-option__label">
+			<div class="la-choice-option__label">
 				<RichText content={label} />
-			</span>
+			</div>
 		{/if}
 
 		{#if hasDescription && description}
-			<span class="la-choice-option__description">
+			<div class="la-choice-option__description">
 				<RichText content={description} />
-			</span>
+			</div>
 		{/if}
 
 		{#if fallbackLabel}
-			<span class="la-choice-option__label">
+			<div class="la-choice-option__label">
 				<RichText content={fallbackLabel} />
-			</span>
+			</div>
 		{/if}
-	</span>
+	</div>
 </label>
 
 <style>
@@ -114,9 +114,9 @@
 		border-color: color-mix(in srgb, var(--color-accent), var(--color-border) 42%);
 	}
 
-    .la-choice-option:active:not(.la-choice-option--disabled) {
-        transform: scale(0.99);
-    }
+	.la-choice-option:active:not(.la-choice-option--disabled) {
+		transform: scale(0.99);
+	}
 
 	.la-choice-option--selected {
 		background: linear-gradient(

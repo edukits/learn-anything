@@ -29,14 +29,14 @@
 			<p class="la-question__eyebrow">{eyebrow}</p>
 		{/if}
 
-		<h2 class="la-question__prompt">
+		<div class="la-question__prompt">
 			<RichText content={question} />
-		</h2>
+		</div>
 
 		{#if description}
-			<p class="la-question__description">
+			<div class="la-question__description">
 				<RichText content={description} />
-			</p>
+			</div>
 		{/if}
 	</div>
 
@@ -65,8 +65,7 @@
 	}
 
 	.la-question__eyebrow,
-	.la-question__description,
-	h2 {
+	.la-question__description {
 		margin-block: 0;
 	}
 
@@ -92,14 +91,10 @@
 		max-inline-size: 36rem;
 	}
 
-	.la-question__answer {
-	}
-
 	@media (max-width: 560px) {
 		.la-question {
 			border-radius: var(--radius-md);
 			padding: var(--space-5);
 		}
-
 	}
 </style>

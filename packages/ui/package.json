@@ -31,7 +31,10 @@
 	},
 	"dependencies": {
 		"@learn-anything/tokens": "workspace:*",
-		"katex": "^0.16.47"
+		"katex": "^0.16.47",
+		"markdown-it": "^14.1.1",
+		"markdown-it-texmath": "^1.0.0",
+		"sanitize-html": "^2.17.4"
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0"
@@ -45,7 +48,9 @@
 		"@sveltejs/kit": "^2.60.1",
 		"@sveltejs/package": "^2.5.7",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
+		"@types/markdown-it": "^14.1.2",
 		"@types/node": "^25.9.1",
+		"@types/sanitize-html": "^2.16.1",
 		"oxlint": "^1.66.0",
 		"storybook": "^10.4.0",
 		"svelte": "^5.55.9",
