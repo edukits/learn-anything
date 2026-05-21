@@ -4,6 +4,7 @@ export { default as MultipleChoiceOption } from './components/quiz/MultipleChoic
 export { default as MultipleSelect } from './components/quiz/MultipleSelect.svelte';
 export { default as NumericAnswer } from './components/quiz/NumericAnswer.svelte';
 export { default as Question } from './components/quiz/Question.svelte';
+export { default as SequencingAnswer } from './components/quiz/SequencingAnswer.svelte';
 export { default as ShortAnswer } from './components/quiz/ShortAnswer.svelte';
 export type {
 	MultipleChoiceInteractionMode,
@@ -24,6 +25,8 @@ export type {
 	NumericUnitMode,
 	NumericUnitOption,
 	NumericUnitSide,
+	SequencingItemData,
+	SequencingSubmitResult,
 	ShortAnswerEvaluation,
 	ShortAnswerMatchMode,
 	ShortAnswerSubmitResult

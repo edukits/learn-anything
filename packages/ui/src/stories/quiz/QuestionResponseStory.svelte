@@ -2,6 +2,7 @@
 	import MultipleChoice from '../../lib/components/quiz/MultipleChoice.svelte';
 	import MultipleSelect from '../../lib/components/quiz/MultipleSelect.svelte';
 	import NumericAnswer from '../../lib/components/quiz/NumericAnswer.svelte';
+	import SequencingAnswer from '../../lib/components/quiz/SequencingAnswer.svelte';
 	import ShortAnswer from '../../lib/components/quiz/ShortAnswer.svelte';
 	import type { MultipleChoiceOptionData } from '../../lib/components/quiz/types';
 	import type {
@@ -62,6 +63,7 @@
 	let multipleChoiceCorrectValue = $derived(
 		response.type === 'multiple-select' ||
 			response.type === 'numeric' ||
+			response.type === 'sequencing' ||
 			response.type === 'short-answer'
 			? null
 			: getMultipleChoiceCorrectValue(response)
@@ -69,6 +71,7 @@
 	let multipleChoiceOptions = $derived(
 		response.type === 'multiple-select' ||
 			response.type === 'numeric' ||
+			response.type === 'sequencing' ||
 			response.type === 'short-answer'
 			? []
 			: multipleChoiceCorrectValue === null
@@ -116,6 +119,18 @@
 		grader={response.grader}
 		{showSubmitButton}
 		{submitLabel}
+	/>
+{:else if response.type === 'sequencing'}
+	<SequencingAnswer
+		value={response.value ?? response.items.map((item) => item.value)}
+		bind:submitted
+		items={response.items}
+		{name}
+		{disabled}
+		correctOrder={response.correctOrder ?? null}
+		{showSubmitButton}
+		{submitLabel}
+		{legend}
 	/>
 {:else if response.type === 'multiple-select'}
 	<MultipleSelect

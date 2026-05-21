@@ -32,6 +32,7 @@
 	"dependencies": {
 		"@learn-anything/tokens": "workspace:*",
 		"@lucide/svelte": "^1.16.0",
+		"@shopify/draggable": "^1.2.1",
 		"bits-ui": "^2.18.1",
 		"canvas-confetti": "^1.9.4",
 		"katex": "^0.16.47",

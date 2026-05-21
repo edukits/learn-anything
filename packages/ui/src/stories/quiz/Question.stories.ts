@@ -210,6 +210,44 @@ export const NumericCurrency: Story = {
 	}
 };
 
+export const Sequencing: Story = {
+	args: {
+		eyebrow: 'Learning science',
+		question: 'Put the study routine in the order that best supports recall.',
+		description: 'Drag the cards into sequence, or use the arrow controls.',
+		name: 'study-routine-sequencing',
+		showSubmitButton: true,
+		submitted: false,
+		response: {
+			type: 'sequencing',
+			value: ['question', 'preview', 'read', 'recall'],
+			correctOrder: ['preview', 'question', 'read', 'recall'],
+			items: [
+				{
+					value: 'preview',
+					label: 'Preview',
+					description: 'Skim headings, examples, and diagrams before reading closely.'
+				},
+				{
+					value: 'question',
+					label: 'Question',
+					description: 'Turn the section heading into a question.'
+				},
+				{
+					value: 'read',
+					label: 'Read',
+					description: 'Read the section with the question in mind.'
+				},
+				{
+					value: 'recall',
+					label: 'Recall',
+					description: 'Close the text and retrieve the answer from memory.'
+				}
+			]
+		}
+	}
+};
+
 export const StateGallery: StoryObj<typeof QuestionStateGalleryStory> = {
 	render: () => ({
 		Component: QuestionStateGalleryStory

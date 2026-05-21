@@ -5,6 +5,7 @@ import type {
 	NumericAnswerEvaluation,
 	NumericAnswerValue,
 	NumericUnitConfig,
+	SequencingItemData,
 	ShortAnswerEvaluation,
 	ShortAnswerMatchMode
 } from '../../lib/components/quiz/types';
@@ -44,8 +45,16 @@ export type NumericAnswerQuestionResponse = {
 	grader?: (answer: NumericAnswerValue) => NumericAnswerEvaluation;
 };
 
+export type SequencingQuestionResponse = {
+	type: 'sequencing';
+	items: SequencingItemData[];
+	value?: string[];
+	correctOrder?: string[] | null;
+};
+
 export type QuestionResponse =
 	| MultipleChoiceQuestionResponse
 	| MultipleSelectQuestionResponse
 	| NumericAnswerQuestionResponse
+	| SequencingQuestionResponse
 	| ShortAnswerQuestionResponse;

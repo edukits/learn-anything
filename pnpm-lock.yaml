@@ -98,6 +98,9 @@ importers:
       '@lucide/svelte':
         specifier: ^1.16.0
         version: 1.16.0(svelte@5.55.9)
+      '@shopify/draggable':
+        specifier: ^1.2.1
+        version: 1.2.1
       bits-ui:
         specifier: ^2.18.1
         version: 2.18.1(@internationalized/date@3.12.1)(@sveltejs/kit@2.60.1(@sveltejs/vite-plugin-svelte@7.1.2(svelte@5.55.9)(vite@8.0.13(@types/node@25.9.1)(esbuild@0.27.7)))(svelte@5.55.9)(typescript@6.0.3)(vite@8.0.13(@types/node@25.9.1)(esbuild@0.27.7)))(svelte@5.55.9)
@@ -1211,6 +1214,12 @@ packages:
     resolution:
       {
         integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==
+      }
+
+  '@shopify/draggable@1.2.1':
+    resolution:
+      {
+        integrity: sha512-hYKhd99nl1mkO4ybA8i3rxvZgYS2A4Imcxpq7BoUu7h4LmFt997YxHLy8Mm5J7ST+G4DTQXqBsTx9mDid6piZg==
       }
 
   '@standard-schema/spec@1.1.0':
@@ -3113,6 +3122,8 @@ snapshots:
     optional: true
 
   '@rolldown/pluginutils@1.0.1': {}
+
+  '@shopify/draggable@1.2.1': {}
 
   '@standard-schema/spec@1.1.0': {}
 

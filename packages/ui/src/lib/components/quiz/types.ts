@@ -111,3 +111,15 @@ export type MultipleChoiceOptionData = {
 	disabled?: boolean;
 	state?: MultipleChoiceOptionState;
 };
+
+export type SequencingItemData = {
+	value: string;
+	label?: string;
+	description?: string;
+	disabled?: boolean;
+};
+
+export type SequencingSubmitResult = {
+	value: string[];
+	correct: boolean | null;
+};
