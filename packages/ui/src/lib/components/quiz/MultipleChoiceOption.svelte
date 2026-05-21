@@ -161,10 +161,12 @@
 
 	.correct {
 		--accent: var(--color-correct);
+        color: hsl(var(--color-correct-h) calc(var(--color-correct-s) + 25%) calc(var(--color-correct-l) - 35%));
 	}
 
 	.incorrect {
 		--accent: var(--color-incorrect);
+        color: hsl(var(--color-incorrect-h) calc(var(--color-incorrect-s) + 25%) calc(var(--color-incorrect-l) - 35%));
 	}
 
 	.selected,
@@ -358,4 +360,9 @@
 		font-weight: 600;
 		line-height: 1.25;
 	}
+
+    .correct .description,
+    .incorrect .description {
+        color: color-mix(in srgb, var(--accent), var(--color-text-muted) 70%);
+    }
 </style>
