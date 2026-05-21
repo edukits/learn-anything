@@ -12,6 +12,7 @@ import {
 	isMathAnswered
 } from './math';
 import type {
+	ImageChoiceOptionData,
 	MathAnswerSubmitResult,
 	MathAnswerValue,
 	MultipleChoiceOptionData,
@@ -31,6 +32,7 @@ export type MultipleChoiceQuizResponse = Extract<
 	QuizQuestionResponse,
 	{ type?: 'multiple-choice' }
 >;
+export type ImageChoiceQuizResponse = Extract<QuizQuestionResponse, { type: 'image-choice' }>;
 export type MultipleSelectQuizResponse = Extract<QuizQuestionResponse, { type: 'multiple-select' }>;
 export type NumericQuizResponse = Extract<QuizQuestionResponse, { type: 'numeric' }>;
 export type MathQuizResponse = Extract<QuizQuestionResponse, { type: 'math' }>;
@@ -51,6 +53,12 @@ export function isMultipleSelectResponse(
 	response: QuizQuestionResponse
 ): response is MultipleSelectQuizResponse {
 	return response.type === 'multiple-select';
+}
+
+export function isImageChoiceResponse(
+	response: QuizQuestionResponse
+): response is ImageChoiceQuizResponse {
+	return response.type === 'image-choice';
 }
 
 export function isNumericResponse(response: QuizQuestionResponse): response is NumericQuizResponse {
@@ -79,7 +87,7 @@ export function buildMultipleChoiceAnswers(
 	const answers: Record<string, string | null> = {};
 
 	for (const question of questionData) {
-		if (isMultipleChoiceResponse(question.response)) {
+		if (isMultipleChoiceResponse(question.response) || isImageChoiceResponse(question.response)) {
 			answers[question.id] = question.response.value ?? null;
 		}
 	}
@@ -211,7 +219,25 @@ export function getOptionDisplayData(optionData: MultipleChoiceOptionData[]) {
 	}));
 }
 
+export function getImageOptionDisplayData(optionData: ImageChoiceOptionData[]) {
+	return optionData.map((option) => ({
+		value: option.value,
+		imageSrc: option.imageSrc,
+		imageAlt: option.imageAlt,
+		label: option.label,
+		disabled: option.disabled
+	}));
+}
+
 export function getMultipleChoiceCorrectValue(response: MultipleChoiceQuizResponse) {
+	return (
+		response.correctValue ??
+		response.options.find((option) => option.state === 'correct')?.value ??
+		null
+	);
+}
+
+export function getImageChoiceCorrectValue(response: ImageChoiceQuizResponse) {
 	return (
 		response.correctValue ??
 		response.options.find((option) => option.state === 'correct')?.value ??

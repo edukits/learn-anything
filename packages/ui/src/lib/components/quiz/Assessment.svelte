@@ -11,12 +11,15 @@
 		buildShortAnswers,
 		buildSubmittedState,
 		gradeMath,
+		getImageChoiceCorrectValue,
+		getImageOptionDisplayData,
 		getMultipleChoiceCorrectValue,
 		getMultipleSelectCorrectValues,
 		getOptionDisplayData,
 		gradeNumeric,
 		gradeShortAnswer,
 		hasExactSelection,
+		isImageChoiceResponse,
 		isMultipleChoiceResponse,
 		isMultipleSelectResponse,
 		isMathAnswered,
@@ -27,6 +30,7 @@
 		isShortAnswerResponse,
 		type QuestionsPerPage
 	} from './assessment';
+	import ImageChoice from './ImageChoice.svelte';
 	import MultipleChoice from './MultipleChoice.svelte';
 	import MultipleSelect from './MultipleSelect.svelte';
 	import MathAnswer from './MathAnswer.svelte';
@@ -129,6 +133,10 @@
 			return multipleChoiceAnswers[question.id] !== null;
 		}
 
+		if (isImageChoiceResponse(response)) {
+			return multipleChoiceAnswers[question.id] !== null;
+		}
+
 		if (isMultipleSelectResponse(response)) {
 			return (multipleSelectAnswers[question.id] ?? []).length > 0;
 		}
@@ -154,6 +162,18 @@
 		if (isMultipleChoiceResponse(response)) {
 			const value = multipleChoiceAnswers[question.id] ?? null;
 			const correctValue = getMultipleChoiceCorrectValue(response);
+
+			return {
+				questionId: question.id,
+				value,
+				answered: value !== null,
+				correct: correctValue === null ? null : value === correctValue
+			};
+		}
+
+		if (isImageChoiceResponse(response)) {
+			const value = multipleChoiceAnswers[question.id] ?? null;
+			const correctValue = getImageChoiceCorrectValue(response);
 
 			return {
 				questionId: question.id,
@@ -443,6 +463,27 @@
 							submitLabel="Submit answer"
 							celebrations={question.response.celebrations ?? celebrations}
 							legend={question.question}
+							onsubmit={() => recordQuestionResult(question)}
+						/>
+					{:else if question.response.type === 'image-choice'}
+						<ImageChoice
+							bind:value={multipleChoiceAnswers[question.id]}
+							submitted={mode === 'exam' ? examSubmitted : questionSubmitted[question.id]}
+							options={getImageChoiceCorrectValue(question.response) === null
+								? question.response.options
+								: getImageOptionDisplayData(question.response.options)}
+							name={`${mode}-${question.id}`}
+							disabled={examSubmitted}
+							interactionMode={mode === 'quiz'
+								? (question.response.interactionMode ?? 'instant-submit')
+								: 'submit'}
+							correctValue={getImageChoiceCorrectValue(question.response)}
+							showSubmitButton={mode === 'quiz' && question.response.interactionMode === 'submit'}
+							submitLabel="Submit answer"
+							celebrations={question.response.celebrations ?? celebrations}
+							legend={question.question}
+							maxColumns={question.response.maxColumns ?? 4}
+							minColumnWidth={question.response.minColumnWidth ?? '9rem'}
 							onsubmit={() => recordQuestionResult(question)}
 						/>
 					{:else}

@@ -21,6 +21,8 @@ export type MultipleChoiceSubmitResult = {
 	correct: boolean | null;
 };
 
+export type ImageChoiceSubmitResult = MultipleChoiceSubmitResult;
+
 export type MultipleSelectSubmitResult = {
 	value: string[];
 	correct: boolean | null;
@@ -140,6 +142,15 @@ export type MultipleChoiceOptionData = {
 	state?: MultipleChoiceOptionState;
 };
 
+export type ImageChoiceOptionData = {
+	value: string;
+	imageSrc: string;
+	imageAlt?: string;
+	label?: string;
+	disabled?: boolean;
+	state?: MultipleChoiceOptionState;
+};
+
 export type SequencingItemData = {
 	value: string;
 	label?: string;
@@ -167,6 +178,16 @@ export type QuizQuestionResponse =
 			value?: string[];
 			correctValues?: string[] | null;
 			celebrations?: boolean;
+	  }
+	| {
+			type: 'image-choice';
+			options: ImageChoiceOptionData[];
+			value?: string | null;
+			correctValue?: string | null;
+			interactionMode?: MultipleChoiceInteractionMode;
+			celebrations?: boolean;
+			maxColumns?: number;
+			minColumnWidth?: string;
 	  }
 	| {
 			type: 'short-answer';

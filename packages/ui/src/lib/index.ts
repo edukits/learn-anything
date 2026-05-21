@@ -1,5 +1,7 @@
 export { default as Button } from './components/Button.svelte';
 export { default as Exam } from './components/quiz/Exam.svelte';
+export { default as ImageChoice } from './components/quiz/ImageChoice.svelte';
+export { default as ImageChoiceOption } from './components/quiz/ImageChoiceOption.svelte';
 export { default as MathAnswer } from './components/quiz/MathAnswer.svelte';
 export { default as MultipleChoice } from './components/quiz/MultipleChoice.svelte';
 export { default as MultipleChoiceOption } from './components/quiz/MultipleChoiceOption.svelte';
@@ -10,6 +12,8 @@ export { default as Quiz } from './components/quiz/Quiz.svelte';
 export { default as SequencingAnswer } from './components/quiz/SequencingAnswer.svelte';
 export { default as ShortAnswer } from './components/quiz/ShortAnswer.svelte';
 export type {
+	ImageChoiceOptionData,
+	ImageChoiceSubmitResult,
 	MathAnswerAcceptedValue,
 	MathAnswerEvaluation,
 	MathAnswerMatchMode,
