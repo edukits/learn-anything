@@ -15,6 +15,7 @@
 		"lint": "turbo lint",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
+		"birefnet:remove-bg": "UV_CACHE_DIR=tools/birefnet-bg-remove/.uv-cache uv run --project tools/birefnet-bg-remove python tools/birefnet-bg-remove/remove_background.py",
 		"storybook": "pnpm --filter @learn-anything/ui storybook",
 		"build-storybook": "pnpm --filter @learn-anything/ui build-storybook",
 		"test": "turbo test"

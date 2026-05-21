@@ -2,6 +2,10 @@ node_modules/
 .turbo/
 .corepack/
 .pnpm-store/
+.venv/
+.uv-cache/
+__pycache__/
+processed/
 
 dist/
 build/

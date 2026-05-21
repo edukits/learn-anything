@@ -1,13 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/sveltekit';
 import ImageChoice from '../../lib/components/quiz/ImageChoice.svelte';
-import appleSrc from '../../lib/assets/foods/apple.jpeg';
-import bananaSrc from '../../lib/assets/foods/banana.jpeg';
-import butterSrc from '../../lib/assets/foods/butter.jpeg';
-import cheeseSrc from '../../lib/assets/foods/cheese.jpeg';
-import coffeeSrc from '../../lib/assets/foods/coffee.jpeg';
-import croissantSrc from '../../lib/assets/foods/croissant.jpeg';
-import grapesSrc from '../../lib/assets/foods/grapes.jpeg';
-import pearSrc from '../../lib/assets/foods/pear.jpeg';
+import appleSrc from '../../lib/assets/foods/apple.png';
+import bananaSrc from '../../lib/assets/foods/banana.png';
+import butterSrc from '../../lib/assets/foods/butter.png';
+import cheeseSrc from '../../lib/assets/foods/cheese.png';
+import coffeeSrc from '../../lib/assets/foods/coffee.png';
+import croissantSrc from '../../lib/assets/foods/croissant.png';
+import grapesSrc from '../../lib/assets/foods/grapes.png';
+import pearSrc from '../../lib/assets/foods/pear.png';
 import type { ImageChoiceOptionData } from '../../lib/components/quiz/types';
 
 const foodOptions: ImageChoiceOptionData[] = [
