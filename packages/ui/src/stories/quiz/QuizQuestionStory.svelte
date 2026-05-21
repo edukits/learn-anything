@@ -1,15 +1,17 @@
 <script lang="ts">
-	import MultipleChoice from '../../lib/components/quiz/MultipleChoice.svelte';
 	import Question from '../../lib/components/quiz/Question.svelte';
 	import type {
 		MultipleChoiceInteractionMode,
 		MultipleChoiceOptionData
 	} from '../../lib/components/quiz/types';
+	import QuestionResponseStory from './QuestionResponseStory.svelte';
+	import type { MultipleChoiceQuestionResponse, QuestionResponse } from './questionResponse';
 
 	type QuizQuestionStoryProps = {
 		eyebrow?: string;
 		question: string;
 		description?: string;
+		response?: QuestionResponse;
 		options: MultipleChoiceOptionData[];
 		value?: string | null;
 		name?: string;
@@ -25,6 +27,7 @@
 		eyebrow,
 		question,
 		description,
+		response,
 		options,
 		value = $bindable<string | null>(null),
 		name = 'quiz-question',
@@ -36,31 +39,25 @@
 		submitLabel = 'Submit answer'
 	}: QuizQuestionStoryProps = $props();
 
-	let resolvedCorrectValue = $derived(
-		correctValue ?? options.find((option) => option.state === 'correct')?.value ?? null
-	);
-	let displayOptions = $derived(
-		resolvedCorrectValue === null
-			? options
-			: options.map((option) => ({
-					value: option.value,
-					label: option.label,
-					description: option.description,
-					disabled: option.disabled
-				}))
+	let responseConfig = $derived(
+		response ??
+			({
+				type: 'multiple-choice',
+				options,
+				value,
+				correctValue,
+				interactionMode
+			} satisfies MultipleChoiceQuestionResponse)
 	);
 </script>
 
 <div class="story">
 	<Question {eyebrow} {question} {description}>
-		<MultipleChoice
-			bind:value
+		<QuestionResponseStory
+			response={responseConfig}
 			bind:submitted
-			options={displayOptions}
 			{name}
 			{disabled}
-			{interactionMode}
-			correctValue={resolvedCorrectValue}
 			{showSubmitButton}
 			{submitLabel}
 			legend={question}

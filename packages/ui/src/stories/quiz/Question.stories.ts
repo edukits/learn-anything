@@ -82,6 +82,44 @@ type Story = StoryObj<typeof meta>;
 
 export const Playground: Story = {};
 
+export const MultipleSelect: Story = {
+	args: {
+		eyebrow: 'Learning science',
+		question: 'Which strategies usually improve long-term recall?',
+		description: 'Select every strategy that applies.',
+		name: 'retention-multiple-select',
+		showSubmitButton: true,
+		submitted: false,
+		response: {
+			type: 'multiple-select',
+			value: ['retrieval'],
+			correctValues: ['retrieval', 'spacing'],
+			options: [
+				{
+					value: 'retrieval',
+					label: 'Retrieval practice',
+					description: 'Trying to answer from memory before checking notes.'
+				},
+				{
+					value: 'spacing',
+					label: 'Spaced repetition',
+					description: 'Reviewing material across multiple sessions with time between them.'
+				},
+				{
+					value: 'highlighting',
+					label: 'Highlighting',
+					description: 'Marking sentences while reading a chapter.'
+				},
+				{
+					value: 'rereading',
+					label: 'Rereading',
+					description: 'Reading the same passage several times in a row.'
+				}
+			]
+		}
+	}
+};
+
 export const StateGallery: StoryObj<typeof QuestionStateGalleryStory> = {
 	render: () => ({
 		Component: QuestionStateGalleryStory

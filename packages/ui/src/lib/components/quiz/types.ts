@@ -6,6 +6,11 @@ export type MultipleChoiceSubmitResult = {
 	correct: boolean | null;
 };
 
+export type MultipleSelectSubmitResult = {
+	value: string[];
+	correct: boolean | null;
+};
+
 export type MultipleChoiceOptionData = {
 	value: string;
 	label?: string;

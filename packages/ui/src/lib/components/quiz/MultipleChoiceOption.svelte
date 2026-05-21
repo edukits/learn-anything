@@ -12,6 +12,7 @@
 		disabled?: boolean;
 		locked?: boolean;
 		state?: MultipleChoiceOptionState;
+		controlType?: 'radio' | 'checkbox';
 		id?: string;
 		onchange?: (event: Event) => void;
 	};
@@ -24,7 +25,8 @@
 		selected = false,
 		disabled = false,
 		locked = false,
-		state = 'neutral',
+		state: optionState = 'neutral',
+		controlType = 'radio',
 		id,
 		onchange
 	}: MultipleChoiceOptionProps = $props();
@@ -65,6 +67,7 @@
 		selected && 'selected',
 		disabled && !locked && 'disabled',
 		locked && 'locked',
+		`option-${controlType}`,
 		optionState !== 'neutral' && optionState
 	]}
 	for={inputId}
@@ -72,7 +75,7 @@
 	<input
 		id={inputId}
 		class="input"
-		type="radio"
+		type={controlType}
 		{name}
 		{value}
 		checked={selected}
@@ -88,6 +91,10 @@
 		{:else if optionState === 'incorrect'}
 			<span class="icon">
 				<X size={12} strokeWidth={4} />
+			</span>
+		{:else if selected && controlType === 'checkbox'}
+			<span class="icon">
+				<Check size={12} strokeWidth={4} />
 			</span>
 		{/if}
 	</span>
@@ -223,9 +230,21 @@
 		aspect-ratio: 1;
 	}
 
+	.option-checkbox .control {
+		border-radius: 0.25rem;
+	}
+
 	.selected .control {
 		border-color: var(--accent);
 		box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent), transparent 82%);
+	}
+
+	.option-checkbox.selected .control {
+		background: var(--accent);
+	}
+
+	.option-checkbox.selected .control::after {
+		content: none;
 	}
 
 	.correct .control,
@@ -238,6 +257,10 @@
 	.correct .control {
 		border-radius: 0.1875rem;
 		transform: rotate(45deg);
+	}
+
+	.option-checkbox.correct .control {
+		transform: none;
 	}
 
 	.selected .control::after {
@@ -261,6 +284,11 @@
 		transform: rotate(-45deg);
 	}
 
+	.option-checkbox .icon,
+	.option-checkbox.correct .icon {
+		transform: none;
+	}
+
 	.correct .icon.icon-animated {
 		animation: icon-in 500ms cubic-bezier(0.16, 1, 0.3, 1);
 		animation-delay: 180ms;
@@ -278,6 +306,24 @@
 			filter: blur(0);
 			opacity: 1;
 			transform: rotate(-45deg) scale(1);
+		}
+	}
+
+	.option-checkbox.correct .icon.icon-animated {
+		animation-name: checkbox-icon-in;
+	}
+
+	@keyframes checkbox-icon-in {
+		from {
+			filter: blur(1px);
+			opacity: 0;
+			transform: scale(1.5);
+		}
+
+		to {
+			filter: blur(0);
+			opacity: 1;
+			transform: scale(1);
 		}
 	}
 
