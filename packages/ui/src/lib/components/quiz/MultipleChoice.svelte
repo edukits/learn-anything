@@ -107,11 +107,11 @@
 	}
 </script>
 
-<div class={['la-multiple-choice', submitted && 'la-multiple-choice--submitted', className]}>
-	<fieldset class="la-multiple-choice__fieldset" disabled={isLocked}>
+<div class={['multiple-choice', className]}>
+	<fieldset disabled={isLocked}>
 		<legend>{legend}</legend>
 
-		<div class="la-multiple-choice__options">
+		<div class="options">
 			{#each options as option (option.value)}
 				<MultipleChoiceOption
 					id={`${name}-${option.value}`}
@@ -130,7 +130,7 @@
 	</fieldset>
 
 	{#if showSubmitButton}
-		<div class="la-multiple-choice__footer">
+		<div class="footer">
 			<Button
 				variant="secondary"
 				size="sm"
@@ -143,12 +143,12 @@
 </div>
 
 <style>
-	.la-multiple-choice {
+	.multiple-choice {
 		display: grid;
 		gap: var(--space-4);
 	}
 
-	.la-multiple-choice__fieldset {
+	fieldset {
 		border: 0;
 		margin: 0;
 		min-inline-size: 0;
@@ -165,12 +165,12 @@
 		white-space: nowrap;
 	}
 
-	.la-multiple-choice__options {
+	.options {
 		display: grid;
 		gap: var(--space-3);
 	}
 
-	.la-multiple-choice__footer {
+	.footer {
 		align-items: center;
 		display: flex;
 		flex-wrap: wrap;

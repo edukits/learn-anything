@@ -23,32 +23,32 @@
 	}: QuestionProps = $props();
 </script>
 
-<section {...rest} class={['la-question', className]}>
-	<div class="la-question__header">
+<section {...rest} class={['question', className]}>
+	<div class="header">
 		{#if eyebrow}
-			<p class="la-question__eyebrow">{eyebrow}</p>
+			<p class="eyebrow">{eyebrow}</p>
 		{/if}
 
-		<div class="la-question__prompt">
+		<div class="prompt">
 			<RichText content={question} />
 		</div>
 
 		{#if description}
-			<div class="la-question__description">
+			<div class="description">
 				<RichText content={description} />
 			</div>
 		{/if}
 	</div>
 
 	{#if children}
-		<div class="la-question__answer">
+		<div class="answer">
 			{@render children()}
 		</div>
 	{/if}
 </section>
 
 <style>
-	.la-question {
+	.question {
 		background: var(--color-surface);
 		border: 1px solid color-mix(in srgb, var(--color-border), transparent 12%);
 		border-radius: var(--radius-lg);
@@ -59,17 +59,17 @@
 		padding: var(--space-6);
 	}
 
-	.la-question__header {
+	.header {
 		display: grid;
 		gap: var(--space-3);
 	}
 
-	.la-question__eyebrow,
-	.la-question__description {
+	.eyebrow,
+	.description {
 		margin-block: 0;
 	}
 
-	.la-question__eyebrow {
+	.eyebrow {
 		color: var(--color-accent);
 		font-size: 0.8125rem;
 		font-weight: 700;
@@ -77,14 +77,14 @@
 		text-transform: uppercase;
 	}
 
-	.la-question__prompt {
+	.prompt {
 		color: var(--color-text);
 		font-size: clamp(1.375rem, 2vw, 1.75rem);
 		line-height: 1.32;
 		max-inline-size: 40rem;
 	}
 
-	.la-question__description {
+	.description {
 		color: var(--color-text-muted);
 		font-size: 1rem;
 		line-height: 1.55;
@@ -92,7 +92,7 @@
 	}
 
 	@media (max-width: 560px) {
-		.la-question {
+		.question {
 			border-radius: var(--radius-md);
 			padding: var(--space-5);
 		}

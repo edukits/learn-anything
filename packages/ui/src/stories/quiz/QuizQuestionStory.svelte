@@ -51,7 +51,7 @@
 	);
 </script>
 
-<div class="quiz-story">
+<div class="story">
 	<Question {eyebrow} {question} {description}>
 		<MultipleChoice
 			bind:value
@@ -69,7 +69,7 @@
 </div>
 
 <style>
-	.quiz-story {
+	.story {
 		background:
 			linear-gradient(
 				90deg,
@@ -89,7 +89,7 @@
 	}
 
 	@media (max-width: 560px) {
-		.quiz-story {
+		.story {
 			padding: var(--space-4);
 		}
 	}

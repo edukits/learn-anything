@@ -10,33 +10,34 @@
 
 	let { content, class: className = '' }: RichTextProps = $props();
 
+	// renderRichTextMarkdown sanitizes Markdown and KaTeX output before {@html} renders it.
 	let html = $derived(renderRichTextMarkdown(content));
 </script>
 
-<div class={['la-rich-text', className]}>{@html html}</div>
+<div class={['rich-text', className]}>{@html html}</div>
 
 <style>
-	.la-rich-text {
+	.rich-text {
 		display: flow-root;
 	}
 
-	.la-rich-text :global(:where(p, ol, ul, pre, blockquote)) {
+	.rich-text :global(:where(p, ol, ul, pre, blockquote)) {
 		margin-block: 0;
 	}
 
-	.la-rich-text :global(:where(p, ol, ul, pre, blockquote) + :where(p, ol, ul, pre, blockquote)) {
+	.rich-text :global(:where(p, ol, ul, pre, blockquote) + :where(p, ol, ul, pre, blockquote)) {
 		margin-block-start: var(--space-3);
 	}
 
-	.la-rich-text :global(:where(ol, ul)) {
+	.rich-text :global(:where(ol, ul)) {
 		padding-inline-start: 1.35em;
 	}
 
-	.la-rich-text :global(li + li) {
+	.rich-text :global(li + li) {
 		margin-block-start: var(--space-1);
 	}
 
-	.la-rich-text :global(code) {
+	.rich-text :global(code) {
 		background: color-mix(in srgb, var(--color-border), transparent 58%);
 		border-radius: var(--radius-sm);
 		font-family: var(--font-mono);
@@ -44,7 +45,7 @@
 		padding: 0.08em 0.28em;
 	}
 
-	.la-rich-text :global(pre) {
+	.rich-text :global(pre) {
 		background: color-mix(in srgb, var(--color-text), transparent 94%);
 		border: 1px solid color-mix(in srgb, var(--color-border), transparent 20%);
 		border-radius: var(--radius-md);
@@ -52,7 +53,7 @@
 		padding: var(--space-3);
 	}
 
-	.la-rich-text :global(pre code) {
+	.rich-text :global(pre code) {
 		background: transparent;
 		border-radius: 0;
 		display: block;
@@ -61,37 +62,37 @@
 		padding: 0;
 	}
 
-	.la-rich-text :global(table) {
+	.rich-text :global(table) {
 		border-collapse: collapse;
 		display: block;
 		max-inline-size: 100%;
 		overflow-x: auto;
 	}
 
-	.la-rich-text :global(:where(th, td)) {
+	.rich-text :global(:where(th, td)) {
 		border: 1px solid color-mix(in srgb, var(--color-border), transparent 18%);
 		padding: var(--space-2) var(--space-3);
 		text-align: start;
 	}
 
-	.la-rich-text :global(th) {
+	.rich-text :global(th) {
 		background: color-mix(in srgb, var(--color-border), transparent 70%);
 		font-weight: 700;
 	}
 
-	.la-rich-text :global(.katex) {
+	.rich-text :global(.katex) {
 		font-size: 1.21em;
 	}
 
-	.la-rich-text :global(eq) {
+	.rich-text :global(eq) {
 		display: inline-block;
 	}
 
-	.la-rich-text :global(section) {
+	.rich-text :global(section) {
 		display: block;
 	}
 
-	.la-rich-text :global(eqn) {
+	.rich-text :global(eqn) {
 		display: block;
 		overflow-x: auto;
 		overflow-y: hidden;

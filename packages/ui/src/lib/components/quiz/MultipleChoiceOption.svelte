@@ -39,17 +39,17 @@
 
 <label
 	class={[
-		'la-choice-option',
-		selected && 'la-choice-option--selected',
-		disabled && !locked && 'la-choice-option--disabled',
-		locked && 'la-choice-option--locked',
-		state !== 'neutral' && `la-choice-option--${state}`
+		'option',
+		selected && 'selected',
+		disabled && !locked && 'disabled',
+		locked && 'locked',
+		state !== 'neutral' && state
 	]}
 	for={inputId}
 >
 	<input
 		id={inputId}
-		class="la-choice-option__input"
+		class="input"
 		type="radio"
 		{name}
 		{value}
@@ -58,37 +58,32 @@
 		{onchange}
 		aria-label={accessibleLabel}
 	/>
-	<span class="la-choice-option__control" aria-hidden="true">
+	<span class="control" aria-hidden="true">
 		{#if state === 'correct'}
-			<span class="la-choice-option__graded-icon">
+			<span class="icon">
 				<Check size={12} strokeWidth={4} />
 			</span>
 		{:else if state === 'incorrect'}
-			<span class="la-choice-option__graded-icon">
+			<span class="icon">
 				<X size={12} strokeWidth={4} />
 			</span>
 		{/if}
 	</span>
-	<div
-		class={[
-			'la-choice-option__content',
-			!hasLabel && hasDescription && 'la-choice-option__content--description-only'
-		]}
-	>
+	<div class={['content', !hasLabel && hasDescription && 'description-only']}>
 		{#if hasLabel && label}
-			<div class="la-choice-option__label">
+			<div class="label">
 				<RichText content={label} />
 			</div>
 		{/if}
 
 		{#if hasDescription && description}
-			<div class="la-choice-option__description">
+			<div class="description">
 				<RichText content={description} />
 			</div>
 		{/if}
 
 		{#if fallbackLabel}
-			<div class="la-choice-option__label">
+			<div class="label">
 				<RichText content={fallbackLabel} />
 			</div>
 		{/if}
@@ -96,9 +91,9 @@
 </label>
 
 <style>
-	.la-choice-option {
-		--choice-accent: var(--color-accent);
-		--choice-control-size: 1.125rem;
+	.option {
+		--accent: var(--color-accent);
+		--control-size: 1.125rem;
 		align-items: start;
 		background: linear-gradient(
 			to bottom,
@@ -112,7 +107,7 @@
 		cursor: pointer;
 		display: grid;
 		gap: var(--space-3);
-		grid-template-columns: var(--choice-control-size) minmax(0, 1fr);
+		grid-template-columns: var(--control-size) minmax(0, 1fr);
 		padding: var(--space-4);
 		position: relative;
 		transition:
@@ -122,51 +117,51 @@
 			transform 100ms ease-out;
 	}
 
-	.la-choice-option:hover:not(.la-choice-option--disabled):not(.la-choice-option--locked) {
+	.option:hover:not(.disabled):not(.locked) {
 		background: linear-gradient(
 			to bottom,
-			color-mix(in srgb, var(--choice-accent), var(--color-surface) 94%),
-			color-mix(in srgb, var(--choice-accent), var(--color-surface-raised) 92%)
+			color-mix(in srgb, var(--accent), var(--color-surface) 94%),
+			color-mix(in srgb, var(--accent), var(--color-surface-raised) 92%)
 		);
-		border-color: color-mix(in srgb, var(--choice-accent), var(--color-border) 42%);
+		border-color: color-mix(in srgb, var(--accent), var(--color-border) 42%);
 	}
 
-	.la-choice-option:active:not(.la-choice-option--disabled):not(.la-choice-option--locked) {
+	.option:active:not(.disabled):not(.locked) {
 		transform: scale(0.99);
 	}
 
-	.la-choice-option--correct {
-		--choice-accent: var(--color-correct);
+	.correct {
+		--accent: var(--color-correct);
 	}
 
-	.la-choice-option--incorrect {
-		--choice-accent: var(--color-incorrect);
+	.incorrect {
+		--accent: var(--color-incorrect);
 	}
 
-	.la-choice-option--selected,
-	.la-choice-option--correct,
-	.la-choice-option--incorrect {
+	.selected,
+	.correct,
+	.incorrect {
 		background: linear-gradient(
 			to bottom,
-			color-mix(in srgb, var(--choice-accent), var(--color-surface) 90%),
-			color-mix(in srgb, var(--choice-accent), var(--color-surface-raised) 86%)
+			color-mix(in srgb, var(--accent), var(--color-surface) 90%),
+			color-mix(in srgb, var(--accent), var(--color-surface-raised) 86%)
 		);
-		border-color: var(--choice-accent);
+		border-color: var(--accent);
 		box-shadow:
-			0 0 0 1px color-mix(in srgb, var(--choice-accent), transparent 42%),
-			0 8px 20px color-mix(in srgb, var(--choice-accent), transparent 86%);
+			0 0 0 1px color-mix(in srgb, var(--accent), transparent 42%),
+			0 8px 20px color-mix(in srgb, var(--accent), transparent 86%);
 	}
 
-	.la-choice-option--disabled {
+	.disabled {
 		cursor: not-allowed;
 		opacity: 0.58;
 	}
 
-	.la-choice-option--locked {
+	.locked {
 		cursor: default;
 	}
 
-	.la-choice-option__input {
+	.input {
 		block-size: 1px;
 		inline-size: 1px;
 		opacity: 0;
@@ -174,14 +169,14 @@
 		position: absolute;
 	}
 
-	.la-choice-option__control {
+	.control {
 		background: var(--color-surface);
 		border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text-muted) 18%);
-		block-size: var(--choice-control-size);
-		border-radius: calc(var(--choice-control-size) / 2);
+		block-size: var(--control-size);
+		border-radius: calc(var(--control-size) / 2);
 		box-shadow: 0 1px 1px rgb(0 0 0 / 0.08) inset;
 		display: grid;
-		inline-size: var(--choice-control-size);
+		inline-size: var(--control-size);
 		margin-block-start: 0.125rem;
 		place-items: center;
 		transform: rotate(0deg);
@@ -193,8 +188,8 @@
 			transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
-	.la-choice-option__control::after {
-		background: var(--choice-accent);
+	.control::after {
+		background: var(--accent);
 		border-radius: inherit;
 		content: '';
 		inline-size: 0.5rem;
@@ -206,48 +201,48 @@
 		aspect-ratio: 1;
 	}
 
-	.la-choice-option--selected .la-choice-option__control {
-		border-color: var(--choice-accent);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--choice-accent), transparent 82%);
+	.selected .control {
+		border-color: var(--accent);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent), transparent 82%);
 	}
 
-	.la-choice-option--correct .la-choice-option__control,
-	.la-choice-option--incorrect .la-choice-option__control {
-		border-color: color-mix(in srgb, var(--choice-accent), black 12%);
-		background: var(--choice-accent);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--choice-accent), transparent 82%);
+	.correct .control,
+	.incorrect .control {
+		border-color: color-mix(in srgb, var(--accent), black 12%);
+		background: var(--accent);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent), transparent 82%);
 	}
 
-	.la-choice-option--correct .la-choice-option__control {
+	.correct .control {
 		border-radius: 0.1875rem;
 		transform: rotate(45deg);
 	}
 
-	.la-choice-option--selected .la-choice-option__control::after {
+	.selected .control::after {
 		opacity: 1;
 		transform: scale(1);
 	}
 
-	.la-choice-option--correct .la-choice-option__control::after,
-	.la-choice-option--incorrect .la-choice-option__control::after {
+	.correct .control::after,
+	.incorrect .control::after {
 		content: none;
 	}
 
-	.la-choice-option__graded-icon {
+	.icon {
 		color: var(--color-surface);
 		display: grid;
 		place-items: center;
 		transform-origin: center;
 	}
 
-	.la-choice-option--correct .la-choice-option__graded-icon {
-		animation: la-choice-option-graded-icon-in 500ms cubic-bezier(0.16, 1, 0.3, 1);
-        animation-delay: 180ms;
-        animation-fill-mode: both;
+	.correct .icon {
+		animation: icon-in 500ms cubic-bezier(0.16, 1, 0.3, 1);
+		animation-delay: 180ms;
+		animation-fill-mode: both;
 		transform: rotate(-45deg);
 	}
 
-	@keyframes la-choice-option-graded-icon-in {
+	@keyframes icon-in {
 		from {
 			filter: blur(1px);
 			opacity: 0;
@@ -261,31 +256,31 @@
 		}
 	}
 
-	.la-choice-option__input:focus-visible + .la-choice-option__control {
+	.input:focus-visible + .control {
 		outline: 3px solid color-mix(in srgb, var(--color-focus), transparent 42%);
 		outline-offset: 3px;
 	}
 
-	.la-choice-option__content {
+	.content {
 		display: grid;
 		gap: var(--space-1);
 		min-inline-size: 0;
 	}
 
-	.la-choice-option__label {
+	.label {
 		font-family: var(--font-display);
 		font-size: 1rem;
 		font-weight: 600;
 		line-height: 1.25;
 	}
 
-	.la-choice-option__description {
+	.description {
 		color: var(--color-text-muted);
 		font-size: 0.9375rem;
 		line-height: 1.45;
 	}
 
-	.la-choice-option__content--description-only .la-choice-option__description {
+	.description-only .description {
 		color: var(--color-text);
 		font-family: var(--font-display);
 		font-size: 1rem;

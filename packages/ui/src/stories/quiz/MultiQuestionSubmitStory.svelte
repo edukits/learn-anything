@@ -91,11 +91,15 @@
 	}
 </script>
 
-<div class="multi-quiz-story">
-	<div class="multi-quiz-story__content">
-		<div class="multi-quiz-story__questions">
+<div class="story">
+	<div class="content">
+		<div class="questions">
 			{#each questions as quizQuestion (quizQuestion.id)}
-				<Question eyebrow={quizQuestion.eyebrow} question={quizQuestion.question}>
+				<Question
+					eyebrow={quizQuestion.eyebrow}
+					question={quizQuestion.question}
+					style="inline-size: 100%;"
+				>
 					<MultipleChoice
 						bind:value={answers[quizQuestion.id]}
 						options={quizQuestion.options}
@@ -108,7 +112,7 @@
 			{/each}
 		</div>
 
-		<div class="multi-quiz-story__actions">
+		<div class="actions">
 			<Button
 				variant="primary"
 				label="Submit quiz"
@@ -117,7 +121,7 @@
 			/>
 			<Button variant="ghost" label="Reset" onclick={resetQuiz} />
 
-			<p class="multi-quiz-story__status">
+			<p class="status">
 				{#if submitted}
 					{correctCount} of {questions.length} correct
 				{:else}
@@ -129,7 +133,7 @@
 </div>
 
 <style>
-	.multi-quiz-story {
+	.story {
 		background:
 			linear-gradient(
 				90deg,
@@ -148,24 +152,20 @@
 		place-items: center;
 	}
 
-	.multi-quiz-story__content {
+	.content {
 		display: grid;
 		gap: var(--space-5);
 		inline-size: min(100%, 56rem);
 	}
 
-	.multi-quiz-story__questions {
+	.questions {
 		align-items: start;
 		display: grid;
 		gap: var(--space-5);
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
-	.multi-quiz-story__questions :global(.la-question) {
-		inline-size: 100%;
-	}
-
-	.multi-quiz-story__actions {
+	.actions {
 		align-items: center;
 		background: var(--color-surface);
 		border: 1px solid color-mix(in srgb, var(--color-border), transparent 12%);
@@ -178,7 +178,7 @@
 		padding: var(--space-4);
 	}
 
-	.multi-quiz-story__status {
+	.status {
 		color: var(--color-text-muted);
 		font-size: 0.9375rem;
 		font-weight: 700;
@@ -186,11 +186,11 @@
 	}
 
 	@media (max-width: 760px) {
-		.multi-quiz-story {
+		.story {
 			padding: var(--space-4);
 		}
 
-		.multi-quiz-story__questions {
+		.questions {
 			grid-template-columns: 1fr;
 		}
 	}
