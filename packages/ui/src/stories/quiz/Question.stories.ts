@@ -669,7 +669,7 @@ export const InstantSubmitCorrectSelected: Story = {
 	args: {
 		eyebrow: 'Instant submit',
 		question: 'Which strategy best strengthens long-term recall?',
-        description: null,
+		description: undefined,
 		options: stateDemoOptions,
 		value: null,
 		name: 'instant-submit-correct',
@@ -683,7 +683,7 @@ export const InstantSubmitIncorrectSelected: Story = {
 	args: {
 		eyebrow: 'Instant submit',
 		question: 'Which strategy best strengthens long-term recall?',
-        description: null,
+		description: undefined,
 		options: stateDemoOptions,
 		value: 'highlighting',
 		name: 'instant-submit-incorrect',
@@ -697,7 +697,7 @@ export const SubmitBasedBeforeSubmission: Story = {
 	args: {
 		eyebrow: 'Submit based',
 		question: 'Which strategy best strengthens long-term recall?',
-        description: null,
+		description: undefined,
 		options: stateDemoOptions,
 		value: 'highlighting',
 		name: 'submit-based-before',
@@ -711,8 +711,8 @@ export const SubmitBasedCorrectSubmission: Story = {
 	args: {
 		eyebrow: 'Submit based',
 		question: 'Which strategy best strengthens long-term recall?',
-        description: null,
-        options: stateDemoOptions,
+		description: undefined,
+		options: stateDemoOptions,
 		value: 'retrieval',
 		name: 'submit-based-correct',
 		correctValue: 'retrieval',
@@ -725,8 +725,8 @@ export const SubmitBasedIncorrectSubmission: Story = {
 	args: {
 		eyebrow: 'Submit based',
 		question: 'Which strategy best strengthens long-term recall?',
-        description: null,
-        options: stateDemoOptions,
+		description: undefined,
+		options: stateDemoOptions,
 		value: 'highlighting',
 		name: 'submit-based-incorrect',
 		correctValue: 'retrieval',

@@ -13,6 +13,53 @@
 		children?: Snippet;
 	};
 
+	type PromptScale = 'short' | 'medium' | 'long' | 'extra-long';
+
+	const MEDIUM_PROMPT_LENGTH = 90;
+	const LONG_PROMPT_LENGTH = 180;
+	const EXTRA_LONG_PROMPT_LENGTH = 280;
+	const MULTIPARAGRAPH_LONG_PROMPT_LENGTH = 120;
+	const MULTIPARAGRAPH_EXTRA_LONG_PROMPT_LENGTH = 220;
+
+	function getReadableText(content: string) {
+		return content
+			.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+			.replace(/\\text\{([^}]*)\}/g, '$1')
+			.replace(/\\[a-zA-Z]+\*?(?:\[[^\]]*\])?(?:\{([^{}]*)\})?/g, '$1')
+			.replace(/[$`*_~>#|]/g, ' ')
+			.replace(/<[^>]+>/g, ' ')
+			.replace(/\s+/g, ' ')
+			.trim();
+	}
+
+	function getPromptScale(content: string): PromptScale {
+		const readableTextLength = getReadableText(content).length;
+		const paragraphCount = content
+			.trim()
+			.split(/\n\s*\n/)
+			.filter(Boolean).length;
+
+		if (
+			readableTextLength > EXTRA_LONG_PROMPT_LENGTH ||
+			(paragraphCount > 1 && readableTextLength > MULTIPARAGRAPH_EXTRA_LONG_PROMPT_LENGTH)
+		) {
+			return 'extra-long';
+		}
+
+		if (
+			readableTextLength > LONG_PROMPT_LENGTH ||
+			(paragraphCount > 1 && readableTextLength > MULTIPARAGRAPH_LONG_PROMPT_LENGTH)
+		) {
+			return 'long';
+		}
+
+		if (readableTextLength > MEDIUM_PROMPT_LENGTH) {
+			return 'medium';
+		}
+
+		return 'short';
+	}
+
 	let {
 		eyebrow,
 		question,
@@ -21,6 +68,8 @@
 		class: className = '',
 		...rest
 	}: QuestionProps = $props();
+
+	let promptScale = $derived(getPromptScale(question));
 </script>
 
 <section {...rest} class={['question', className]}>
@@ -29,7 +78,7 @@
 			<p class="eyebrow">{eyebrow}</p>
 		{/if}
 
-		<div class="prompt">
+		<div class={['prompt', `prompt-${promptScale}`]}>
 			<RichText content={question} />
 		</div>
 
@@ -79,9 +128,27 @@
 
 	.prompt {
 		color: var(--color-text);
+		max-inline-size: 40rem;
+	}
+
+	.prompt-short {
 		font-size: clamp(1.375rem, 2vw, 1.75rem);
 		line-height: 1.32;
-		max-inline-size: 40rem;
+	}
+
+	.prompt-medium {
+		font-size: clamp(1.25rem, 1.6vw, 1.5rem);
+		line-height: 1.38;
+	}
+
+	.prompt-long {
+		font-size: clamp(1.125rem, 1.35vw, 1.25rem);
+		line-height: 1.48;
+	}
+
+	.prompt-extra-long {
+		font-size: 1rem;
+		line-height: 1.55;
 	}
 
 	.description {
