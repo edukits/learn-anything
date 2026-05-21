@@ -24,11 +24,18 @@
 	--color-text: #11131f;
 	--color-text-muted: #646c82;
 	--color-border: #cccfde;
-	--color-accent: #34b7fa;
-	--color-accent-hover: #11131f;
+	/* Accent — h/s/l are the source; derived tokens below */
+	--color-accent-h: 200;
+	--color-accent-s: 95%;
+	--color-accent-l: 59%;
+
+	--color-accent: hsl(var(--color-accent-h) var(--color-accent-s) var(--color-accent-l));
+	--color-accent-hover: hsl(
+		var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 7%)
+	);
 	--color-accent-contrast: #ffffff;
 	--color-accent-hover-contrast: #ffffff;
-	--color-focus: #34b7fa;
+	--color-focus: var(--color-accent);
 	--color-pro: #a82bff;
 	--color-star: #ffae00;
 

@@ -43,6 +43,30 @@
 </button>
 
 <style>
+	@property --btn-accent-l-top {
+		syntax: '<percentage>';
+		inherits: false;
+		initial-value: 59%;
+	}
+
+	@property --btn-accent-l-bottom {
+		syntax: '<percentage>';
+		inherits: false;
+		initial-value: 44%;
+	}
+
+	@property --btn-accent-l-border {
+		syntax: '<percentage>';
+		inherits: false;
+		initial-value: 34%;
+	}
+
+	@property --btn-accent-l-inset {
+		syntax: '<percentage>';
+		inherits: false;
+		initial-value: 69%;
+	}
+
 	.la-button {
 		align-items: center;
 		appearance: none;
@@ -57,10 +81,11 @@
 		min-inline-size: max-content;
 		text-decoration: none;
 		transition:
-			background 150ms ease,
-			border-color 150ms ease,
-			box-shadow 150ms ease,
-			color 150ms ease;
+			background 150ms ease-out,
+			border-color 150ms ease-out,
+			box-shadow 150ms ease-out,
+			color 150ms ease-out,
+            transform 150ms ease-out;
 	}
 
 	.la-button:focus-visible {
@@ -71,6 +96,10 @@
 	.la-button:disabled {
 		cursor: not-allowed;
 		opacity: 0.58;
+	}
+
+	.la-button:active:not(:disabled) {
+		transform: scale(0.97);
 	}
 
 	.la-button--sm {
@@ -92,14 +121,32 @@
 	}
 
 	.la-button--primary {
-		background: var(--color-accent);
-		box-shadow: var(--shadow-sm);
+		--btn-accent-l-top: var(--color-accent-l);
+		--btn-accent-l-bottom: calc(var(--color-accent-l) - 15%);
+		--btn-accent-l-border: calc(var(--color-accent-l) - 25%);
+		--btn-accent-l-inset: calc(var(--color-accent-l) + 10%);
+		background: linear-gradient(
+			to bottom,
+			hsl(var(--color-accent-h) var(--color-accent-s) var(--btn-accent-l-top)),
+			hsl(var(--color-accent-h) var(--color-accent-s) var(--btn-accent-l-bottom))
+		);
+		border-color: hsl(var(--color-accent-h) var(--color-accent-s) var(--btn-accent-l-border));
+		box-shadow: 0 2px 1px inset
+			hsl(var(--color-accent-h) var(--color-accent-s) var(--btn-accent-l-inset));
 		color: var(--color-accent-contrast);
+		transition:
+			--btn-accent-l-top 100ms ease-out,
+			--btn-accent-l-bottom 100ms ease-out,
+			--btn-accent-l-border 100ms ease-out,
+			--btn-accent-l-inset 100ms ease-out,
+			transform 150ms ease-out;
 	}
 
 	.la-button--primary:hover:not(:disabled) {
-		background: var(--color-accent-hover);
-		color: var(--color-accent-hover-contrast);
+		--btn-accent-l-top: calc(var(--color-accent-l) - 10%);
+		--btn-accent-l-bottom: calc(var(--color-accent-l) - 5%);
+		--btn-accent-l-border: calc(var(--color-accent-l) - 15%);
+		--btn-accent-l-inset: calc(var(--color-accent-l) + 10%);
 	}
 
 	.la-button--secondary {
