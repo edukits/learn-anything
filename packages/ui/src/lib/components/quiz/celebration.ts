@@ -1,3 +1,5 @@
+export const MULTIPLE_SELECT_CELEBRATION_STAGGER_MS = 100;
+
 function createHiDpiConfettiCanvas() {
 	const pixelRatio = Math.max(1, window.devicePixelRatio || 1);
 	const width = document.documentElement.clientWidth;
@@ -108,7 +110,7 @@ export async function celebrateCorrectMultipleSelect(sourceElements: HTMLElement
 		disableForReducedMotion: true
 	});
 	const animations = sourceElements.map(async (sourceElement, index) => {
-		await delay(index * 100);
+		await delay(index * MULTIPLE_SELECT_CELEBRATION_STAGGER_MS);
 
 		return fireConfetti({
 			colors: getCorrectConfettiColors(),

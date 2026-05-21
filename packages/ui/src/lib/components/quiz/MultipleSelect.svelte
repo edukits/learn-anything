@@ -1,6 +1,10 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import Button from '../Button.svelte';
-	import { celebrateCorrectMultipleSelect } from './celebration';
+	import {
+		MULTIPLE_SELECT_CELEBRATION_STAGGER_MS,
+		celebrateCorrectMultipleSelect
+	} from './celebration';
 	import MultipleChoiceOption from './MultipleChoiceOption.svelte';
 	import type {
 		MultipleChoiceOptionData,
@@ -55,6 +59,23 @@
 	let selectedValues = $derived(new Set(value));
 	let correctValueSet = $derived(new Set(resolvedCorrectValues ?? []));
 	let isLocked = $derived(disabled || submitted);
+	let stagedCorrectValues = $state<string[]>([]);
+	let isStaggeringCorrectReveal = $state(false);
+	let correctRevealTimers: number[] = [];
+
+	function clearCorrectRevealTimers() {
+		for (const timer of correctRevealTimers) {
+			window.clearTimeout(timer);
+		}
+
+		correctRevealTimers = [];
+	}
+
+	onDestroy(clearCorrectRevealTimers);
+
+	function getCorrectOptionsInDisplayOrder() {
+		return options.filter((option) => correctValueSet.has(option.value));
+	}
 
 	function getOptionControlElement(optionValue: string) {
 		const input = document.getElementById(`${name}-${optionValue}`);
@@ -68,10 +89,28 @@
 	}
 
 	function getCorrectOptionControlElements() {
-		return options
-			.filter((option) => correctValueSet.has(option.value))
+		return getCorrectOptionsInDisplayOrder()
 			.map((option) => getOptionControlElement(option.value))
 			.filter((element): element is HTMLElement => element !== undefined);
+	}
+
+	function revealCorrectOptionsInStep() {
+		clearCorrectRevealTimers();
+		stagedCorrectValues = [];
+		isStaggeringCorrectReveal = true;
+
+		for (const [index, option] of getCorrectOptionsInDisplayOrder().entries()) {
+			const timer = window.setTimeout(() => {
+				stagedCorrectValues = [...stagedCorrectValues, option.value];
+
+				if (stagedCorrectValues.length === correctValueSet.size) {
+					isStaggeringCorrectReveal = false;
+					correctRevealTimers = [];
+				}
+			}, index * MULTIPLE_SELECT_CELEBRATION_STAGGER_MS) as number;
+
+			correctRevealTimers = [...correctRevealTimers, timer];
+		}
 	}
 
 	function getOptionState(option: MultipleChoiceOptionData): MultipleChoiceOptionState {
@@ -80,6 +119,10 @@
 		}
 
 		if (correctValueSet.has(option.value)) {
+			if (isStaggeringCorrectReveal && !stagedCorrectValues.includes(option.value)) {
+				return option.state ?? 'neutral';
+			}
+
 			return 'correct';
 		}
 
@@ -116,7 +159,12 @@
 		});
 
 		if (celebrations && isCorrect) {
+			revealCorrectOptionsInStep();
 			void celebrateCorrectMultipleSelect(getCorrectOptionControlElements());
+		} else {
+			clearCorrectRevealTimers();
+			isStaggeringCorrectReveal = false;
+			stagedCorrectValues = [];
 		}
 	}
 
