@@ -138,6 +138,78 @@ export const ShortAnswer: Story = {
 	}
 };
 
+export const NumericAnswer: Story = {
+	args: {
+		eyebrow: 'Physics',
+		question: 'A cyclist travels 1.2 kilometers in 4 minutes. What is their average speed?',
+		description: 'Answer in meters per second or an equivalent listed unit.',
+		name: 'average-speed-numeric',
+		showSubmitButton: true,
+		submitted: false,
+		response: {
+			type: 'numeric',
+			value: '',
+			unit: 'm/s',
+			placeholder: '0.0',
+			unitConfig: {
+				mode: 'select',
+				side: 'right',
+				value: 'm/s',
+				options: [
+					{
+						value: 'm/s',
+						label: 'm/s',
+						aliases: ['meters per second'],
+						multiplier: 1
+					},
+					{
+						value: 'km/h',
+						label: 'km/h',
+						aliases: ['kilometers per hour'],
+						multiplier: 1 / 3.6
+					}
+				]
+			},
+			acceptedValues: [
+				{
+					value: 5,
+					unit: 'm/s',
+					tolerance: { type: 'relative', value: 0.01 },
+					precision: { type: 'significant-figures', value: 2, mode: 'at-least' },
+					feedback: 'Within 1% and with enough precision.'
+				}
+			]
+		}
+	}
+};
+
+export const NumericCurrency: Story = {
+	args: {
+		eyebrow: 'Finance',
+		question: 'A notebook costs $3.75 and a pen costs $1.20. What is the total?',
+		name: 'currency-numeric',
+		showSubmitButton: true,
+		submitted: false,
+		response: {
+			type: 'numeric',
+			value: '',
+			placeholder: '0.00',
+			unitConfig: {
+				mode: 'fixed',
+				side: 'left',
+				value: '$'
+			},
+			acceptedValues: [
+				{
+					value: 4.95,
+					tolerance: { type: 'absolute', value: 0.005 },
+					precision: { type: 'decimal-places', value: 2 }
+				}
+			]
+		}
+	}
+};
+
 export const StateGallery: StoryObj<typeof QuestionStateGalleryStory> = {
 	render: () => ({
 		Component: QuestionStateGalleryStory

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import MultipleChoice from '../../lib/components/quiz/MultipleChoice.svelte';
 	import MultipleSelect from '../../lib/components/quiz/MultipleSelect.svelte';
+	import NumericAnswer from '../../lib/components/quiz/NumericAnswer.svelte';
 	import ShortAnswer from '../../lib/components/quiz/ShortAnswer.svelte';
 	import type { MultipleChoiceOptionData } from '../../lib/components/quiz/types';
 	import type {
@@ -59,12 +60,16 @@
 	}
 
 	let multipleChoiceCorrectValue = $derived(
-		response.type === 'multiple-select' || response.type === 'short-answer'
+		response.type === 'multiple-select' ||
+			response.type === 'numeric' ||
+			response.type === 'short-answer'
 			? null
 			: getMultipleChoiceCorrectValue(response)
 	);
 	let multipleChoiceOptions = $derived(
-		response.type === 'multiple-select' || response.type === 'short-answer'
+		response.type === 'multiple-select' ||
+			response.type === 'numeric' ||
+			response.type === 'short-answer'
 			? []
 			: multipleChoiceCorrectValue === null
 				? response.options
@@ -82,7 +87,22 @@
 	);
 </script>
 
-{#if response.type === 'short-answer'}
+{#if response.type === 'numeric'}
+	<NumericAnswer
+		value={response.value ?? ''}
+		unit={response.unit}
+		bind:submitted
+		{name}
+		label={legend}
+		placeholder={response.placeholder}
+		{disabled}
+		unitConfig={response.unitConfig}
+		acceptedValues={response.acceptedValues ?? null}
+		grader={response.grader}
+		{showSubmitButton}
+		{submitLabel}
+	/>
+{:else if response.type === 'short-answer'}
 	<ShortAnswer
 		value={response.value ?? ''}
 		bind:submitted

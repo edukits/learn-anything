@@ -1,6 +1,10 @@
 import type {
 	MultipleChoiceInteractionMode,
 	MultipleChoiceOptionData,
+	NumericAnswerAcceptedValue,
+	NumericAnswerEvaluation,
+	NumericAnswerValue,
+	NumericUnitConfig,
 	ShortAnswerEvaluation,
 	ShortAnswerMatchMode
 } from '../../lib/components/quiz/types';
@@ -30,7 +34,18 @@ export type ShortAnswerQuestionResponse = {
 	grader?: (value: string) => ShortAnswerEvaluation;
 };
 
+export type NumericAnswerQuestionResponse = {
+	type: 'numeric';
+	value?: string;
+	unit?: string | null;
+	unitConfig?: NumericUnitConfig;
+	placeholder?: string;
+	acceptedValues?: NumericAnswerAcceptedValue[] | null;
+	grader?: (answer: NumericAnswerValue) => NumericAnswerEvaluation;
+};
+
 export type QuestionResponse =
 	| MultipleChoiceQuestionResponse
 	| MultipleSelectQuestionResponse
+	| NumericAnswerQuestionResponse
 	| ShortAnswerQuestionResponse;
