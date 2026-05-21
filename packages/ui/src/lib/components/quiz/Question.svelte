@@ -98,14 +98,9 @@
 
 <style>
 	.question {
-		background: var(--color-surface);
-		border: 1px solid color-mix(in srgb, var(--color-border), transparent 12%);
-		border-radius: var(--radius-lg);
-		box-shadow: var(--shadow-md);
 		display: grid;
 		gap: var(--space-6);
-		inline-size: min(100%, 25rem);
-		padding: var(--space-6);
+		inline-size: 100%;
 	}
 
 	.header {
@@ -156,12 +151,5 @@
 		font-size: 1rem;
 		line-height: 1.55;
 		max-inline-size: 36rem;
-	}
-
-	@media (max-width: 560px) {
-		.question {
-			border-radius: var(--radius-md);
-			padding: var(--space-5);
-		}
 	}
 </style>

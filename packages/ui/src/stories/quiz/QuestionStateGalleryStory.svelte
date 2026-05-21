@@ -75,18 +75,20 @@
 <div class="story">
 	<div class="grid">
 		{#each examples as example (example.id)}
-			<Question eyebrow={example.eyebrow} {question} style="inline-size: 100%;">
-				<MultipleChoice
-					{options}
-					value={example.value}
-					name={`question-state-${example.id}`}
-					legend={question}
-					{correctValue}
-					submitted={example.submitted}
-					showSubmitButton={example.showSubmitButton}
-					interactionMode={example.interactionMode ?? 'submit'}
-				/>
-			</Question>
+			<article class="state-card">
+				<Question eyebrow={example.eyebrow} {question}>
+					<MultipleChoice
+						{options}
+						value={example.value}
+						name={`question-state-${example.id}`}
+						legend={question}
+						{correctValue}
+						submitted={example.submitted}
+						showSubmitButton={example.showSubmitButton}
+						interactionMode={example.interactionMode ?? 'submit'}
+					/>
+				</Question>
+			</article>
 		{/each}
 	</div>
 </div>
@@ -119,9 +121,22 @@
 		inline-size: min(100%, 72rem);
 	}
 
+	.state-card {
+		background: var(--color-surface);
+		border: 1px solid color-mix(in srgb, var(--color-border), transparent 12%);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-sm);
+		padding: var(--space-6);
+	}
+
 	@media (max-width: 560px) {
 		.story {
 			padding: var(--space-4);
+		}
+
+		.state-card {
+			border-radius: var(--radius-md);
+			padding: var(--space-5);
 		}
 	}
 </style>

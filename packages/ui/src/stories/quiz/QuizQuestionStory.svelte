@@ -52,17 +52,19 @@
 </script>
 
 <div class="story">
-	<Question {eyebrow} {question} {description}>
-		<QuestionResponseStory
-			response={responseConfig}
-			bind:submitted
-			{name}
-			{disabled}
-			{showSubmitButton}
-			{submitLabel}
-			legend={question}
-		/>
-	</Question>
+	<div class="question-panel">
+		<Question {eyebrow} {question} {description}>
+			<QuestionResponseStory
+				response={responseConfig}
+				bind:submitted
+				{name}
+				{disabled}
+				{showSubmitButton}
+				{submitLabel}
+				legend={question}
+			/>
+		</Question>
+	</div>
 </div>
 
 <style>
@@ -85,9 +87,23 @@
 		place-items: center;
 	}
 
+	.question-panel {
+		background: var(--color-surface);
+		border: 1px solid color-mix(in srgb, var(--color-border), transparent 12%);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-md);
+		inline-size: min(100%, 28rem);
+		padding: var(--space-6);
+	}
+
 	@media (max-width: 560px) {
 		.story {
 			padding: var(--space-4);
+		}
+
+		.question-panel {
+			border-radius: var(--radius-md);
+			padding: var(--space-5);
 		}
 	}
 </style>

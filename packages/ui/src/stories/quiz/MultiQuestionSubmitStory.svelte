@@ -98,7 +98,7 @@
 				<Question
 					eyebrow={quizQuestion.eyebrow}
 					question={quizQuestion.question}
-					style="inline-size: 100%;"
+					class="multi-question"
 				>
 					<MultipleChoice
 						bind:value={answers[quizQuestion.id]}
@@ -160,9 +160,14 @@
 
 	.questions {
 		align-items: start;
+		background: var(--color-surface);
+		border: 1px solid color-mix(in srgb, var(--color-border), transparent 12%);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-md);
 		display: grid;
-		gap: var(--space-5);
+		gap: var(--space-6);
 		grid-template-columns: repeat(2, minmax(0, 1fr));
+		padding: var(--space-6);
 	}
 
 	.actions {
@@ -192,6 +197,11 @@
 
 		.questions {
 			grid-template-columns: 1fr;
+		}
+
+		.questions :global(.multi-question + .multi-question) {
+			border-block-start: 1px solid color-mix(in srgb, var(--color-border), transparent 16%);
+			padding-block-start: var(--space-6);
 		}
 	}
 </style>

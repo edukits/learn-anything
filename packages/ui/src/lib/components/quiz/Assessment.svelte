@@ -317,13 +317,13 @@
 			{/if}
 		</div>
 
-		<div class={['question-list', currentPage.length > 1 && 'multi-question-page']}>
+		<div class="question-list">
 			{#each currentPage as question, index (question.id)}
 				<Question
 					eyebrow={question.eyebrow ?? `Question ${currentPageIndex + index + 1}`}
 					question={question.question}
 					description={question.description}
-					style="inline-size: 100%;"
+					class="assessment-question"
 				>
 					{#if question.response.type === 'numeric'}
 						<NumericAnswer
@@ -545,11 +545,21 @@
 
 	.question-list {
 		display: grid;
-		gap: var(--space-5);
+		gap: 0;
 	}
 
-	.multi-question-page {
-		gap: var(--space-4);
+	.assessment[data-mode='quiz'] .question-list {
+		background: var(--color-surface);
+		border: 1px solid color-mix(in srgb, var(--color-border), transparent 12%);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-md);
+		padding: var(--space-6);
+	}
+
+	.question-list :global(.assessment-question + .assessment-question) {
+		border-block-start: 1px solid color-mix(in srgb, var(--color-border), transparent 16%);
+		margin-block-start: var(--space-6);
+		padding-block-start: var(--space-6);
 	}
 
 	.assessment-actions {
@@ -578,6 +588,11 @@
 		.assessment-actions {
 			align-items: stretch;
 			flex-direction: column;
+		}
+
+		.assessment[data-mode='quiz'] .question-list {
+			border-radius: var(--radius-md);
+			padding: var(--space-5);
 		}
 	}
 </style>
