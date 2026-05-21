@@ -100,7 +100,6 @@
 		display: grid;
 		gap: var(--space-3);
 		grid-template-rows: minmax(0, 1fr) auto;
-		isolation: isolate;
 		min-block-size: 12rem;
 		padding: var(--space-3);
 		position: relative;
@@ -124,17 +123,7 @@
 		transform: scale(0.99);
 	}
 
-	.correct {
-		--accent: var(--color-correct);
-	}
-
-	.incorrect {
-		--accent: var(--color-incorrect);
-	}
-
-	.selected,
-	.correct,
-	.incorrect {
+	.selected {
 		background: linear-gradient(
 			to bottom,
 			color-mix(in srgb, var(--accent), var(--color-surface) 91%),
@@ -144,6 +133,24 @@
 		box-shadow:
 			0 0 0 1px color-mix(in srgb, var(--accent), transparent 42%),
 			0 8px 20px color-mix(in srgb, var(--accent), transparent 86%);
+	}
+
+	.correct {
+		background: linear-gradient(
+			to bottom,
+			color-mix(in srgb, var(--color-correct), var(--color-surface) 94%),
+			color-mix(in srgb, var(--color-correct), var(--color-surface-raised) 92%)
+		);
+		border-color: color-mix(in srgb, var(--color-correct), var(--color-border) 42%);
+	}
+
+	.incorrect {
+		background: linear-gradient(
+			to bottom,
+			color-mix(in srgb, var(--color-incorrect), var(--color-surface) 94%),
+			color-mix(in srgb, var(--color-incorrect), var(--color-surface-raised) 92%)
+		);
+		border-color: color-mix(in srgb, var(--color-incorrect), var(--color-border) 42%);
 	}
 
 	.disabled {
@@ -177,16 +184,6 @@
 		inline-size: 100%;
 		object-fit: contain;
 		pointer-events: none;
-		transition:
-			filter 150ms ease-out,
-			mix-blend-mode 150ms ease-out;
-	}
-
-	.selected img,
-	.correct img,
-	.incorrect img {
-		filter: saturate(1.04) contrast(1.02);
-		mix-blend-mode: multiply;
 	}
 
 	.status {
@@ -209,16 +206,21 @@
 			transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
-	.selected .status,
-	.correct .status,
-	.incorrect .status {
+	.selected .status {
 		border-color: color-mix(in srgb, var(--accent), black 12%);
 		box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent), transparent 82%);
 	}
 
-	.correct .status,
+	.correct .status {
+		background: var(--color-correct);
+		border-color: color-mix(in srgb, var(--color-correct), black 12%);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-correct), transparent 82%);
+	}
+
 	.incorrect .status {
-		background: var(--accent);
+		background: var(--color-incorrect);
+		border-color: color-mix(in srgb, var(--color-incorrect), black 12%);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-incorrect), transparent 82%);
 	}
 
 	.selected-dot {
