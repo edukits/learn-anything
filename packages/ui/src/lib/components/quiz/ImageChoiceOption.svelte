@@ -123,34 +123,26 @@
 		transform: scale(0.99);
 	}
 
-	.selected {
+	.correct {
+		--accent: var(--color-correct);
+	}
+
+	.incorrect {
+		--accent: var(--color-incorrect);
+	}
+
+	.selected,
+	.correct,
+	.incorrect {
 		background: linear-gradient(
 			to bottom,
-			color-mix(in srgb, var(--accent), var(--color-surface) 91%),
+			color-mix(in srgb, var(--accent), var(--color-surface) 90%),
 			color-mix(in srgb, var(--accent), var(--color-surface-raised) 86%)
 		);
 		border-color: var(--accent);
 		box-shadow:
 			0 0 0 1px color-mix(in srgb, var(--accent), transparent 42%),
 			0 8px 20px color-mix(in srgb, var(--accent), transparent 86%);
-	}
-
-	.correct {
-		background: linear-gradient(
-			to bottom,
-			color-mix(in srgb, var(--color-correct), var(--color-surface) 94%),
-			color-mix(in srgb, var(--color-correct), var(--color-surface-raised) 92%)
-		);
-		border-color: color-mix(in srgb, var(--color-correct), var(--color-border) 42%);
-	}
-
-	.incorrect {
-		background: linear-gradient(
-			to bottom,
-			color-mix(in srgb, var(--color-incorrect), var(--color-surface) 94%),
-			color-mix(in srgb, var(--color-incorrect), var(--color-surface-raised) 92%)
-		);
-		border-color: color-mix(in srgb, var(--color-incorrect), var(--color-border) 42%);
 	}
 
 	.disabled {
@@ -206,21 +198,16 @@
 			transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
-	.selected .status {
+	.selected .status,
+	.correct .status,
+	.incorrect .status {
 		border-color: color-mix(in srgb, var(--accent), black 12%);
 		box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent), transparent 82%);
 	}
 
-	.correct .status {
-		background: var(--color-correct);
-		border-color: color-mix(in srgb, var(--color-correct), black 12%);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-correct), transparent 82%);
-	}
-
+	.correct .status,
 	.incorrect .status {
-		background: var(--color-incorrect);
-		border-color: color-mix(in srgb, var(--color-incorrect), black 12%);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-incorrect), transparent 82%);
+		background: var(--accent);
 	}
 
 	.selected-dot {

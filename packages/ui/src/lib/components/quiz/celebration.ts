@@ -23,17 +23,21 @@ function toHexByte(channel: number) {
 	return Math.round(channel).toString(16).padStart(2, '0');
 }
 
-function normalizeHexColor(colorValue: string, fallback: string) {
-	const hex = colorValue.trim().replace(/^#/, '');
-	const normalized =
-		hex.length === 3
-			? hex
-					.split('')
-					.map((channel) => channel + channel)
-					.join('')
-			: hex;
+function getCssVariableColorHex(variableName: string, fallback: string) {
+	const probe = document.createElement('span');
+	probe.hidden = true;
+	probe.style.color = `var(${variableName})`;
+	document.documentElement.appendChild(probe);
 
-	return /^[0-9a-f]{6}$/i.test(normalized) ? `#${normalized.toLowerCase()}` : fallback;
+	const { r, g, b } = getComputedStyle(probe);
+	probe.remove();
+
+	const channels = [r, g, b].map((value) => Number.parseFloat(value));
+	if (channels.some((value) => Number.isNaN(value))) {
+		return fallback;
+	}
+
+	return `#${channels.map((value) => Math.round(value).toString(16).padStart(2, '0')).join('')}`;
 }
 
 function mixHexColor(hexColor: string, target: number, amount: number) {
@@ -47,8 +51,7 @@ function mixHexColor(hexColor: string, target: number, amount: number) {
 }
 
 function getCorrectConfettiColors() {
-	const styles = getComputedStyle(document.documentElement);
-	const correctColor = normalizeHexColor(styles.getPropertyValue('--color-correct'), '#22a06b');
+	const correctColor = getCssVariableColorHex('--color-correct', '#22a06b');
 
 	return [correctColor, mixHexColor(correctColor, 255, 0.34), mixHexColor(correctColor, 0, 0.2)];
 }

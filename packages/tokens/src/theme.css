@@ -16,36 +16,68 @@
 
 :root {
 	color-scheme: light;
+
+	/* Surfaces */
 	--color-canvas: #ffffff;
 	--color-surface: #ffffff;
 	--color-surface-raised: #f7f9fc;
 	--color-surface-accent: #e3f2ff;
 	--color-surface-pro: #f8f6fc;
+
+	/* Text */
 	--color-text: #11131f;
 	--color-text-muted: #646c82;
+
+	/* Border */
 	--color-border: #cccfde;
-	/* Accent — h/s/l are the source; derived tokens below */
+
+	/* Accent — source (h/s/l) */
 	--color-accent-h: 200;
 	--color-accent-s: 95%;
 	--color-accent-l: 59%;
 
+	/* Accent — derived */
 	--color-accent: hsl(var(--color-accent-h) var(--color-accent-s) var(--color-accent-l));
 	--color-accent-hover: hsl(
 		var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 7%)
 	);
 	--color-accent-contrast: #ffffff;
 	--color-accent-hover-contrast: #ffffff;
+
+	/* Correct — source (h/s/l) */
+	--color-correct-h: 155;
+	--color-correct-s: 65%;
+	--color-correct-l: 38%;
+
+	/* Correct — derived */
+	--color-correct: hsl(var(--color-correct-h) var(--color-correct-s) var(--color-correct-l));
+	--color-correct-hover: hsl(
+		var(--color-correct-h) var(--color-correct-s) calc(var(--color-correct-l) - 7%)
+	);
+
+	/* Incorrect — source (h/s/l) */
+	--color-incorrect-h: 358;
+	--color-incorrect-s: 69%;
+	--color-incorrect-l: 55%;
+
+	/* Incorrect — derived */
+	--color-incorrect: hsl(var(--color-incorrect-h) var(--color-incorrect-s) var(--color-incorrect-l));
+	--color-incorrect-hover: hsl(
+		var(--color-incorrect-h) var(--color-incorrect-s) calc(var(--color-incorrect-l) - 7%)
+	);
+
+	/* Semantic */
 	--color-focus: var(--color-accent);
-	--color-correct: #22a06b;
-	--color-incorrect: #dc3d43;
 	--color-pro: #a82bff;
 	--color-star: #ffae00;
 
+	/* Typography */
 	--font-display: Konnect, Inter, ui-sans-serif, system-ui, sans-serif;
 	--font-sans:
 		Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 	--font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 
+	/* Spacing */
 	--space-1: 0.25rem;
 	--space-2: 0.5rem;
 	--space-3: 0.75rem;
@@ -56,11 +88,13 @@
 	--space-10: 2.5rem;
 	--space-12: 3rem;
 
+	/* Radius */
 	--radius-sm: 0.25rem;
 	--radius-md: 0.375rem;
 	--radius-lg: 0.75rem;
 	--radius-xl: 1.25rem;
 
+	/* Shadow */
 	--shadow-sm: inset 0 0 0 1px rgb(0 0 0 / 0.2), 0 1px 3px rgb(0 0 0 / 0.1);
 	--shadow-md:
 		0 1px 0 rgb(0 0 0 / 0.04), 0 2px 7px rgb(0 0 0 / 0.05), 0 12px 22px rgb(0 0 0 / 0.06);
