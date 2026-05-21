@@ -123,3 +123,61 @@ export type SequencingSubmitResult = {
 	value: string[];
 	correct: boolean | null;
 };
+
+export type QuizQuestionResponse =
+	| {
+			type?: 'multiple-choice';
+			options: MultipleChoiceOptionData[];
+			value?: string | null;
+			correctValue?: string | null;
+			interactionMode?: MultipleChoiceInteractionMode;
+	  }
+	| {
+			type: 'multiple-select';
+			options: MultipleChoiceOptionData[];
+			value?: string[];
+			correctValues?: string[] | null;
+	  }
+	| {
+			type: 'short-answer';
+			value?: string;
+			placeholder?: string;
+			acceptedAnswers?: string[] | null;
+			matchMode?: ShortAnswerMatchMode;
+			normalizer?: (value: string) => string;
+			grader?: (value: string) => ShortAnswerEvaluation;
+	  }
+	| {
+			type: 'numeric';
+			value?: string;
+			unit?: string | null;
+			unitConfig?: NumericUnitConfig;
+			placeholder?: string;
+			acceptedValues?: NumericAnswerAcceptedValue[] | null;
+			grader?: (answer: NumericAnswerValue) => NumericAnswerEvaluation;
+	  }
+	| {
+			type: 'sequencing';
+			items: SequencingItemData[];
+			value?: string[];
+			correctOrder?: string[] | null;
+	  };
+
+export type QuizQuestionData = {
+	id: string;
+	eyebrow?: string;
+	question: string;
+	description?: string;
+	response: QuizQuestionResponse;
+};
+
+export type QuizAnswerValue = string | string[] | NumericAnswerValue | null;
+
+export type QuizQuestionResult = {
+	questionId: string;
+	value: QuizAnswerValue;
+	correct: boolean | null;
+	answered: boolean;
+};
+
+export type QuizPageLayout = string[][];
