@@ -120,6 +120,24 @@ export const MultipleSelect: Story = {
 	}
 };
 
+export const ShortAnswer: Story = {
+	args: {
+		eyebrow: 'Physics',
+		question: 'What unit is used to measure force?',
+		description: 'Use the singular SI unit name.',
+		name: 'force-unit-short-answer',
+		showSubmitButton: true,
+		submitted: false,
+		response: {
+			type: 'short-answer',
+			value: '',
+			placeholder: 'Type the unit',
+			acceptedAnswers: ['newton', 'N'],
+			matchMode: 'case-insensitive'
+		}
+	}
+};
+
 export const StateGallery: StoryObj<typeof QuestionStateGalleryStory> = {
 	render: () => ({
 		Component: QuestionStateGalleryStory

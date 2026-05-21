@@ -1,6 +1,8 @@
 import type {
 	MultipleChoiceInteractionMode,
-	MultipleChoiceOptionData
+	MultipleChoiceOptionData,
+	ShortAnswerEvaluation,
+	ShortAnswerMatchMode
 } from '../../lib/components/quiz/types';
 
 export type MultipleChoiceQuestionResponse = {
@@ -18,4 +20,17 @@ export type MultipleSelectQuestionResponse = {
 	correctValues?: string[] | null;
 };
 
-export type QuestionResponse = MultipleChoiceQuestionResponse | MultipleSelectQuestionResponse;
+export type ShortAnswerQuestionResponse = {
+	type: 'short-answer';
+	value?: string;
+	placeholder?: string;
+	acceptedAnswers?: string[] | null;
+	matchMode?: ShortAnswerMatchMode;
+	normalizer?: (value: string) => string;
+	grader?: (value: string) => ShortAnswerEvaluation;
+};
+
+export type QuestionResponse =
+	| MultipleChoiceQuestionResponse
+	| MultipleSelectQuestionResponse
+	| ShortAnswerQuestionResponse;

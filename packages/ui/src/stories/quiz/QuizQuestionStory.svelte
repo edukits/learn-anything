@@ -12,7 +12,7 @@
 		question: string;
 		description?: string;
 		response?: QuestionResponse;
-		options: MultipleChoiceOptionData[];
+		options?: MultipleChoiceOptionData[];
 		value?: string | null;
 		name?: string;
 		disabled?: boolean;
@@ -28,7 +28,7 @@
 		question,
 		description,
 		response,
-		options,
+		options = [],
 		value = $bindable<string | null>(null),
 		name = 'quiz-question',
 		disabled = false,
