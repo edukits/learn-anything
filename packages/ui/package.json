@@ -30,7 +30,8 @@
 		"test": "pnpm run check"
 	},
 	"dependencies": {
-		"@learn-anything/tokens": "workspace:*"
+		"@learn-anything/tokens": "workspace:*",
+		"katex": "^0.16.47"
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0"
