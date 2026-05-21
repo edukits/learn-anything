@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/sveltekit';
-import MultipleChoice from './MultipleChoice.svelte';
-import type { MultipleChoiceOptionData } from './types';
+import MultipleChoice from '../../lib/components/quiz/MultipleChoice.svelte';
+import type { MultipleChoiceOptionData } from '../../lib/components/quiz/types';
 
 const defaultOptions: MultipleChoiceOptionData[] = [
 	{

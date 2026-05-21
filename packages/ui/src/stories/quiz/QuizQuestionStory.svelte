@@ -1,7 +1,10 @@
 <script lang="ts">
-	import MultipleChoice from './MultipleChoice.svelte';
-	import Question from './Question.svelte';
-	import type { MultipleChoiceInteractionMode, MultipleChoiceOptionData } from './types';
+	import MultipleChoice from '../../lib/components/quiz/MultipleChoice.svelte';
+	import Question from '../../lib/components/quiz/Question.svelte';
+	import type {
+		MultipleChoiceInteractionMode,
+		MultipleChoiceOptionData
+	} from '../../lib/components/quiz/types';
 
 	type QuizQuestionStoryProps = {
 		eyebrow?: string;

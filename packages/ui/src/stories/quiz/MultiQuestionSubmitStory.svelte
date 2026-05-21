@@ -1,8 +1,8 @@
 <script lang="ts">
-	import Button from '../Button.svelte';
-	import MultipleChoice from './MultipleChoice.svelte';
-	import Question from './Question.svelte';
-	import type { MultipleChoiceOptionData } from './types';
+	import Button from '../../lib/components/Button.svelte';
+	import MultipleChoice from '../../lib/components/quiz/MultipleChoice.svelte';
+	import Question from '../../lib/components/quiz/Question.svelte';
+	import type { MultipleChoiceOptionData } from '../../lib/components/quiz/types';
 
 	type MultiQuestionData = {
 		id: 'spacing' | 'http';
