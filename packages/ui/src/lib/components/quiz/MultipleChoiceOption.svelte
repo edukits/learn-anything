@@ -61,11 +61,11 @@
 	<span class="la-choice-option__control" aria-hidden="true">
 		{#if state === 'correct'}
 			<span class="la-choice-option__graded-icon">
-				<Check size={12} strokeWidth={3} />
+				<Check size={12} strokeWidth={4} />
 			</span>
 		{:else if state === 'incorrect'}
 			<span class="la-choice-option__graded-icon">
-				<X size={12} strokeWidth={3} />
+				<X size={12} strokeWidth={4} />
 			</span>
 		{/if}
 	</span>
@@ -98,6 +98,7 @@
 <style>
 	.la-choice-option {
 		--choice-accent: var(--color-accent);
+		--choice-control-size: 1.125rem;
 		align-items: start;
 		background: linear-gradient(
 			to bottom,
@@ -111,7 +112,7 @@
 		cursor: pointer;
 		display: grid;
 		gap: var(--space-3);
-		grid-template-columns: 1.125rem minmax(0, 1fr);
+		grid-template-columns: var(--choice-control-size) minmax(0, 1fr);
 		padding: var(--space-4);
 		position: relative;
 		transition:
@@ -176,13 +177,20 @@
 	.la-choice-option__control {
 		background: var(--color-surface);
 		border: 1px solid color-mix(in srgb, var(--color-border), var(--color-text-muted) 18%);
-		border-radius: 999px;
+		block-size: var(--choice-control-size);
+		border-radius: calc(var(--choice-control-size) / 2);
 		box-shadow: 0 1px 1px rgb(0 0 0 / 0.08) inset;
 		display: grid;
-		inline-size: 1.125rem;
+		inline-size: var(--choice-control-size);
 		margin-block-start: 0.125rem;
 		place-items: center;
-		aspect-ratio: 1;
+		transform: rotate(0deg);
+		transition:
+			background 180ms ease-out,
+			border-color 180ms ease-out,
+			border-radius 220ms ease-out,
+			box-shadow 180ms ease-out,
+			transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
 	}
 
 	.la-choice-option__control::after {
@@ -206,8 +214,13 @@
 	.la-choice-option--correct .la-choice-option__control,
 	.la-choice-option--incorrect .la-choice-option__control {
 		border-color: color-mix(in srgb, var(--choice-accent), black 12%);
-        background: var(--choice-accent);
+		background: var(--choice-accent);
 		box-shadow: 0 0 0 3px color-mix(in srgb, var(--choice-accent), transparent 82%);
+	}
+
+	.la-choice-option--correct .la-choice-option__control {
+		border-radius: 0.1875rem;
+		transform: rotate(45deg);
 	}
 
 	.la-choice-option--selected .la-choice-option__control::after {
@@ -227,21 +240,24 @@
 		transform-origin: center;
 	}
 
-    .la-choice-option--correct .la-choice-option__graded-icon {
-        animation: la-choice-option-graded-icon-in 500ms cubic-bezier(0.16, 1, 0.3, 1);
-    }
+	.la-choice-option--correct .la-choice-option__graded-icon {
+		animation: la-choice-option-graded-icon-in 500ms cubic-bezier(0.16, 1, 0.3, 1);
+        animation-delay: 180ms;
+        animation-fill-mode: both;
+		transform: rotate(-45deg);
+	}
 
 	@keyframes la-choice-option-graded-icon-in {
 		from {
+			filter: blur(1px);
 			opacity: 0;
-			transform: scale(1.5);
-            filter: blur(1px);
+			transform: rotate(-45deg) scale(1.5);
 		}
 
 		to {
+			filter: blur(0);
 			opacity: 1;
-			transform: scale(1);
-            filter: blur(0px);
+			transform: rotate(-45deg) scale(1);
 		}
 	}
 
