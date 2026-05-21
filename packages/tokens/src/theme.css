@@ -45,9 +45,9 @@
 	--color-accent-hover-contrast: #ffffff;
 
 	/* Correct — source (h/s/l) */
-	--color-correct-h: 155;
-	--color-correct-s: 65%;
-	--color-correct-l: 38%;
+	--color-correct-h: 95;
+	--color-correct-s: 95%;
+	--color-correct-l: 40%;
 
 	/* Correct — derived */
 	--color-correct: hsl(var(--color-correct-h) var(--color-correct-s) var(--color-correct-l));
@@ -57,7 +57,7 @@
 
 	/* Incorrect — source (h/s/l) */
 	--color-incorrect-h: 358;
-	--color-incorrect-s: 69%;
+	--color-incorrect-s: 75%;
 	--color-incorrect-l: 55%;
 
 	/* Incorrect — derived */
