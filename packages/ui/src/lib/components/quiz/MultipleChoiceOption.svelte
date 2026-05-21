@@ -35,6 +35,28 @@
 	let fallbackLabel = $derived(!hasLabel && !hasDescription ? value : undefined);
 	let accessibleLabel = $derived([label, description].filter(Boolean).join(' ') || value);
 	let isUnavailable = $derived(disabled || locked);
+
+	let hasTrackedOptionState = $state(false);
+	let previousOptionState = $state<MultipleChoiceOptionState>('neutral');
+	let playCorrectIconAnimation = $state(false);
+
+	$effect(() => {
+		if (!hasTrackedOptionState) {
+			hasTrackedOptionState = true;
+			previousOptionState = optionState;
+			return;
+		}
+
+		const prev = previousOptionState;
+
+		if (optionState === 'correct' && prev !== 'correct') {
+			playCorrectIconAnimation = true;
+		} else if (optionState !== 'correct') {
+			playCorrectIconAnimation = false;
+		}
+
+		previousOptionState = optionState;
+	});
 </script>
 
 <label
@@ -43,7 +65,7 @@
 		selected && 'selected',
 		disabled && !locked && 'disabled',
 		locked && 'locked',
-		state !== 'neutral' && state
+		optionState !== 'neutral' && optionState
 	]}
 	for={inputId}
 >
@@ -59,11 +81,11 @@
 		aria-label={accessibleLabel}
 	/>
 	<span class="control" aria-hidden="true">
-		{#if state === 'correct'}
-			<span class="icon">
+		{#if optionState === 'correct'}
+			<span class={['icon', playCorrectIconAnimation && 'icon-animated']}>
 				<Check size={12} strokeWidth={4} />
 			</span>
-		{:else if state === 'incorrect'}
+		{:else if optionState === 'incorrect'}
 			<span class="icon">
 				<X size={12} strokeWidth={4} />
 			</span>
@@ -236,10 +258,13 @@
 	}
 
 	.correct .icon {
+		transform: rotate(-45deg);
+	}
+
+	.correct .icon.icon-animated {
 		animation: icon-in 500ms cubic-bezier(0.16, 1, 0.3, 1);
 		animation-delay: 180ms;
 		animation-fill-mode: both;
-		transform: rotate(-45deg);
 	}
 
 	@keyframes icon-in {
