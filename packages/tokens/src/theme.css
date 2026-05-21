@@ -36,6 +36,8 @@
 	--color-accent-contrast: #ffffff;
 	--color-accent-hover-contrast: #ffffff;
 	--color-focus: var(--color-accent);
+	--color-correct: #22a06b;
+	--color-incorrect: #dc3d43;
 	--color-pro: #a82bff;
 	--color-star: #ffae00;
 

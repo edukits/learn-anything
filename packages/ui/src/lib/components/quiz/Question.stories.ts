@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/sveltekit';
 import type { ComponentProps } from 'svelte';
+import MultiQuestionSubmitStory from './MultiQuestionSubmitStory.svelte';
 import QuizQuestionStory from './QuizQuestionStory.svelte';
 
 type QuizQuestionData = ComponentProps<typeof QuizQuestionStory> & {
@@ -22,6 +23,24 @@ const quizOptions: ComponentProps<typeof QuizQuestionStory>['options'] = [
 	{
 		value: '140',
 		label: '$140\\text{ km/h}$'
+	}
+];
+
+const stateDemoOptions: ComponentProps<typeof QuizQuestionStory>['options'] = [
+	{
+		value: 'retrieval',
+		label: 'Retrieval practice',
+		description: 'Answering from memory before checking notes.'
+	},
+	{
+		value: 'highlighting',
+		label: 'Highlighting',
+		description: 'Marking important passages while reading.'
+	},
+	{
+		value: 'rereading',
+		label: 'Rereading',
+		description: 'Reading the same passage several times in a row.'
 	}
 ];
 
@@ -642,8 +661,80 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+type MultiQuestionStory = StoryObj<typeof MultiQuestionSubmitStory>;
 
 export const MultipleChoice: Story = {};
+
+export const InstantSubmitCorrectSelected: Story = {
+	args: {
+		eyebrow: 'Instant submit',
+		question: 'Which strategy best strengthens long-term recall?',
+		options: stateDemoOptions,
+		value: 'retrieval',
+		name: 'instant-submit-correct',
+		interactionMode: 'instant-submit',
+		correctValue: 'retrieval',
+		submitted: true
+	}
+};
+
+export const InstantSubmitIncorrectSelected: Story = {
+	args: {
+		eyebrow: 'Instant submit',
+		question: 'Which strategy best strengthens long-term recall?',
+		options: stateDemoOptions,
+		value: 'highlighting',
+		name: 'instant-submit-incorrect',
+		interactionMode: 'instant-submit',
+		correctValue: 'retrieval',
+		submitted: true
+	}
+};
+
+export const SubmitBasedBeforeSubmission: Story = {
+	args: {
+		eyebrow: 'Submit based',
+		question: 'Which strategy best strengthens long-term recall?',
+		options: stateDemoOptions,
+		value: 'highlighting',
+		name: 'submit-based-before',
+		correctValue: 'retrieval',
+		showSubmitButton: true,
+		submitted: false
+	}
+};
+
+export const SubmitBasedCorrectSubmission: Story = {
+	args: {
+		eyebrow: 'Submit based',
+		question: 'Which strategy best strengthens long-term recall?',
+		options: stateDemoOptions,
+		value: 'retrieval',
+		name: 'submit-based-correct',
+		correctValue: 'retrieval',
+		showSubmitButton: true,
+		submitted: true
+	}
+};
+
+export const SubmitBasedIncorrectSubmission: Story = {
+	args: {
+		eyebrow: 'Submit based',
+		question: 'Which strategy best strengthens long-term recall?',
+		options: stateDemoOptions,
+		value: 'highlighting',
+		name: 'submit-based-incorrect',
+		correctValue: 'retrieval',
+		showSubmitButton: true,
+		submitted: true
+	}
+};
+
+export const MultiQuestionSubmitFlow: MultiQuestionStory = {
+	render: () => ({
+		Component: MultiQuestionSubmitStory
+	})
+};
 
 export const WithSelection: Story = {
 	args: {

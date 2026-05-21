@@ -1,7 +1,7 @@
 <script lang="ts">
 	import MultipleChoice from './MultipleChoice.svelte';
 	import Question from './Question.svelte';
-	import type { MultipleChoiceOptionData } from './types';
+	import type { MultipleChoiceInteractionMode, MultipleChoiceOptionData } from './types';
 
 	type QuizQuestionStoryProps = {
 		eyebrow?: string;
@@ -11,6 +11,11 @@
 		value?: string | null;
 		name?: string;
 		disabled?: boolean;
+		interactionMode?: MultipleChoiceInteractionMode;
+		correctValue?: string | null;
+		submitted?: boolean;
+		showSubmitButton?: boolean;
+		submitLabel?: string;
 	};
 
 	let {
@@ -20,14 +25,43 @@
 		options,
 		value = $bindable<string | null>(null),
 		name = 'quiz-question',
-		disabled = false
+		disabled = false,
+		interactionMode = 'submit',
+		correctValue = null,
+		submitted = $bindable(false),
+		showSubmitButton = false,
+		submitLabel = 'Submit answer'
 	}: QuizQuestionStoryProps = $props();
 
+	let resolvedCorrectValue = $derived(
+		correctValue ?? options.find((option) => option.state === 'correct')?.value ?? null
+	);
+	let displayOptions = $derived(
+		resolvedCorrectValue === null
+			? options
+			: options.map((option) => ({
+					value: option.value,
+					label: option.label,
+					description: option.description,
+					disabled: option.disabled
+				}))
+	);
 </script>
 
 <div class="quiz-story">
 	<Question {eyebrow} {question} {description}>
-		<MultipleChoice bind:value {options} {name} {disabled} legend={question} />
+		<MultipleChoice
+			bind:value
+			bind:submitted
+			options={displayOptions}
+			{name}
+			{disabled}
+			{interactionMode}
+			correctValue={resolvedCorrectValue}
+			{showSubmitButton}
+			{submitLabel}
+			legend={question}
+		/>
 	</Question>
 </div>
 

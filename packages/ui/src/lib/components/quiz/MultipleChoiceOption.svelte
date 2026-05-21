@@ -9,6 +9,7 @@
 		description?: string;
 		selected?: boolean;
 		disabled?: boolean;
+		locked?: boolean;
 		state?: MultipleChoiceOptionState;
 		id?: string;
 		onchange?: (event: Event) => void;
@@ -21,6 +22,7 @@
 		description,
 		selected = false,
 		disabled = false,
+		locked = false,
 		state = 'neutral',
 		id,
 		onchange
@@ -31,13 +33,15 @@
 	let hasDescription = $derived(Boolean(description?.trim()));
 	let fallbackLabel = $derived(!hasLabel && !hasDescription ? value : undefined);
 	let accessibleLabel = $derived([label, description].filter(Boolean).join(' ') || value);
+	let isUnavailable = $derived(disabled || locked);
 </script>
 
 <label
 	class={[
 		'la-choice-option',
 		selected && 'la-choice-option--selected',
-		disabled && 'la-choice-option--disabled',
+		disabled && !locked && 'la-choice-option--disabled',
+		locked && 'la-choice-option--locked',
 		state !== 'neutral' && `la-choice-option--${state}`
 	]}
 	for={inputId}
@@ -49,7 +53,7 @@
 		{name}
 		{value}
 		checked={selected}
-		{disabled}
+		disabled={isUnavailable}
 		{onchange}
 		aria-label={accessibleLabel}
 	/>
@@ -82,6 +86,7 @@
 
 <style>
 	.la-choice-option {
+		--choice-accent: var(--color-accent);
 		align-items: start;
 		background: linear-gradient(
 			to bottom,
@@ -105,44 +110,48 @@
 			transform 100ms ease-out;
 	}
 
-	.la-choice-option:hover:not(.la-choice-option--disabled) {
+	.la-choice-option:hover:not(.la-choice-option--disabled):not(.la-choice-option--locked) {
 		background: linear-gradient(
 			to bottom,
-			color-mix(in srgb, var(--color-accent), var(--color-surface) 94%),
-			color-mix(in srgb, var(--color-accent), var(--color-surface-raised) 92%)
+			color-mix(in srgb, var(--choice-accent), var(--color-surface) 94%),
+			color-mix(in srgb, var(--choice-accent), var(--color-surface-raised) 92%)
 		);
-		border-color: color-mix(in srgb, var(--color-accent), var(--color-border) 42%);
+		border-color: color-mix(in srgb, var(--choice-accent), var(--color-border) 42%);
 	}
 
-	.la-choice-option:active:not(.la-choice-option--disabled) {
+	.la-choice-option:active:not(.la-choice-option--disabled):not(.la-choice-option--locked) {
 		transform: scale(0.99);
 	}
 
-	.la-choice-option--selected {
-		background: linear-gradient(
-			to bottom,
-			color-mix(in srgb, var(--color-accent), var(--color-surface) 90%),
-			color-mix(in srgb, var(--color-accent), var(--color-surface-raised) 86%)
-		);
-		border-color: var(--color-accent);
-		box-shadow:
-			0 0 0 1px color-mix(in srgb, var(--color-accent), transparent 42%),
-			0 8px 20px color-mix(in srgb, var(--color-accent), transparent 86%);
-	}
-
 	.la-choice-option--correct {
-		border-color: #22a06b;
-		box-shadow: 0 0 0 1px color-mix(in srgb, #22a06b, transparent 52%);
+		--choice-accent: var(--color-correct);
 	}
 
 	.la-choice-option--incorrect {
-		border-color: #dc3d43;
-		box-shadow: 0 0 0 1px color-mix(in srgb, #dc3d43, transparent 56%);
+		--choice-accent: var(--color-incorrect);
+	}
+
+	.la-choice-option--selected,
+	.la-choice-option--correct,
+	.la-choice-option--incorrect {
+		background: linear-gradient(
+			to bottom,
+			color-mix(in srgb, var(--choice-accent), var(--color-surface) 90%),
+			color-mix(in srgb, var(--choice-accent), var(--color-surface-raised) 86%)
+		);
+		border-color: var(--choice-accent);
+		box-shadow:
+			0 0 0 1px color-mix(in srgb, var(--choice-accent), transparent 42%),
+			0 8px 20px color-mix(in srgb, var(--choice-accent), transparent 86%);
 	}
 
 	.la-choice-option--disabled {
 		cursor: not-allowed;
 		opacity: 0.58;
+	}
+
+	.la-choice-option--locked {
+		cursor: default;
 	}
 
 	.la-choice-option__input {
@@ -166,7 +175,7 @@
 	}
 
 	.la-choice-option__control::after {
-		background: var(--color-accent);
+		background: var(--choice-accent);
 		border-radius: inherit;
 		content: '';
 		inline-size: 0.5rem;
@@ -179,8 +188,14 @@
 	}
 
 	.la-choice-option--selected .la-choice-option__control {
-		border-color: var(--color-accent);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent), transparent 82%);
+		border-color: var(--choice-accent);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--choice-accent), transparent 82%);
+	}
+
+	.la-choice-option--correct .la-choice-option__control,
+	.la-choice-option--incorrect .la-choice-option__control {
+		border-color: var(--choice-accent);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--choice-accent), transparent 82%);
 	}
 
 	.la-choice-option--selected .la-choice-option__control::after {
