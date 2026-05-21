@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Check, X } from '@lucide/svelte';
 	import RichText from './RichText.svelte';
 	import type { MultipleChoiceOptionState } from './types';
 
@@ -57,7 +58,17 @@
 		{onchange}
 		aria-label={accessibleLabel}
 	/>
-	<span class="la-choice-option__control" aria-hidden="true"></span>
+	<span class="la-choice-option__control" aria-hidden="true">
+		{#if state === 'correct'}
+			<span class="la-choice-option__graded-icon">
+				<Check size={12} strokeWidth={3} />
+			</span>
+		{:else if state === 'incorrect'}
+			<span class="la-choice-option__graded-icon">
+				<X size={12} strokeWidth={3} />
+			</span>
+		{/if}
+	</span>
 	<div
 		class={[
 			'la-choice-option__content',
@@ -194,13 +205,44 @@
 
 	.la-choice-option--correct .la-choice-option__control,
 	.la-choice-option--incorrect .la-choice-option__control {
-		border-color: var(--choice-accent);
+		border-color: color-mix(in srgb, var(--choice-accent), black 12%);
+        background: var(--choice-accent);
 		box-shadow: 0 0 0 3px color-mix(in srgb, var(--choice-accent), transparent 82%);
 	}
 
 	.la-choice-option--selected .la-choice-option__control::after {
 		opacity: 1;
 		transform: scale(1);
+	}
+
+	.la-choice-option--correct .la-choice-option__control::after,
+	.la-choice-option--incorrect .la-choice-option__control::after {
+		content: none;
+	}
+
+	.la-choice-option__graded-icon {
+		color: var(--color-surface);
+		display: grid;
+		place-items: center;
+		transform-origin: center;
+	}
+
+    .la-choice-option--correct .la-choice-option__graded-icon {
+        animation: la-choice-option-graded-icon-in 500ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+	@keyframes la-choice-option-graded-icon-in {
+		from {
+			opacity: 0;
+			transform: scale(1.5);
+            filter: blur(1px);
+		}
+
+		to {
+			opacity: 1;
+			transform: scale(1);
+            filter: blur(0px);
+		}
 	}
 
 	.la-choice-option__input:focus-visible + .la-choice-option__control {
