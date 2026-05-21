@@ -4,7 +4,16 @@ import {
 	gradeNumericAnswer,
 	parseNumericInput
 } from './numeric';
+import {
+	buildEmptyMathPrompts,
+	buildMathSubmitResult,
+	coerceMathEvaluation,
+	gradeMathAnswer,
+	isMathAnswered
+} from './math';
 import type {
+	MathAnswerSubmitResult,
+	MathAnswerValue,
 	MultipleChoiceOptionData,
 	NumericAnswerSubmitResult,
 	NumericAnswerValue,
@@ -24,6 +33,7 @@ export type MultipleChoiceQuizResponse = Extract<
 >;
 export type MultipleSelectQuizResponse = Extract<QuizQuestionResponse, { type: 'multiple-select' }>;
 export type NumericQuizResponse = Extract<QuizQuestionResponse, { type: 'numeric' }>;
+export type MathQuizResponse = Extract<QuizQuestionResponse, { type: 'math' }>;
 export type SequencingQuizResponse = Extract<QuizQuestionResponse, { type: 'sequencing' }>;
 export type ShortAnswerQuizResponse = Extract<QuizQuestionResponse, { type: 'short-answer' }>;
 
@@ -45,6 +55,10 @@ export function isMultipleSelectResponse(
 
 export function isNumericResponse(response: QuizQuestionResponse): response is NumericQuizResponse {
 	return response.type === 'numeric';
+}
+
+export function isMathResponse(response: QuizQuestionResponse): response is MathQuizResponse {
+	return response.type === 'math';
 }
 
 export function isSequencingResponse(
@@ -109,6 +123,21 @@ export function buildNumericAnswers(
 			answers[question.id] = {
 				value: question.response.value ?? '',
 				unit: getInitialNumericUnit(question.response)
+			};
+		}
+	}
+
+	return answers;
+}
+
+export function buildMathAnswers(questionData: QuizQuestionData[]): Record<string, MathAnswerValue> {
+	const answers: Record<string, MathAnswerValue> = {};
+
+	for (const question of questionData) {
+		if (isMathResponse(question.response)) {
+			answers[question.id] = {
+				latex: question.response.value ?? question.response.template ?? '',
+				prompts: buildEmptyMathPrompts(question.response.value ?? question.response.template)
 			};
 		}
 	}
@@ -245,6 +274,20 @@ export function gradeNumeric(
 	);
 }
 
+export function gradeMath(
+	response: MathQuizResponse,
+	answer: MathAnswerValue
+): MathAnswerSubmitResult {
+	if (response.grader) {
+		return buildMathSubmitResult(answer, coerceMathEvaluation(response.grader(answer)));
+	}
+
+	return buildMathSubmitResult(
+		answer,
+		gradeMathAnswer(answer, response.acceptedValues ?? null, response.matchMode ?? 'normalized')
+	);
+}
+
 export function hasExactSelection(value: string[], correctValues: string[]) {
 	const selectedValues = new Set(value);
 	const correctValueSet = new Set(correctValues);
@@ -263,6 +306,8 @@ export function isNumericAnswered(response: NumericQuizResponse, answer: Numeric
 
 	return parseNumericInput(answer.value) !== null && hasRequiredUnit;
 }
+
+export { isMathAnswered };
 
 function getInitialNumericUnit(response: NumericQuizResponse) {
 	if (response.unitConfig?.mode === 'fixed') {

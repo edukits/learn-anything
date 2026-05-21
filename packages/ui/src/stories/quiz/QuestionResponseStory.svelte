@@ -1,6 +1,7 @@
 <script lang="ts">
 	import MultipleChoice from '../../lib/components/quiz/MultipleChoice.svelte';
 	import MultipleSelect from '../../lib/components/quiz/MultipleSelect.svelte';
+	import MathAnswer from '../../lib/components/quiz/MathAnswer.svelte';
 	import NumericAnswer from '../../lib/components/quiz/NumericAnswer.svelte';
 	import SequencingAnswer from '../../lib/components/quiz/SequencingAnswer.svelte';
 	import ShortAnswer from '../../lib/components/quiz/ShortAnswer.svelte';
@@ -62,6 +63,7 @@
 
 	let multipleChoiceCorrectValue = $derived(
 		response.type === 'multiple-select' ||
+			response.type === 'math' ||
 			response.type === 'numeric' ||
 			response.type === 'sequencing' ||
 			response.type === 'short-answer'
@@ -70,6 +72,7 @@
 	);
 	let multipleChoiceOptions = $derived(
 		response.type === 'multiple-select' ||
+			response.type === 'math' ||
 			response.type === 'numeric' ||
 			response.type === 'sequencing' ||
 			response.type === 'short-answer'
@@ -101,6 +104,22 @@
 		{disabled}
 		unitConfig={response.unitConfig}
 		acceptedValues={response.acceptedValues ?? null}
+		grader={response.grader}
+		{showSubmitButton}
+		{submitLabel}
+	/>
+{:else if response.type === 'math'}
+	<MathAnswer
+		value={response.value ?? ''}
+		bind:submitted
+		{name}
+		label={legend}
+		placeholder={response.placeholder}
+		mathPlaceholder={response.mathPlaceholder}
+		{disabled}
+		template={response.template}
+		acceptedValues={response.acceptedValues ?? null}
+		matchMode={response.matchMode ?? 'normalized'}
 		grader={response.grader}
 		{showSubmitButton}
 		{submitLabel}

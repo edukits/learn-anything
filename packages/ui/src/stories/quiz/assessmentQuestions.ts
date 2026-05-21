@@ -105,5 +105,24 @@ export const assessmentQuestions: QuizQuestionData[] = [
 				}
 			]
 		}
+	},
+	{
+		id: 'vector-components',
+		eyebrow: 'Linear algebra',
+		question: 'Write the vector with horizontal component 3 and vertical component -2.',
+		description: 'Fill in the locked vector template.',
+		response: {
+			type: 'math',
+			value: '\\begin{bmatrix}\\placeholder[x]{}\\\\\\placeholder[y]{}\\end{bmatrix}',
+			template: '\\begin{bmatrix}\\placeholder[x]{}\\\\\\placeholder[y]{}\\end{bmatrix}',
+			acceptedValues: [
+				{
+					prompts: {
+						x: '3',
+						y: '-2'
+					}
+				}
+			]
+		}
 	}
 ];

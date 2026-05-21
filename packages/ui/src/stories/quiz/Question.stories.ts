@@ -210,6 +210,53 @@ export const NumericCurrency: Story = {
 	}
 };
 
+export const MathAnswer: Story = {
+	args: {
+		eyebrow: 'Algebra',
+		question: 'Factor $x^2 + 3x + 2$.',
+		description: 'Enter an algebraic expression.',
+		name: 'factor-expression-math',
+		showSubmitButton: true,
+		submitted: false,
+		response: {
+			type: 'math',
+			value: '',
+			placeholder: 'Type a factored expression',
+			acceptedValues: [
+				{
+					latex: '(x+1)(x+2)',
+					feedback: 'Matches the configured factored form.'
+				}
+			]
+		}
+	}
+};
+
+export const MathVectorTemplate: Story = {
+	args: {
+		eyebrow: 'Linear algebra',
+		question: 'Write the vector with horizontal component 3 and vertical component -2.',
+		description: 'The vector structure is part of the answer template.',
+		name: 'vector-template-math',
+		showSubmitButton: true,
+		submitted: false,
+		response: {
+			type: 'math',
+			value: '\\begin{bmatrix}\\placeholder[x]{}\\\\\\placeholder[y]{}\\end{bmatrix}',
+			template: '\\begin{bmatrix}\\placeholder[x]{}\\\\\\placeholder[y]{}\\end{bmatrix}',
+			acceptedValues: [
+				{
+					prompts: {
+						x: '3',
+						y: '-2'
+					},
+					feedback: 'Both components match the configured vector.'
+				}
+			]
+		}
+	}
+};
+
 export const Sequencing: Story = {
 	args: {
 		eyebrow: 'Learning science',

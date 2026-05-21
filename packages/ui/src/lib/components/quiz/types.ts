@@ -6,6 +6,7 @@ export type NumericAnswerPrecisionType = 'decimal-places' | 'significant-figures
 export type NumericUnitMode = 'fixed' | 'freeform' | 'none' | 'select';
 export type NumericUnitSide = 'left' | 'right';
 export type ShortAnswerMatchMode = 'exact' | 'case-insensitive' | 'normalized' | 'contains';
+export type MathAnswerMatchMode = 'exact' | 'normalized';
 
 export type ShortAnswerEvaluation =
 	| boolean
@@ -104,6 +105,33 @@ export type NumericAnswerSubmitResult = NumericAnswerValue & {
 	feedback?: string;
 };
 
+export type MathAnswerPromptValues = Record<string, string>;
+
+export type MathAnswerValue = {
+	latex: string;
+	prompts: MathAnswerPromptValues;
+};
+
+export type MathAnswerEvaluation =
+	| boolean
+	| null
+	| {
+			correct: boolean | null;
+			feedback?: string;
+	  };
+
+export type MathAnswerAcceptedValue = {
+	latex?: string;
+	prompts?: MathAnswerPromptValues;
+	matchMode?: MathAnswerMatchMode;
+	feedback?: string;
+};
+
+export type MathAnswerSubmitResult = MathAnswerValue & {
+	correct: boolean | null;
+	feedback?: string;
+};
+
 export type MultipleChoiceOptionData = {
 	value: string;
 	label?: string;
@@ -159,6 +187,16 @@ export type QuizQuestionResponse =
 			grader?: (answer: NumericAnswerValue) => NumericAnswerEvaluation;
 	  }
 	| {
+			type: 'math';
+			value?: string;
+			template?: string;
+			placeholder?: string;
+			mathPlaceholder?: string;
+			acceptedValues?: MathAnswerAcceptedValue[] | null;
+			matchMode?: MathAnswerMatchMode;
+			grader?: (answer: MathAnswerValue) => MathAnswerEvaluation;
+	  }
+	| {
 			type: 'sequencing';
 			items: SequencingItemData[];
 			value?: string[];
@@ -173,7 +211,7 @@ export type QuizQuestionData = {
 	response: QuizQuestionResponse;
 };
 
-export type QuizAnswerValue = string | string[] | NumericAnswerValue | null;
+export type QuizAnswerValue = string | string[] | NumericAnswerValue | MathAnswerValue | null;
 
 export type QuizQuestionResult = {
 	questionId: string;

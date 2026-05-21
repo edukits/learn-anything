@@ -38,6 +38,7 @@
 		"katex": "^0.16.47",
 		"markdown-it": "^14.1.1",
 		"markdown-it-texmath": "^1.0.0",
+		"mathlive": "^0.109.2",
 		"sanitize-html": "^2.17.4"
 	},
 	"peerDependencies": {

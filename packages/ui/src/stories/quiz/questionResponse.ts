@@ -1,4 +1,8 @@
 import type {
+	MathAnswerAcceptedValue,
+	MathAnswerEvaluation,
+	MathAnswerMatchMode,
+	MathAnswerValue,
 	MultipleChoiceInteractionMode,
 	MultipleChoiceOptionData,
 	NumericAnswerAcceptedValue,
@@ -47,6 +51,17 @@ export type NumericAnswerQuestionResponse = {
 	grader?: (answer: NumericAnswerValue) => NumericAnswerEvaluation;
 };
 
+export type MathAnswerQuestionResponse = {
+	type: 'math';
+	value?: string;
+	template?: string;
+	placeholder?: string;
+	mathPlaceholder?: string;
+	acceptedValues?: MathAnswerAcceptedValue[] | null;
+	matchMode?: MathAnswerMatchMode;
+	grader?: (answer: MathAnswerValue) => MathAnswerEvaluation;
+};
+
 export type SequencingQuestionResponse = {
 	type: 'sequencing';
 	items: SequencingItemData[];
@@ -57,6 +72,7 @@ export type SequencingQuestionResponse = {
 export type QuestionResponse =
 	| MultipleChoiceQuestionResponse
 	| MultipleSelectQuestionResponse
+	| MathAnswerQuestionResponse
 	| NumericAnswerQuestionResponse
 	| SequencingQuestionResponse
 	| ShortAnswerQuestionResponse;

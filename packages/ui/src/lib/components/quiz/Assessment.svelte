@@ -4,11 +4,13 @@
 	import {
 		buildMultipleChoiceAnswers,
 		buildMultipleSelectAnswers,
+		buildMathAnswers,
 		buildNumericAnswers,
 		buildPageGroups,
 		buildSequenceAnswers,
 		buildShortAnswers,
 		buildSubmittedState,
+		gradeMath,
 		getMultipleChoiceCorrectValue,
 		getMultipleSelectCorrectValues,
 		getOptionDisplayData,
@@ -17,6 +19,8 @@
 		hasExactSelection,
 		isMultipleChoiceResponse,
 		isMultipleSelectResponse,
+		isMathAnswered,
+		isMathResponse,
 		isNumericAnswered,
 		isNumericResponse,
 		isSequencingResponse,
@@ -25,11 +29,14 @@
 	} from './assessment';
 	import MultipleChoice from './MultipleChoice.svelte';
 	import MultipleSelect from './MultipleSelect.svelte';
+	import MathAnswer from './MathAnswer.svelte';
 	import NumericAnswer from './NumericAnswer.svelte';
 	import Question from './Question.svelte';
 	import SequencingAnswer from './SequencingAnswer.svelte';
 	import ShortAnswer from './ShortAnswer.svelte';
 	import type {
+		MathAnswerSubmitResult,
+		MathAnswerValue,
 		NumericAnswerValue,
 		QuizPageLayout,
 		QuizQuestionData,
@@ -81,6 +88,8 @@
 	// svelte-ignore state_referenced_locally
 	let numericAnswers = $state<Record<string, NumericAnswerValue>>(buildNumericAnswers(questions));
 	// svelte-ignore state_referenced_locally
+	let mathAnswers = $state<Record<string, MathAnswerValue>>(buildMathAnswers(questions));
+	// svelte-ignore state_referenced_locally
 	let sequenceAnswers = $state<Record<string, string[]>>(buildSequenceAnswers(questions));
 
 	let resolvedTitle = $derived(title ?? (mode === 'quiz' ? 'Quiz' : 'Exam'));
@@ -130,6 +139,10 @@
 
 		if (isNumericResponse(response)) {
 			return isNumericAnswered(response, numericAnswers[question.id] ?? { value: '', unit: null });
+		}
+
+		if (isMathResponse(response)) {
+			return isMathAnswered(mathAnswers[question.id] ?? { latex: '', prompts: {} });
 		}
 
 		return (sequenceAnswers[question.id] ?? []).length > 0;
@@ -185,6 +198,18 @@
 			};
 		}
 
+		if (isMathResponse(response)) {
+			const value = mathAnswers[question.id] ?? { latex: '', prompts: {} };
+			const result = gradeMath(response, value);
+
+			return {
+				questionId: question.id,
+				value,
+				answered: isMathAnswered(value),
+				correct: result.correct
+			};
+		}
+
 		if (!isSequencingResponse(response)) {
 			return {
 				questionId: question.id,
@@ -214,6 +239,17 @@
 		questionSubmitted[question.id] = true;
 		results[question.id] = result;
 		onquestionresult?.(result);
+	}
+
+	function recordMathQuestionResult(
+		question: QuizQuestionData,
+		result: MathAnswerSubmitResult
+	) {
+		mathAnswers[question.id] = {
+			latex: result.latex,
+			prompts: result.prompts
+		};
+		recordQuestionResult(question);
 	}
 
 	function submitExam() {
@@ -255,6 +291,7 @@
 		multipleSelectAnswers = buildMultipleSelectAnswers(questions);
 		shortAnswers = buildShortAnswers(questions);
 		numericAnswers = buildNumericAnswers(questions);
+		mathAnswers = buildMathAnswers(questions);
 		sequenceAnswers = buildSequenceAnswers(questions);
 	}
 </script>
@@ -342,6 +379,26 @@
 							showSubmitButton={mode === 'quiz'}
 							submitLabel="Submit answer"
 							onsubmit={() => recordQuestionResult(question)}
+						/>
+					{:else if question.response.type === 'math'}
+						<MathAnswer
+							bind:value={mathAnswers[question.id].latex}
+							submitted={mode === 'exam' ? examSubmitted : questionSubmitted[question.id]}
+							name={`${mode}-${question.id}`}
+							label={question.question}
+							placeholder={question.response.placeholder}
+							mathPlaceholder={question.response.mathPlaceholder}
+							disabled={examSubmitted}
+							template={question.response.template}
+							acceptedValues={question.response.acceptedValues ?? null}
+							matchMode={question.response.matchMode ?? 'normalized'}
+							grader={question.response.grader}
+							showSubmitButton={mode === 'quiz'}
+							submitLabel="Submit answer"
+							oninput={(answer) => {
+								mathAnswers[question.id] = answer;
+							}}
+							onsubmit={(result) => recordMathQuestionResult(question, result)}
 						/>
 					{:else if question.response.type === 'short-answer'}
 						<ShortAnswer
