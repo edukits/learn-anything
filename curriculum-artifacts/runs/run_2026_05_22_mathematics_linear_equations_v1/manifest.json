@@ -1,0 +1,41 @@
+{
+	"run_id": "run_2026_05_22_mathematics_linear_equations_v1",
+	"title": "Mathematics Linear Equations v1",
+	"schema_version": 1,
+	"authoring_mode": "generated",
+	"subject_area_id": "subject_mathematics",
+	"topic_area_id": "topic_linear_equations",
+	"source_refs": [
+		{
+			"source_id": "source_mathematics_linear_equations_v1",
+			"path": "content-sources/mathematics/linear-equations/source.md",
+			"metadata_path": "content-sources/mathematics/linear-equations/metadata.json"
+		}
+	],
+	"artifacts": {
+		"subject_areas": "subject-areas.jsonl",
+		"topic_areas": "topic-areas.jsonl",
+		"skills": "skills.jsonl",
+		"lessons": "lessons.jsonl",
+		"quizzes": "quizzes.jsonl",
+		"questions": "questions.jsonl",
+		"quiz_question_links": "quiz-question-links.jsonl",
+		"learning_paths": "learning-paths.jsonl",
+		"media_assets": "media-assets.jsonl",
+		"releases": "releases.jsonl",
+		"topic_discovery_metadata": "topic-discovery-metadata.jsonl"
+	},
+	"schemas": {
+		"subject_areas": "../../../../content-schemas/v1/subject-area.schema.json",
+		"topic_areas": "../../../../content-schemas/v1/topic-area.schema.json",
+		"skills": "../../../../content-schemas/v1/skill.schema.json",
+		"lessons": "../../../../content-schemas/v1/lesson.schema.json",
+		"quizzes": "../../../../content-schemas/v1/quiz.schema.json",
+		"questions": "../../../../content-schemas/v1/quiz-question.schema.json",
+		"quiz_question_links": "../../../../content-schemas/v1/quiz-question-link.schema.json",
+		"learning_paths": "../../../../content-schemas/v1/learning-path.schema.json",
+		"media_assets": "../../../../content-schemas/v1/media-asset.schema.json",
+		"releases": "../../../../content-schemas/v1/release.schema.json",
+		"topic_discovery_metadata": "../../../../content-schemas/v1/topic-discovery-metadata.schema.json"
+	}
+}

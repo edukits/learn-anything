@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import { DeviceStatsPanel, MetricGrid, PageHeader } from '$lib/features/literary-devices';
-	import type { MetricItem } from '$lib/features/literary-devices';
+	import { MetricGrid, PageHeader, SkillAccuracyPanel } from '$lib/features/learning';
+	import type { MetricItem } from '$lib/features/learning';
 	import { Button } from '@learn-anything/ui';
 
 	let { data }: PageProps = $props();
@@ -69,7 +69,7 @@
 <main class="page stack">
 	<PageHeader
 		eyebrow="Progress"
-		title="Literary Devices"
+		title={data.topic.name}
 		description={`Based on the latest published release: ${data.release.title}`}
 	/>
 
@@ -86,7 +86,7 @@
 				<h2>{data.reviewSummary.reason_label ?? 'Adaptive review'}</h2>
 				<p>{data.reviewSummary.question_count} questions selected from your recent attempt history.</p>
 			</div>
-			<Button href="/app/literary-devices/review" label="Start review" />
+			<Button href={`/app/topics/${data.topic.slug}/review`} label="Start review" />
 		</section>
 	{/if}
 
@@ -108,10 +108,10 @@
 		{/each}
 	</section>
 
-	<DeviceStatsPanel
-		title="Device accuracy"
-		stats={data.deviceStats}
-		emptyMessage="No quiz answers yet. Complete a Literary Devices quiz to populate this view."
+	<SkillAccuracyPanel
+		title="Skill accuracy"
+		stats={data.skillAccuracy}
+		emptyMessage={`No quiz answers yet. Complete a ${data.topic.name} quiz to populate this view.`}
 	/>
 </main>
 

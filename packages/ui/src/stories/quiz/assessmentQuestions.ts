@@ -107,6 +107,22 @@ export const assessmentQuestions: QuizQuestionData[] = [
 		}
 	},
 	{
+		id: 'procedure-order',
+		eyebrow: 'Lab safety',
+		question: 'Put the safe measurement procedure in order.',
+		description: 'Drag the steps from first to last.',
+		response: {
+			type: 'sequencing',
+			correctOrder: ['inspect', 'zero', 'measure', 'record'],
+			items: [
+				{ value: 'measure', label: 'Measure the sample' },
+				{ value: 'record', label: 'Record the reading' },
+				{ value: 'inspect', label: 'Inspect the instrument' },
+				{ value: 'zero', label: 'Zero the scale' }
+			]
+		}
+	},
+	{
 		id: 'vector-components',
 		eyebrow: 'Linear algebra',
 		question: 'Write the vector with horizontal component 3 and vertical component -2.',

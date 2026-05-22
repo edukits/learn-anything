@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import { PageHeader } from '$lib/features/literary-devices';
+	import { PageHeader } from '$lib/features/learning';
 	import { Button } from '@learn-anything/ui';
 
 	let { data }: PageProps = $props();
@@ -10,13 +10,14 @@
 		quiz_completed: 'Quiz completed',
 		review_completed: 'Review completed'
 	};
+	const dateTimeFormatter = new Intl.DateTimeFormat('en-US', {
+		dateStyle: 'medium',
+		timeStyle: 'short',
+		timeZone: 'America/Los_Angeles'
+	});
 
 	function formatWhen(value: string) {
-		return new Intl.DateTimeFormat('en-US', {
-			dateStyle: 'medium',
-			timeStyle: 'short',
-			timeZone: 'America/Los_Angeles'
-		}).format(new Date(value));
+		return dateTimeFormatter.format(new Date(value));
 	}
 </script>
 

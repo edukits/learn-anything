@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { createClient } from '@supabase/supabase-js';
-import { loadAndValidateRun, writeValidationReport } from './content-run.mjs';
+import { access, readFile } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
+import { getImportBlockers, loadAndValidateRun, writeValidationReport } from './content-run.mjs';
 import { getTargetSupabaseEnv, loadReleaseEnvironment, parseReleaseArgs } from './release-env.mjs';
 
 let manifestPath;
@@ -22,16 +24,78 @@ try {
 loadReleaseEnvironment(target);
 
 const run = await loadAndValidateRun(manifestPath);
-const reportPath = await writeValidationReport(run);
+let reportPath = await writeValidationReport(run);
+let diffReport = null;
 
 if (!run.report.valid) {
 	console.error('Refusing to import invalid content. Run content:validate for details.');
 	process.exit(1);
 }
 
+const importBlockers = getImportBlockers(run);
+if (importBlockers.length) {
+	console.error(
+		'Refusing to import content that validates for review but is not app/database importable yet.'
+	);
+	for (const blocker of importBlockers) {
+		console.error(`- ${blocker}`);
+	}
+	process.exit(1);
+}
+
+const diffReportPath = resolve(dirname(run.manifestPath), 'diff-report.json');
+try {
+	await access(diffReportPath);
+	diffReport = JSON.parse(await readFile(diffReportPath, 'utf8'));
+	if (diffReport.candidate_run_id !== run.manifest.run_id || diffReport.valid !== true) {
+		throw new Error(`Diff report does not match ${run.manifest.run_id}.`);
+	}
+	run.report.diff_summary = diffReport.summary;
+	run.report.diff_base_run_id = diffReport.base_run_id;
+	reportPath = await writeValidationReport(run);
+} catch (error) {
+	console.error(
+		`Refusing to import without a valid diff report at ${diffReportPath}. Run tools/content/diff-run.mjs first.`
+	);
+	if (error instanceof Error) {
+		console.error(error.message);
+	}
+	process.exit(1);
+}
+
 if (target === 'production' && !confirmProduction) {
 	console.error('Refusing production import without --confirm-production.');
 	process.exit(1);
+}
+
+if (target === 'production') {
+	for (const release of run.artifacts.releases ?? []) {
+		if (release.status !== 'published') {
+			continue;
+		}
+
+		if (release.manifest?.review_status !== 'approved') {
+			console.error(
+				`Refusing production import for ${release.id}: release manifest review_status must be approved.`
+			);
+			process.exit(1);
+		}
+
+		const staging = release.manifest?.staging;
+		if (!staging?.imported_at || !staging?.smoke_tested_at) {
+			console.error(
+				`Refusing production import for ${release.id}: staging import and smoke test metadata are required.`
+			);
+			process.exit(1);
+		}
+
+		if (!release.manifest?.rollback?.action) {
+			console.error(
+				`Refusing production import for ${release.id}: rollback action metadata is required.`
+			);
+			process.exit(1);
+		}
+	}
 }
 
 let env;
@@ -60,6 +124,36 @@ async function upsert(table, rows, onConflict) {
 	}
 }
 
+function reviewStatusForRelease(release) {
+	if (release.status === 'retired') {
+		return 'rolled_back';
+	}
+	if (release.status === 'published' && release.manifest?.review_status === 'approved') {
+		return target === 'production' ? 'approved' : 'published';
+	}
+	if (release.manifest?.review_status === 'rejected') {
+		return 'rejected';
+	}
+	return 'pending';
+}
+
+function releaseReviewRow(release) {
+	const staging = release.manifest?.staging ?? {};
+	return {
+		release_id: release.id,
+		review_status: reviewStatusForRelease(release),
+		validation_report: run.report,
+		diff_report: diffReport ?? {},
+		validation_passed: run.report.valid === true,
+		staging_imported_at: staging.imported_at ?? null,
+		smoke_tested_at: staging.smoke_tested_at ?? null,
+		published_at:
+			release.status === 'published' && target !== 'production'
+				? (release.published_at ?? new Date().toISOString())
+				: null
+	};
+}
+
 const {
 	subject_areas: subjectAreas,
 	topic_areas: topicAreas,
@@ -70,7 +164,8 @@ const {
 	quiz_question_links: quizQuestionLinks,
 	learning_paths: learningPaths,
 	releases,
-	topic_discovery_metadata: topicDiscoveryMetadata = []
+	topic_discovery_metadata: topicDiscoveryMetadata = [],
+	media_assets: mediaAssets = []
 } = run.artifacts;
 
 const targetReleaseStatusById = new Map(releases.map((release) => [release.id, release.status]));
@@ -99,15 +194,17 @@ await upsert(
 );
 await upsert(
 	'subject_area_versions',
-	subjectAreas.map(({ id, version, name, summary, content_run_id, source_refs, schema_version }) => ({
-		subject_area_id: id,
-		version,
-		name,
-		summary,
-		content_run_id,
-		source_refs,
-		schema_version
-	})),
+	subjectAreas.map(
+		({ id, version, name, summary, content_run_id, source_refs, schema_version }) => ({
+			subject_area_id: id,
+			version,
+			name,
+			summary,
+			content_run_id,
+			source_refs,
+			schema_version
+		})
+	),
 	'subject_area_id,version'
 );
 
@@ -118,16 +215,27 @@ await upsert(
 );
 await upsert(
 	'topic_area_versions',
-	topicAreas.map(({ id, version, subject_area_id, name, summary, content_run_id, source_refs, schema_version }) => ({
-		topic_area_id: id,
-		version,
-		subject_area_id,
-		name,
-		summary,
-		content_run_id,
-		source_refs,
-		schema_version
-	})),
+	topicAreas.map(
+		({
+			id,
+			version,
+			subject_area_id,
+			name,
+			summary,
+			content_run_id,
+			source_refs,
+			schema_version
+		}) => ({
+			topic_area_id: id,
+			version,
+			subject_area_id,
+			name,
+			summary,
+			content_run_id,
+			source_refs,
+			schema_version
+		})
+	),
 	'topic_area_id,version'
 );
 
@@ -138,17 +246,29 @@ await upsert(
 );
 await upsert(
 	'skill_versions',
-	skills.map(({ id, version, topic_area_id, name, device, summary, content_run_id, source_refs, schema_version }) => ({
-		skill_id: id,
-		version,
-		topic_area_id,
-		name,
-		device,
-		summary,
-		content_run_id,
-		source_refs,
-		schema_version
-	})),
+	skills.map(
+		({
+			id,
+			version,
+			topic_area_id,
+			name,
+			device,
+			summary,
+			content_run_id,
+			source_refs,
+			schema_version
+		}) => ({
+			skill_id: id,
+			version,
+			topic_area_id,
+			name,
+			device,
+			summary,
+			content_run_id,
+			source_refs,
+			schema_version
+		})
+	),
 	'skill_id,version'
 );
 
@@ -159,20 +279,35 @@ await upsert(
 );
 await upsert(
 	'lesson_versions',
-	lessons.map(({ id, version, topic_area_id, title, summary, body_markdown, skill_ids, estimated_minutes, sort_order, content_run_id, source_refs, schema_version }) => ({
-		lesson_id: id,
-		version,
-		topic_area_id,
-		title,
-		summary,
-		body_markdown,
-		skill_ids,
-		estimated_minutes,
-		sort_order,
-		content_run_id,
-		source_refs,
-		schema_version
-	})),
+	lessons.map(
+		({
+			id,
+			version,
+			topic_area_id,
+			title,
+			summary,
+			body_markdown,
+			skill_ids,
+			estimated_minutes,
+			sort_order,
+			content_run_id,
+			source_refs,
+			schema_version
+		}) => ({
+			lesson_id: id,
+			version,
+			topic_area_id,
+			title,
+			summary,
+			body_markdown,
+			skill_ids,
+			estimated_minutes,
+			sort_order,
+			content_run_id,
+			source_refs,
+			schema_version
+		})
+	),
 	'lesson_id,version'
 );
 
@@ -183,18 +318,31 @@ await upsert(
 );
 await upsert(
 	'quiz_versions',
-	quizzes.map(({ id, version, topic_area_id, title, description, kind, question_count, content_run_id, source_refs, schema_version }) => ({
-		quiz_id: id,
-		version,
-		topic_area_id,
-		title,
-		description,
-		kind,
-		question_count,
-		content_run_id,
-		source_refs,
-		schema_version
-	})),
+	quizzes.map(
+		({
+			id,
+			version,
+			topic_area_id,
+			title,
+			description,
+			kind,
+			question_count,
+			content_run_id,
+			source_refs,
+			schema_version
+		}) => ({
+			quiz_id: id,
+			version,
+			topic_area_id,
+			title,
+			description,
+			kind,
+			question_count,
+			content_run_id,
+			source_refs,
+			schema_version
+		})
+	),
 	'quiz_id,version'
 );
 
@@ -205,26 +353,58 @@ await upsert(
 );
 await upsert(
 	'quiz_question_versions',
-	questions.map(({ id, version, topic_area_id, skill_id, device, question_type, difficulty, prompt, choices, correct_choice_id, explanation, content_run_id, source_refs, schema_version }) => ({
-		question_id: id,
-		version,
-		topic_area_id,
-		skill_id,
-		device,
-		question_type,
-		difficulty,
-		prompt,
-		choices,
-		correct_choice_id,
-		explanation,
-		content_run_id,
-		source_refs,
-		schema_version
-	})),
+	questions.map(
+		({
+			id,
+			version,
+			topic_area_id,
+			skill_id,
+			device,
+			question_type,
+			difficulty,
+			prompt,
+			choices,
+			correct_choice_id,
+			correct_choice_ids,
+			correct_numeric_answer,
+			sequence_items,
+			accepted_answers,
+			grading_rubric,
+			explanation,
+			content_run_id,
+			source_refs,
+			schema_version
+		}) => ({
+			question_id: id,
+			version,
+			topic_area_id,
+			skill_id,
+			device,
+			question_type,
+			difficulty,
+			prompt,
+			choices: choices ?? [],
+			correct_choice_id: correct_choice_id ?? '__rich_question__',
+			correct_choice_ids: correct_choice_ids ?? [],
+			correct_numeric_value: correct_numeric_answer?.value ?? null,
+			correct_numeric_tolerance: correct_numeric_answer?.tolerance ?? 0,
+			sequence_items: sequence_items ?? [],
+			accepted_answers: accepted_answers ?? [],
+			grading_rubric: grading_rubric ?? null,
+			explanation,
+			content_run_id,
+			source_refs,
+			schema_version
+		})
+	),
 	'question_id,version'
 );
 
-await upsert('quiz_question_to_quiz', quizQuestionLinks, 'quiz_id,quiz_version,question_id,question_version');
+await upsert(
+	'quiz_question_to_quiz',
+	quizQuestionLinks,
+	'quiz_id,quiz_version,question_id,question_version'
+);
 
 await upsert(
 	'learning_paths',
@@ -233,16 +413,27 @@ await upsert(
 );
 await upsert(
 	'learning_path_versions',
-	learningPaths.map(({ id, version, topic_area_id, title, summary, content_run_id, source_refs, schema_version }) => ({
-		learning_path_id: id,
-		version,
-		topic_area_id,
-		title,
-		summary,
-		content_run_id,
-		source_refs,
-		schema_version
-	})),
+	learningPaths.map(
+		({
+			id,
+			version,
+			topic_area_id,
+			title,
+			summary,
+			content_run_id,
+			source_refs,
+			schema_version
+		}) => ({
+			learning_path_id: id,
+			version,
+			topic_area_id,
+			title,
+			summary,
+			content_run_id,
+			source_refs,
+			schema_version
+		})
+	),
 	'learning_path_id,version'
 );
 await upsert(
@@ -262,18 +453,65 @@ await upsert(
 );
 
 await upsert(
+	'media_assets',
+	mediaAssets.map(({ id }) => ({ id })),
+	'id'
+);
+await upsert(
+	'media_asset_versions',
+	mediaAssets.map(
+		({
+			id,
+			version,
+			asset_type,
+			storage_bucket,
+			storage_path,
+			mime_type,
+			alt_text,
+			content_run_id,
+			source_refs,
+			schema_version
+		}) => ({
+			media_asset_id: id,
+			version,
+			asset_type,
+			storage_bucket,
+			storage_path,
+			mime_type,
+			alt_text: alt_text ?? null,
+			content_run_id,
+			source_refs,
+			schema_version
+		})
+	),
+	'media_asset_id,version'
+);
+
+await upsert(
 	'content_releases',
-	releases.map(({ id, slug, title, scope_type, scope_id, status, content_run_id, manifest, published_at }) => ({
-		id,
-		slug,
-		title,
-		scope_type,
-		scope_id,
-		status: status === 'published' ? 'draft' : status,
-		content_run_id,
-		manifest,
-		published_at: status === 'published' ? null : (published_at ?? null)
-	})),
+	releases.map(
+		({
+			id,
+			slug,
+			title,
+			scope_type,
+			scope_id,
+			status,
+			content_run_id,
+			manifest,
+			published_at
+		}) => ({
+			id,
+			slug,
+			title,
+			scope_type,
+			scope_id,
+			status: status === 'published' ? 'draft' : status,
+			content_run_id,
+			manifest,
+			published_at: status === 'published' ? null : (published_at ?? null)
+		})
+	),
 	'id'
 );
 await upsert(
@@ -298,6 +536,8 @@ await upsert(
 	),
 	'release_id,content_type,content_id,content_version'
 );
+
+await upsert('content_release_reviews', releases.map(releaseReviewRow), 'release_id');
 
 await upsert(
 	'topic_discovery_metadata',
@@ -338,7 +578,7 @@ await upsert(
 await upsert(
 	'content_releases',
 	releases
-		.filter((release) => targetReleaseStatusById.get(release.id) === 'published')
+		.filter((release) => target !== 'production' && targetReleaseStatusById.get(release.id) === 'published')
 		.map(({ id, slug, title, scope_type, scope_id, content_run_id, manifest, published_at }) => ({
 			id,
 			slug,
@@ -353,4 +593,6 @@ await upsert(
 	'id'
 );
 
-console.log(`Imported ${run.manifest.run_id} into ${target} (${env.url}). Validation report: ${reportPath}`);
+console.log(
+	`Imported ${run.manifest.run_id} into ${target} (${env.url}). Validation report: ${reportPath}`
+);

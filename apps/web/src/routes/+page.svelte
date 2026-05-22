@@ -21,13 +21,13 @@
 				<Button href={`/topics/${data.topic.slug}/preview`} variant="secondary" size="lg" label="Preview" />
 			</div>
 		</div>
-		<div class="path-preview" aria-label="Literary Devices path preview">
+		<div class="path-preview" aria-label={`${data.topic.name} path preview`}>
 			<div class="path-node done"><BookOpen size={24} /> {pluralize(data.topic.lesson_count, 'lesson')}</div>
 			<div class="path-line"></div>
 			<div class="path-node active"><Trophy size={24} /> {pluralize(data.topic.quiz_count, 'quiz', 'quizzes')}</div>
 			<div class="metrics">
 				<span><Clock size={16} /> {data.topic.estimated_minutes} min</span>
-				<span><Layers size={16} /> {data.topic.covered_devices.length} devices</span>
+				<span><Layers size={16} /> {data.topic.covered_skill_labels.length} skills</span>
 			</div>
 		</div>
 	</section>

@@ -1,12 +1,14 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import { Button, RichText } from '@learn-anything/ui';
+	import { getTopicRenderer } from '$lib/features/topic-renderers';
+	import { Button } from '@learn-anything/ui';
 	import { ArrowRight, LockKeyhole } from '@lucide/svelte';
 
 	let { data }: PageProps = $props();
 
 	let appHref = $derived(data.isSignedIn ? data.topic.app_path : '/sign-in');
 	let appLabel = $derived(data.isSignedIn ? 'Continue in app' : 'Sign in to practice');
+	let RichTextRenderer = $derived(getTopicRenderer(data.topic.slug).RichTextRenderer);
 </script>
 
 <main class="page preview-page">
@@ -16,13 +18,13 @@
 			<h1>{data.topic.name}</h1>
 		</div>
 
-		<RichText content={data.topic.preview_markdown} />
+		<RichTextRenderer content={data.topic.preview_markdown} />
 
 		<div class="locked-note">
 			<LockKeyhole size={20} />
 			<p>
-				Full lessons, quizzes, answer keys, explanations, progress, XP, streaks, and review
-				sessions require sign-in.
+				Full lessons, quizzes, answer keys, explanations, progress, XP, streaks, and review sessions
+				require sign-in.
 			</p>
 		</div>
 

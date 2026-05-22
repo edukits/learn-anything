@@ -19,6 +19,8 @@
     "Stable ids and versions are unique",
     "Question answer keys point to declared choices",
     "Quiz-to-question references are complete and ordered",
+    "Question interaction payloads match their declared question_type",
+    "Media assets have valid storage paths, MIME types, and accessibility metadata",
     "Release items point to imported content versions",
     "Public discovery metadata references imported topics, releases, and skills"
   ],

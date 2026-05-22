@@ -1,0 +1,111 @@
+{
+  "run_id": "run_2026_05_22_exam_prep_california_driving_test_v1",
+  "valid": true,
+  "counts": {
+    "subject_areas": 1,
+    "topic_areas": 1,
+    "skills": 4,
+    "lessons": 2,
+    "quizzes": 2,
+    "questions": 8,
+    "quiz_question_links": 8,
+    "learning_paths": 1,
+    "releases": 1,
+    "topic_discovery_metadata": 1,
+    "media_assets": 0
+  },
+  "checks": [
+    "JSONL parses successfully",
+    "Records match v1 schemas",
+    "Stable ids and versions are unique",
+    "Question answer keys point to declared choices",
+    "Quiz-to-question references are complete and ordered",
+    "Question interaction payloads match their declared question_type",
+    "Media assets, when present, have valid storage paths, MIME types, and accessibility metadata",
+    "Release items point to imported content versions",
+    "Public discovery metadata references imported topics, releases, and skills"
+  ],
+  "failures": [],
+  "importable": true,
+  "import_blockers": [],
+  "diff_summary": {
+    "learning_paths": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "lessons": {
+      "added": 2,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "media_assets": {
+      "added": 0,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "questions": {
+      "added": 8,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "quiz_question_links": {
+      "added": 8,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "quizzes": {
+      "added": 2,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "releases": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "skills": {
+      "added": 4,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "subject_areas": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "topic_areas": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "topic_discovery_metadata": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    }
+  },
+  "diff_base_run_id": null
+}

@@ -78,18 +78,127 @@ const choiceSchema = z.object({
 	label: z.string().min(1)
 });
 
-const questionSchema = z.object({
-	...versionedBase,
-	topic_area_id: z.string().min(1),
-	skill_id: z.string().min(1),
-	device: z.string().min(1),
-	question_type: z.enum(['recognition', 'application']),
-	difficulty: z.enum(['easy', 'medium', 'hard']),
-	prompt: z.string().min(1),
-	choices: z.array(choiceSchema).min(2),
-	correct_choice_id: z.string().min(1),
-	explanation: z.string().min(1)
+const questionTypeSchema = z.enum([
+	'recognition',
+	'application',
+	'multiple_select',
+	'numeric_answer',
+	'sequencing',
+	'short_answer'
+]);
+const importableQuestionTypes = new Set([
+	'recognition',
+	'application',
+	'multiple_select',
+	'numeric_answer',
+	'sequencing',
+	'short_answer'
+]);
+
+const numericAnswerSchema = z.object({
+	value: z.number(),
+	tolerance: z.number().nonnegative().default(0)
 });
+
+const sequenceItemSchema = z.object({
+	id: z.string().min(1),
+	label: z.string().min(1)
+});
+
+const questionSchema = z
+	.object({
+		...versionedBase,
+		topic_area_id: z.string().min(1),
+		skill_id: z.string().min(1),
+		device: z.string().min(1),
+		question_type: questionTypeSchema,
+		difficulty: z.enum(['easy', 'medium', 'hard']),
+		prompt: z.string().min(1),
+		choices: z.array(choiceSchema).optional(),
+		correct_choice_id: z.string().min(1).optional(),
+		correct_choice_ids: z.array(z.string().min(1)).optional(),
+		correct_numeric_answer: numericAnswerSchema.optional(),
+		sequence_items: z.array(sequenceItemSchema).optional(),
+		accepted_answers: z.array(z.string().min(1)).optional(),
+		grading_rubric: z.string().min(1).optional(),
+		explanation: z.string().min(1)
+	})
+	.superRefine((question, context) => {
+		const choices = question.choices ?? [];
+		const choiceIds = new Set(choices.map((choice) => choice.id));
+
+		if (question.question_type === 'recognition' || question.question_type === 'application') {
+			if (choices.length < 2) {
+				context.addIssue({
+					code: 'custom',
+					message: `${question.question_type} questions require at least 2 choices`,
+					path: ['choices']
+				});
+			}
+			if (!question.correct_choice_id) {
+				context.addIssue({
+					code: 'custom',
+					message: `${question.question_type} questions require correct_choice_id`,
+					path: ['correct_choice_id']
+				});
+			}
+			return;
+		}
+
+		if (question.question_type === 'multiple_select') {
+			if (choices.length < 2) {
+				context.addIssue({
+					code: 'custom',
+					message: 'multiple_select questions require at least 2 choices',
+					path: ['choices']
+				});
+			}
+			if ((question.correct_choice_ids ?? []).length < 2) {
+				context.addIssue({
+					code: 'custom',
+					message: 'multiple_select questions require at least 2 correct_choice_ids',
+					path: ['correct_choice_ids']
+				});
+			}
+			for (const choiceId of question.correct_choice_ids ?? []) {
+				if (!choiceIds.has(choiceId)) {
+					context.addIssue({
+						code: 'custom',
+						message: `correct_choice_ids contains ${choiceId}, which is not present in choices`,
+						path: ['correct_choice_ids']
+					});
+				}
+			}
+			return;
+		}
+
+		if (question.question_type === 'numeric_answer' && !question.correct_numeric_answer) {
+			context.addIssue({
+				code: 'custom',
+				message: 'numeric_answer questions require correct_numeric_answer',
+				path: ['correct_numeric_answer']
+			});
+		}
+
+		if (question.question_type === 'sequencing' && (question.sequence_items ?? []).length < 2) {
+			context.addIssue({
+				code: 'custom',
+				message: 'sequencing questions require at least 2 sequence_items',
+				path: ['sequence_items']
+			});
+		}
+
+		if (
+			question.question_type === 'short_answer' &&
+			!(question.accepted_answers?.length)
+		) {
+			context.addIssue({
+				code: 'custom',
+				message: 'short_answer questions require accepted_answers for deterministic grading',
+				path: ['accepted_answers']
+			});
+		}
+	});
 
 const quizQuestionLinkSchema = z.object({
 	quiz_id: z.string().min(1),
@@ -153,13 +262,22 @@ const topicDiscoverySchema = z.object({
 	name: z.string().min(1),
 	public_summary: z.string().min(1),
 	preview_markdown: z.string().min(1),
-	app_path: z.string().regex(/^\/app\/[a-z0-9-]+$/),
+	app_path: z.string().regex(/^\/app\/(?:topics\/)?[a-z0-9-]+$/),
 	level_label: z.string().min(1),
 	estimated_minutes: z.number().int().positive(),
 	lesson_count: z.number().int().nonnegative(),
 	quiz_count: z.number().int().nonnegative(),
 	covered_skill_ids: z.array(z.string().min(1)).min(1),
 	covered_devices: z.array(z.string().min(1)).min(1)
+});
+
+const mediaAssetSchema = z.object({
+	...versionedBase,
+	asset_type: z.enum(['image', 'audio', 'video', 'document', 'interactive']),
+	storage_bucket: z.string().min(1),
+	storage_path: z.string().min(1),
+	mime_type: z.string().min(1),
+	alt_text: z.string().min(1).nullable().optional()
 });
 
 const artifactSchemas = {
@@ -172,7 +290,8 @@ const artifactSchemas = {
 	quiz_question_links: quizQuestionLinkSchema,
 	learning_paths: learningPathSchema,
 	releases: releaseSchema,
-	topic_discovery_metadata: topicDiscoverySchema
+	topic_discovery_metadata: topicDiscoverySchema,
+	media_assets: mediaAssetSchema
 };
 
 async function readJson(path) {
@@ -216,13 +335,27 @@ function assertUnique(records, name, failures) {
 function assertRun(records, runId, name, failures) {
 	for (const record of records) {
 		if (record.content_run_id !== runId) {
-			failures.push(`${name} ${record.id ?? record.quiz_id} references ${record.content_run_id}, expected ${runId}`);
+			failures.push(
+				`${name} ${record.id ?? record.quiz_id} references ${record.content_run_id}, expected ${runId}`
+			);
 		}
 	}
 }
 
 function has(map, id, version) {
 	return map.has(refKey(id, version));
+}
+
+export function getImportBlockers(run) {
+	const blockers = [];
+	for (const question of run.artifacts.questions ?? []) {
+		if (!importableQuestionTypes.has(question.question_type)) {
+			blockers.push(
+				`Question ${question.id}@${question.version} uses ${question.question_type}, which validates for review but is not importable until the app/database support that interaction.`
+			);
+		}
+	}
+	return blockers;
 }
 
 export async function loadAndValidateRun(manifestPath) {
@@ -261,6 +394,7 @@ export async function loadAndValidateRun(manifestPath) {
 	const learningPaths = artifacts.learning_paths ?? [];
 	const releases = artifacts.releases ?? [];
 	const topicDiscoveryMetadata = artifacts.topic_discovery_metadata ?? [];
+	const mediaAssets = artifacts.media_assets ?? [];
 
 	for (const [name, records] of Object.entries({
 		subject_areas: subjectAreas,
@@ -269,7 +403,8 @@ export async function loadAndValidateRun(manifestPath) {
 		lessons,
 		quizzes,
 		questions,
-		learning_paths: learningPaths
+		learning_paths: learningPaths,
+		media_assets: mediaAssets
 	})) {
 		assertUnique(records, name, failures);
 		assertRun(records, manifest.run_id, name, failures);
@@ -283,34 +418,71 @@ export async function loadAndValidateRun(manifestPath) {
 	const quizMap = new Map(quizzes.map((record) => [keyFor(record), record]));
 	const questionMap = new Map(questions.map((record) => [keyFor(record), record]));
 	const pathMap = new Map(learningPaths.map((record) => [keyFor(record), record]));
+	const mediaAssetMap = new Map(mediaAssets.map((record) => [keyFor(record), record]));
 
 	for (const topic of topicAreas) {
 		if (!has(subjectMap, topic.subject_area_id, 1)) {
-			failures.push(`Topic ${topic.id}@${topic.version} references missing subject ${topic.subject_area_id}@1`);
+			failures.push(
+				`Topic ${topic.id}@${topic.version} references missing subject ${topic.subject_area_id}@1`
+			);
 		}
 	}
 
 	for (const skill of skills) {
 		if (!has(topicMap, skill.topic_area_id, 1)) {
-			failures.push(`Skill ${skill.id}@${skill.version} references missing topic ${skill.topic_area_id}@1`);
+			failures.push(
+				`Skill ${skill.id}@${skill.version} references missing topic ${skill.topic_area_id}@1`
+			);
 		}
 	}
 
 	for (const lesson of lessons) {
 		for (const skillId of lesson.skill_ids) {
 			if (!has(skillMap, skillId, 1)) {
-				failures.push(`Lesson ${lesson.id}@${lesson.version} references missing skill ${skillId}@1`);
+				failures.push(
+					`Lesson ${lesson.id}@${lesson.version} references missing skill ${skillId}@1`
+				);
 			}
 		}
 	}
 
 	for (const question of questions) {
-		const choiceIds = new Set(question.choices.map((choice) => choice.id));
-		if (!choiceIds.has(question.correct_choice_id)) {
-			failures.push(`Question ${question.id}@${question.version} has a correct_choice_id not present in choices`);
+		const choiceIds = new Set((question.choices ?? []).map((choice) => choice.id));
+		if (question.correct_choice_id && !choiceIds.has(question.correct_choice_id)) {
+			failures.push(
+				`Question ${question.id}@${question.version} has a correct_choice_id not present in choices`
+			);
 		}
 		if (!has(skillMap, question.skill_id, 1)) {
-			failures.push(`Question ${question.id}@${question.version} references missing skill ${question.skill_id}@1`);
+			failures.push(
+				`Question ${question.id}@${question.version} references missing skill ${question.skill_id}@1`
+			);
+		}
+	}
+
+	for (const mediaAsset of mediaAssets) {
+		if (mediaAsset.storage_path.startsWith('/')) {
+			failures.push(
+				`Media asset ${keyFor(mediaAsset)} storage_path must be relative, not absolute`
+			);
+		}
+		if (mediaAsset.asset_type === 'image' && !mediaAsset.mime_type.startsWith('image/')) {
+			failures.push(
+				`Media asset ${keyFor(mediaAsset)} has asset_type image but mime_type ${mediaAsset.mime_type}`
+			);
+		}
+		if (mediaAsset.asset_type === 'audio' && !mediaAsset.mime_type.startsWith('audio/')) {
+			failures.push(
+				`Media asset ${keyFor(mediaAsset)} has asset_type audio but mime_type ${mediaAsset.mime_type}`
+			);
+		}
+		if (mediaAsset.asset_type === 'video' && !mediaAsset.mime_type.startsWith('video/')) {
+			failures.push(
+				`Media asset ${keyFor(mediaAsset)} has asset_type video but mime_type ${mediaAsset.mime_type}`
+			);
+		}
+		if (mediaAsset.asset_type === 'image' && !mediaAsset.alt_text) {
+			failures.push(`Image media asset ${keyFor(mediaAsset)} is missing alt_text`);
 		}
 	}
 
@@ -320,7 +492,9 @@ export async function loadAndValidateRun(manifestPath) {
 			failures.push(`Quiz link references missing quiz ${link.quiz_id}@${link.quiz_version}`);
 		}
 		if (!has(questionMap, link.question_id, link.question_version)) {
-			failures.push(`Quiz link references missing question ${link.question_id}@${link.question_version}`);
+			failures.push(
+				`Quiz link references missing question ${link.question_id}@${link.question_version}`
+			);
 		}
 		const quizKey = refKey(link.quiz_id, link.quiz_version);
 		const orderSet = linkOrderByQuiz.get(quizKey) ?? new Set();
@@ -334,7 +508,9 @@ export async function loadAndValidateRun(manifestPath) {
 	for (const quiz of quizzes) {
 		const orderSet = linkOrderByQuiz.get(keyFor(quiz)) ?? new Set();
 		if (orderSet.size !== quiz.question_count) {
-			failures.push(`Quiz ${keyFor(quiz)} declares ${quiz.question_count} questions but has ${orderSet.size} links`);
+			failures.push(
+				`Quiz ${keyFor(quiz)} declares ${quiz.question_count} questions but has ${orderSet.size} links`
+			);
 		}
 		for (let ordering = 1; ordering <= quiz.question_count; ordering += 1) {
 			if (!orderSet.has(ordering)) {
@@ -348,10 +524,14 @@ export async function loadAndValidateRun(manifestPath) {
 		for (const item of learningPath.items) {
 			const itemMap = item.item_type === 'lesson' ? lessonMap : quizMap;
 			if (!itemMap.has(refKey(item.item_id, item.item_version))) {
-				failures.push(`Learning path ${keyFor(learningPath)} references missing ${item.item_type} ${item.item_id}@${item.item_version}`);
+				failures.push(
+					`Learning path ${keyFor(learningPath)} references missing ${item.item_type} ${item.item_id}@${item.item_version}`
+				);
 			}
 			if (orderSet.has(item.ordering)) {
-				failures.push(`Learning path ${keyFor(learningPath)} has duplicate ordering ${item.ordering}`);
+				failures.push(
+					`Learning path ${keyFor(learningPath)} has duplicate ordering ${item.ordering}`
+				);
 			}
 			orderSet.add(item.ordering);
 		}
@@ -369,7 +549,8 @@ export async function loadAndValidateRun(manifestPath) {
 		lesson: lessonMap,
 		quiz: quizMap,
 		quiz_question: questionMap,
-		learning_path: pathMap
+		learning_path: pathMap,
+		media_asset: mediaAssetMap
 	};
 
 	for (const release of releases) {
@@ -379,7 +560,9 @@ export async function loadAndValidateRun(manifestPath) {
 		for (const item of release.items) {
 			const contentMap = contentMaps[item.content_type];
 			if (!contentMap?.has(refKey(item.content_id, item.content_version))) {
-				failures.push(`Release ${release.id} references missing ${item.content_type} ${item.content_id}@${item.content_version}`);
+				failures.push(
+					`Release ${release.id} references missing ${item.content_type} ${item.content_id}@${item.content_version}`
+				);
 			}
 		}
 	}
@@ -393,7 +576,8 @@ export async function loadAndValidateRun(manifestPath) {
 		}
 
 		const hasDiscoveryMetadata = topicDiscoveryMetadata.some(
-			(metadata) => metadata.release_id === release.id && metadata.topic_area_id === release.scope_id
+			(metadata) =>
+				metadata.release_id === release.id && metadata.topic_area_id === release.scope_id
 		);
 		if (!hasDiscoveryMetadata) {
 			failures.push(`Published topic release ${release.id} is missing public discovery metadata`);
@@ -408,20 +592,32 @@ export async function loadAndValidateRun(manifestPath) {
 
 		const release = releases.find((candidate) => candidate.id === metadata.release_id);
 		if (!releaseIds.has(metadata.release_id)) {
-			failures.push(`Discovery metadata for ${metadata.topic_area_id} references missing release ${metadata.release_id}`);
+			failures.push(
+				`Discovery metadata for ${metadata.topic_area_id} references missing release ${metadata.release_id}`
+			);
 		}
-		if (release && (release.scope_type !== 'topic_area' || release.scope_id !== metadata.topic_area_id)) {
-			failures.push(`Discovery metadata for ${metadata.topic_area_id} does not match release ${metadata.release_id} scope`);
+		if (
+			release &&
+			(release.scope_type !== 'topic_area' || release.scope_id !== metadata.topic_area_id)
+		) {
+			failures.push(
+				`Discovery metadata for ${metadata.topic_area_id} does not match release ${metadata.release_id} scope`
+			);
 		}
 		const topic = topicAreas.find((candidate) => candidate.id === metadata.topic_area_id);
 		if (!topic) {
 			failures.push(`Discovery metadata references missing topic ${metadata.topic_area_id}`);
 		}
 		if (topic && topic.slug !== metadata.slug) {
-			failures.push(`Discovery metadata for ${metadata.topic_area_id} has slug ${metadata.slug}, expected ${topic.slug}`);
+			failures.push(
+				`Discovery metadata for ${metadata.topic_area_id} has slug ${metadata.slug}, expected ${topic.slug}`
+			);
 		}
-		if (topic && metadata.app_path !== `/app/${topic.slug}`) {
-			failures.push(`Discovery metadata for ${metadata.topic_area_id} has app_path ${metadata.app_path}, expected /app/${topic.slug}`);
+		const validAppPaths = new Set([`/app/${topic?.slug}`, `/app/topics/${topic?.slug}`]);
+		if (topic && !validAppPaths.has(metadata.app_path)) {
+			failures.push(
+				`Discovery metadata for ${metadata.topic_area_id} has app_path ${metadata.app_path}, expected /app/topics/${topic.slug}`
+			);
 		}
 		const releaseItems = release?.items ?? [];
 		const releaseLessonCount = releaseItems.filter((item) => item.content_type === 'lesson').length;
@@ -438,20 +634,30 @@ export async function loadAndValidateRun(manifestPath) {
 		const metadataDevices = metadata.covered_devices.toSorted();
 
 		if (metadata.lesson_count !== releaseLessonCount) {
-			failures.push(`Discovery metadata for ${metadata.topic_area_id} declares ${metadata.lesson_count} lessons but release has ${releaseLessonCount}`);
+			failures.push(
+				`Discovery metadata for ${metadata.topic_area_id} declares ${metadata.lesson_count} lessons but release has ${releaseLessonCount}`
+			);
 		}
 		if (metadata.quiz_count !== releaseQuizCount) {
-			failures.push(`Discovery metadata for ${metadata.topic_area_id} declares ${metadata.quiz_count} quizzes but release has ${releaseQuizCount}`);
+			failures.push(
+				`Discovery metadata for ${metadata.topic_area_id} declares ${metadata.quiz_count} quizzes but release has ${releaseQuizCount}`
+			);
 		}
 		if (JSON.stringify(metadataSkillIds) !== JSON.stringify(releaseSkillIds)) {
-			failures.push(`Discovery metadata for ${metadata.topic_area_id} covered_skill_ids do not match release skills`);
+			failures.push(
+				`Discovery metadata for ${metadata.topic_area_id} covered_skill_ids do not match release skills`
+			);
 		}
 		if (JSON.stringify(metadataDevices) !== JSON.stringify(releaseDevices)) {
-			failures.push(`Discovery metadata for ${metadata.topic_area_id} covered_devices do not match release skills`);
+			failures.push(
+				`Discovery metadata for ${metadata.topic_area_id} covered_devices do not match release skills`
+			);
 		}
 		for (const skillId of metadata.covered_skill_ids) {
 			if (!skills.some((skill) => skill.id === skillId)) {
-				failures.push(`Discovery metadata for ${metadata.topic_area_id} references missing skill ${skillId}`);
+				failures.push(
+					`Discovery metadata for ${metadata.topic_area_id} references missing skill ${skillId}`
+				);
 			}
 		}
 	}
@@ -461,6 +667,10 @@ export async function loadAndValidateRun(manifestPath) {
 	checks.push('Stable ids and versions are unique');
 	checks.push('Question answer keys point to declared choices');
 	checks.push('Quiz-to-question references are complete and ordered');
+	checks.push('Question interaction payloads match their declared question_type');
+	checks.push(
+		'Media assets, when present, have valid storage paths, MIME types, and accessibility metadata'
+	);
 	checks.push('Release items point to imported content versions');
 	checks.push('Public discovery metadata references imported topics, releases, and skills');
 
@@ -468,7 +678,7 @@ export async function loadAndValidateRun(manifestPath) {
 		Object.entries(artifacts).map(([name, records]) => [name, records.length])
 	);
 
-	return {
+	const run = {
 		manifestPath: absoluteManifestPath,
 		manifestDir,
 		manifest,
@@ -478,12 +688,20 @@ export async function loadAndValidateRun(manifestPath) {
 			valid: failures.length === 0,
 			counts,
 			checks,
-			failures
+			failures,
+			importable: true,
+			import_blockers: []
 		}
 	};
+	run.report.import_blockers = getImportBlockers(run);
+	run.report.importable = run.report.import_blockers.length === 0;
+	return run;
 }
 
-export async function writeValidationReport(run, outputPath = resolve(run.manifestDir, 'validation-report.json')) {
+export async function writeValidationReport(
+	run,
+	outputPath = resolve(run.manifestDir, 'validation-report.json')
+) {
 	await writeFile(outputPath, `${JSON.stringify(run.report, null, 2)}\n`);
 	return outputPath;
 }

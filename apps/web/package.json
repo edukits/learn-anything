@@ -9,7 +9,7 @@
 		"preview": "vite preview --host 127.0.0.1",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"lint": "oxlint src",
-		"test": "pnpm run check"
+		"test": "vitest run"
 	},
 	"dependencies": {
 		"@learn-anything/tokens": "workspace:*",
@@ -30,6 +30,7 @@
 		"@types/node": "^25.9.1",
 		"oxlint": "^1.66.0",
 		"svelte-check": "^4.4.8",
-		"typescript": "^6.0.3"
+		"typescript": "^6.0.3",
+		"vitest": "^4.1.7"
 	}
 }

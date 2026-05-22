@@ -1,0 +1,325 @@
+{
+  "base_run_id": null,
+  "candidate_run_id": "run_2026_05_22_mathematics_linear_equations_v1",
+  "valid": true,
+  "artifacts": {
+    "learning_paths": {
+      "added": [
+        {
+          "identity": "learning_path_linear_equations",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "lessons": {
+      "added": [
+        {
+          "identity": "lesson_linear_equations_balance",
+          "version": 1
+        },
+        {
+          "identity": "lesson_linear_equations_inverse_operations",
+          "version": 1
+        },
+        {
+          "identity": "lesson_linear_equations_simplify",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "media_assets": {
+      "added": [],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "questions": {
+      "added": [
+        {
+          "identity": "question_linear_equations_balance_1",
+          "version": 1
+        },
+        {
+          "identity": "question_linear_equations_balance_2",
+          "version": 1
+        },
+        {
+          "identity": "question_linear_equations_balance_3",
+          "version": 1
+        },
+        {
+          "identity": "question_linear_equations_balance_4",
+          "version": 1
+        },
+        {
+          "identity": "question_linear_equations_inverse_1",
+          "version": 1
+        },
+        {
+          "identity": "question_linear_equations_inverse_2",
+          "version": 1
+        },
+        {
+          "identity": "question_linear_equations_inverse_3",
+          "version": 1
+        },
+        {
+          "identity": "question_linear_equations_inverse_4",
+          "version": 1
+        },
+        {
+          "identity": "question_linear_equations_simplify_1",
+          "version": 1
+        },
+        {
+          "identity": "question_linear_equations_simplify_2",
+          "version": 1
+        },
+        {
+          "identity": "question_linear_equations_simplify_3",
+          "version": 1
+        },
+        {
+          "identity": "question_linear_equations_simplify_4",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "quiz_question_links": {
+      "added": [
+        {
+          "identity": "quiz_linear_equations_balance@1:question_linear_equations_balance_1@1",
+          "version": 1
+        },
+        {
+          "identity": "quiz_linear_equations_balance@1:question_linear_equations_balance_2@1",
+          "version": 1
+        },
+        {
+          "identity": "quiz_linear_equations_balance@1:question_linear_equations_balance_3@1",
+          "version": 1
+        },
+        {
+          "identity": "quiz_linear_equations_balance@1:question_linear_equations_balance_4@1",
+          "version": 1
+        },
+        {
+          "identity": "quiz_linear_equations_inverse_operations@1:question_linear_equations_inverse_1@1",
+          "version": 1
+        },
+        {
+          "identity": "quiz_linear_equations_inverse_operations@1:question_linear_equations_inverse_2@1",
+          "version": 1
+        },
+        {
+          "identity": "quiz_linear_equations_inverse_operations@1:question_linear_equations_inverse_3@1",
+          "version": 1
+        },
+        {
+          "identity": "quiz_linear_equations_inverse_operations@1:question_linear_equations_inverse_4@1",
+          "version": 1
+        },
+        {
+          "identity": "quiz_linear_equations_simplify@1:question_linear_equations_simplify_1@1",
+          "version": 1
+        },
+        {
+          "identity": "quiz_linear_equations_simplify@1:question_linear_equations_simplify_2@1",
+          "version": 1
+        },
+        {
+          "identity": "quiz_linear_equations_simplify@1:question_linear_equations_simplify_3@1",
+          "version": 1
+        },
+        {
+          "identity": "quiz_linear_equations_simplify@1:question_linear_equations_simplify_4@1",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "quizzes": {
+      "added": [
+        {
+          "identity": "quiz_linear_equations_balance",
+          "version": 1
+        },
+        {
+          "identity": "quiz_linear_equations_inverse_operations",
+          "version": 1
+        },
+        {
+          "identity": "quiz_linear_equations_simplify",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "releases": {
+      "added": [
+        {
+          "identity": "release_mathematics_linear_equations_v1",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "skills": {
+      "added": [
+        {
+          "identity": "skill_equation_balance",
+          "version": 1
+        },
+        {
+          "identity": "skill_inverse_operations",
+          "version": 1
+        },
+        {
+          "identity": "skill_simplify_then_solve",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "subject_areas": {
+      "added": [
+        {
+          "identity": "subject_mathematics",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "topic_areas": {
+      "added": [
+        {
+          "identity": "topic_linear_equations",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "topic_discovery_metadata": {
+      "added": [
+        {
+          "identity": "topic_linear_equations:release_mathematics_linear_equations_v1",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    }
+  },
+  "summary": {
+    "learning_paths": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "lessons": {
+      "added": 3,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "media_assets": {
+      "added": 0,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "questions": {
+      "added": 12,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "quiz_question_links": {
+      "added": 12,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "quizzes": {
+      "added": 3,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "releases": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "skills": {
+      "added": 3,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "subject_areas": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "topic_areas": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "topic_discovery_metadata": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    }
+  }
+}

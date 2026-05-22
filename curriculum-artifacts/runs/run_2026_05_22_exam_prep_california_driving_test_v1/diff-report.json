@@ -1,0 +1,289 @@
+{
+  "base_run_id": null,
+  "candidate_run_id": "run_2026_05_22_exam_prep_california_driving_test_v1",
+  "valid": true,
+  "artifacts": {
+    "learning_paths": {
+      "added": [
+        {
+          "identity": "path_california_driving_test",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "lessons": {
+      "added": [
+        {
+          "identity": "lesson_ca_driving_control_rules",
+          "version": 1
+        },
+        {
+          "identity": "lesson_ca_driving_safe_choices",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "media_assets": {
+      "added": [],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "questions": {
+      "added": [
+        {
+          "identity": "question_ca_signs_stop_1",
+          "version": 1
+        },
+        {
+          "identity": "question_ca_right_of_way_1",
+          "version": 1
+        },
+        {
+          "identity": "question_ca_right_of_way_sequence_1",
+          "version": 1
+        },
+        {
+          "identity": "question_ca_crosswalk_short_1",
+          "version": 1
+        },
+        {
+          "identity": "question_ca_spacing_numeric_1",
+          "version": 1
+        },
+        {
+          "identity": "question_ca_emergency_select_1",
+          "version": 1
+        },
+        {
+          "identity": "question_ca_impairment_numeric_1",
+          "version": 1
+        },
+        {
+          "identity": "question_ca_impairment_short_1",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "quiz_question_links": {
+      "added": [
+        {
+          "identity": "quiz_ca_driving_control_rules@1:question_ca_signs_stop_1@1",
+          "version": 1
+        },
+        {
+          "identity": "quiz_ca_driving_control_rules@1:question_ca_right_of_way_1@1",
+          "version": 1
+        },
+        {
+          "identity": "quiz_ca_driving_control_rules@1:question_ca_right_of_way_sequence_1@1",
+          "version": 1
+        },
+        {
+          "identity": "quiz_ca_driving_control_rules@1:question_ca_crosswalk_short_1@1",
+          "version": 1
+        },
+        {
+          "identity": "quiz_ca_driving_safe_choices@1:question_ca_spacing_numeric_1@1",
+          "version": 1
+        },
+        {
+          "identity": "quiz_ca_driving_safe_choices@1:question_ca_emergency_select_1@1",
+          "version": 1
+        },
+        {
+          "identity": "quiz_ca_driving_safe_choices@1:question_ca_impairment_numeric_1@1",
+          "version": 1
+        },
+        {
+          "identity": "quiz_ca_driving_safe_choices@1:question_ca_impairment_short_1@1",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "quizzes": {
+      "added": [
+        {
+          "identity": "quiz_ca_driving_control_rules",
+          "version": 1
+        },
+        {
+          "identity": "quiz_ca_driving_safe_choices",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "releases": {
+      "added": [
+        {
+          "identity": "release_exam_prep_california_driving_test_v1",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "skills": {
+      "added": [
+        {
+          "identity": "skill_ca_signs_signals",
+          "version": 1
+        },
+        {
+          "identity": "skill_ca_right_of_way",
+          "version": 1
+        },
+        {
+          "identity": "skill_ca_safe_spacing",
+          "version": 1
+        },
+        {
+          "identity": "skill_ca_impairment",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "subject_areas": {
+      "added": [
+        {
+          "identity": "subject_exam_prep",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "topic_areas": {
+      "added": [
+        {
+          "identity": "topic_california_driving_test",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    },
+    "topic_discovery_metadata": {
+      "added": [
+        {
+          "identity": "topic_california_driving_test:release_exam_prep_california_driving_test_v1",
+          "version": 1
+        }
+      ],
+      "changed": [],
+      "retired": [],
+      "replaced": [],
+      "unchanged_count": 0
+    }
+  },
+  "summary": {
+    "learning_paths": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "lessons": {
+      "added": 2,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "media_assets": {
+      "added": 0,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "questions": {
+      "added": 8,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "quiz_question_links": {
+      "added": 8,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "quizzes": {
+      "added": 2,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "releases": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "skills": {
+      "added": 4,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "subject_areas": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "topic_areas": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "topic_discovery_metadata": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    }
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "run_id": "run_2026_05_22_mathematics_linear_equations_v1",
+  "valid": true,
+  "counts": {
+    "subject_areas": 1,
+    "topic_areas": 1,
+    "skills": 3,
+    "lessons": 3,
+    "quizzes": 3,
+    "questions": 12,
+    "quiz_question_links": 12,
+    "learning_paths": 1,
+    "media_assets": 0,
+    "releases": 1,
+    "topic_discovery_metadata": 1
+  },
+  "checks": [
+    "JSONL parses successfully",
+    "Records match v1 schemas",
+    "Stable ids and versions are unique",
+    "Question answer keys point to declared choices",
+    "Quiz-to-question references are complete and ordered",
+    "Question interaction payloads match their declared question_type",
+    "Media assets, when present, have valid storage paths, MIME types, and accessibility metadata",
+    "Release items point to imported content versions",
+    "Public discovery metadata references imported topics, releases, and skills"
+  ],
+  "failures": [],
+  "importable": true,
+  "import_blockers": [],
+  "diff_summary": {
+    "learning_paths": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "lessons": {
+      "added": 3,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "media_assets": {
+      "added": 0,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "questions": {
+      "added": 12,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "quiz_question_links": {
+      "added": 12,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "quizzes": {
+      "added": 3,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "releases": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "skills": {
+      "added": 3,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "subject_areas": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "topic_areas": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    },
+    "topic_discovery_metadata": {
+      "added": 1,
+      "changed": 0,
+      "retired": 0,
+      "replaced": 0,
+      "unchanged": 0
+    }
+  },
+  "diff_base_run_id": null
+}

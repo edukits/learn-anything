@@ -26,7 +26,7 @@
 		"name": { "type": "string", "minLength": 1 },
 		"public_summary": { "type": "string", "minLength": 1 },
 		"preview_markdown": { "type": "string", "minLength": 1 },
-		"app_path": { "type": "string", "pattern": "^/app/[a-z0-9-]+$" },
+		"app_path": { "type": "string", "pattern": "^/app/(topics/)?[a-z0-9-]+$" },
 		"level_label": { "type": "string", "minLength": 1 },
 		"estimated_minutes": { "type": "integer", "minimum": 1 },
 		"lesson_count": { "type": "integer", "minimum": 0 },

@@ -1,0 +1,12 @@
+{
+	"source_id": "source_mathematics_linear_equations_v1",
+	"title": "Linear Equations Foundations",
+	"license": "internal-original",
+	"review_status": "candidate-reviewed",
+	"learner_outcomes": [
+		"Solve one-step linear equations with inverse operations.",
+		"Solve two-step linear equations by preserving equality.",
+		"Simplify equations with like terms before solving.",
+		"Interpret the solution as the value that makes the equation true."
+	]
+}

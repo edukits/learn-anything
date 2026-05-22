@@ -6,8 +6,6 @@
 
 	let { data }: PageProps = $props();
 
-	let appHref = $derived(data.isSignedIn ? data.topic.app_path : '/sign-in');
-	let appLabel = $derived(data.isSignedIn ? 'Open learning path' : 'Sign in to start');
 	let topicHref = $derived(`/topics/${data.topic.slug}`);
 </script>
 
@@ -18,7 +16,14 @@
 			<h1>{data.topic.name}</h1>
 			<p>{data.topic.public_summary}</p>
 			<div class="button-row">
-				<Button href={appHref} size="lg">{appLabel} <ArrowRight size={18} /></Button>
+				{#if data.isSignedIn}
+					<form method="POST" action="?/enroll">
+						<input type="hidden" name="topicSlug" value={data.topic.slug} />
+						<Button type="submit" size="lg">Start or continue <ArrowRight size={18} /></Button>
+					</form>
+				{:else}
+					<Button href="/sign-in" size="lg">Sign in to start <ArrowRight size={18} /></Button>
+				{/if}
 				<Button href={`${topicHref}/preview`} variant="secondary" size="lg">
 					Preview lesson <Eye size={18} />
 				</Button>
@@ -32,11 +37,11 @@
 		</div>
 	</section>
 
-	<section class="devices page" aria-label="Devices covered">
-		<h2>Devices covered</h2>
-		<div class="device-grid">
-			{#each data.topic.covered_devices as device (device)}
-				<span>{device}</span>
+	<section class="skills page" aria-label="Skills covered">
+		<h2>Skills covered</h2>
+		<div class="skill-grid">
+			{#each data.topic.covered_skill_labels as skill (skill)}
+				<span>{skill}</span>
 			{/each}
 		</div>
 	</section>
@@ -95,7 +100,11 @@
 		gap: 8px;
 	}
 
-	.devices {
+	form {
+		display: contents;
+	}
+
+	.skills {
 		border-block-start: 1px solid var(--color-border);
 		display: grid;
 		gap: 18px;
@@ -108,13 +117,13 @@
 		letter-spacing: 0;
 	}
 
-	.device-grid {
+	.skill-grid {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 10px;
 	}
 
-	.device-grid span {
+	.skill-grid span {
 		background: var(--color-surface-raised);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-sm);
