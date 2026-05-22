@@ -137,7 +137,7 @@
 	}
 
 	.state-correct {
-		--accent: var(--color-correct);
+		--accent: var(--color-success);
 		background: var(--accent);
 		border-radius: 0.1875rem;
 		transform: rotate(45deg);
@@ -149,7 +149,7 @@
 	}
 
 	.state-incorrect {
-		--accent: var(--color-incorrect);
+		--accent: var(--color-danger);
 		background: var(--accent);
 	}
 

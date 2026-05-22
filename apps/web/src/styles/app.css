@@ -60,13 +60,13 @@ a {
 }
 
 .message.error {
-	background: color-mix(in srgb, var(--color-incorrect), transparent 90%);
-	border: 1px solid color-mix(in srgb, var(--color-incorrect), transparent 55%);
+	background: color-mix(in srgb, var(--color-danger), transparent 90%);
+	border: 1px solid color-mix(in srgb, var(--color-danger), transparent 55%);
 	color: var(--color-text);
 }
 
 .message.success {
-	background: color-mix(in srgb, var(--color-correct), transparent 90%);
-	border: 1px solid color-mix(in srgb, var(--color-correct), transparent 55%);
+	background: color-mix(in srgb, var(--color-success), transparent 90%);
+	border: 1px solid color-mix(in srgb, var(--color-success), transparent 55%);
 	color: var(--color-text);
 }

@@ -161,9 +161,9 @@
 	}
 
 	.node[data-state='completed'] {
-		--path-item-accent-h: var(--color-correct-h);
-		--path-item-accent-l: var(--color-correct-l);
-		--path-item-accent-s: var(--color-correct-s);
+		--path-item-accent-h: var(--color-success-h);
+		--path-item-accent-l: var(--color-success-l);
+		--path-item-accent-s: var(--color-success-s);
 		border-color: color-mix(in srgb, var(--path-item-accent), var(--color-border) 34%);
 	}
 
@@ -253,9 +253,9 @@
 	}
 
 	.connector[data-state='completed'] {
-		--path-item-accent-h: var(--color-correct-h);
-		--path-item-accent-l: var(--color-correct-l);
-		--path-item-accent-s: var(--color-correct-s);
+		--path-item-accent-h: var(--color-success-h);
+		--path-item-accent-l: var(--color-success-l);
+		--path-item-accent-s: var(--color-success-s);
 		background: color-mix(in srgb, var(--path-item-accent), var(--color-border) 24%);
 	}
 

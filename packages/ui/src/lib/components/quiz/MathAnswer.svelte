@@ -288,17 +288,17 @@
 	}
 
 	.field.correct {
-		--answer-accent: var(--color-correct);
-		--answer-accent-h: var(--color-correct-h);
-		--answer-accent-s: var(--color-correct-s);
-		--answer-accent-l: var(--color-correct-l);
+		--answer-accent: var(--color-success);
+		--answer-accent-h: var(--color-success-h);
+		--answer-accent-s: var(--color-success-s);
+		--answer-accent-l: var(--color-success-l);
 	}
 
 	.field.incorrect {
-		--answer-accent: var(--color-incorrect);
-		--answer-accent-h: var(--color-incorrect-h);
-		--answer-accent-s: var(--color-incorrect-s);
-		--answer-accent-l: var(--color-incorrect-l);
+		--answer-accent: var(--color-danger);
+		--answer-accent-h: var(--color-danger-h);
+		--answer-accent-s: var(--color-danger-s);
+		--answer-accent-l: var(--color-danger-l);
 	}
 
 	.label {

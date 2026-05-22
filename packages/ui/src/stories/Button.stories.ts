@@ -5,7 +5,7 @@ type ButtonStoryArgs = {
 	disabled?: boolean;
 	label?: string;
 	size?: 'sm' | 'md' | 'lg';
-	variant?: 'primary' | 'secondary' | 'ghost';
+	variant?: 'primary' | 'secondary' | 'ghost' | 'success' | 'danger' | 'warning';
 };
 
 const meta = {
@@ -20,7 +20,7 @@ const meta = {
 	argTypes: {
 		variant: {
 			control: 'inline-radio',
-			options: ['primary', 'secondary', 'ghost']
+			options: ['primary', 'secondary', 'ghost', 'success', 'danger', 'warning']
 		},
 		size: {
 			control: 'inline-radio',
@@ -43,6 +43,27 @@ export const Secondary: Story = {
 export const Ghost: Story = {
 	args: {
 		variant: 'ghost'
+	}
+};
+
+export const Success: Story = {
+	args: {
+		variant: 'success',
+		label: 'Confirm'
+	}
+};
+
+export const Danger: Story = {
+	args: {
+		variant: 'danger',
+		label: 'Delete'
+	}
+};
+
+export const Warning: Story = {
+	args: {
+		variant: 'warning',
+		label: 'Proceed with caution'
 	}
 };
 

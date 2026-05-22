@@ -612,7 +612,7 @@
 	}
 
 	.progress-value {
-		background: linear-gradient(90deg, var(--color-accent), var(--color-correct));
+		background: linear-gradient(90deg, var(--color-accent), var(--color-success));
 		block-size: 100%;
 		display: block;
 		inline-size: var(--progress);
@@ -632,7 +632,7 @@
 	}
 
 	.metrics :global(svg) {
-		color: var(--color-correct);
+		color: var(--color-success);
 	}
 
 	.metrics h3 {
@@ -682,8 +682,8 @@
 
 	.question-feedback {
 		align-items: start;
-		background: color-mix(in srgb, var(--color-correct), transparent 90%);
-		border: 1px solid color-mix(in srgb, var(--color-correct), transparent 55%);
+		background: color-mix(in srgb, var(--color-success), transparent 90%);
+		border: 1px solid color-mix(in srgb, var(--color-success), transparent 55%);
 		border-radius: var(--radius-md);
 		color: var(--color-text);
 		display: grid;
@@ -694,7 +694,7 @@
 	}
 
 	.question-feedback :global(svg) {
-		color: var(--color-correct);
+		color: var(--color-success);
 	}
 
 	.question-feedback p {

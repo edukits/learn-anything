@@ -44,29 +44,41 @@
 	--color-accent-contrast: #ffffff;
 	--color-accent-hover-contrast: #ffffff;
 
-	/* Correct — source (h/s/l) */
-	--color-correct-h: 95;
-	--color-correct-s: 95%;
-	--color-correct-l: 40%;
+	/* Success — source (h/s/l) */
+	--color-success-h: 95;
+	--color-success-s: 95%;
+	--color-success-l: 40%;
 
-	/* Correct — derived */
-	--color-correct: hsl(var(--color-correct-h) var(--color-correct-s) var(--color-correct-l));
-	--color-correct-hover: hsl(
-		var(--color-correct-h) var(--color-correct-s) calc(var(--color-correct-l) - 7%)
+	/* Success — derived */
+	--color-success: hsl(var(--color-success-h) var(--color-success-s) var(--color-success-l));
+	--color-success-hover: hsl(
+		var(--color-success-h) var(--color-success-s) calc(var(--color-success-l) - 7%)
 	);
+	--color-success-contrast: #ffffff;
 
-	/* Incorrect — source (h/s/l) */
-	--color-incorrect-h: 358;
-	--color-incorrect-s: 75%;
-	--color-incorrect-l: 55%;
+	/* Danger — source (h/s/l) */
+	--color-danger-h: 358;
+	--color-danger-s: 75%;
+	--color-danger-l: 55%;
 
-	/* Incorrect — derived */
-	--color-incorrect: hsl(
-		var(--color-incorrect-h) var(--color-incorrect-s) var(--color-incorrect-l)
+	/* Danger — derived */
+	--color-danger: hsl(var(--color-danger-h) var(--color-danger-s) var(--color-danger-l));
+	--color-danger-hover: hsl(
+		var(--color-danger-h) var(--color-danger-s) calc(var(--color-danger-l) - 7%)
 	);
-	--color-incorrect-hover: hsl(
-		var(--color-incorrect-h) var(--color-incorrect-s) calc(var(--color-incorrect-l) - 7%)
+	--color-danger-contrast: #ffffff;
+
+	/* Warning — source (h/s/l) */
+	--color-warning-h: 38;
+	--color-warning-s: 92%;
+	--color-warning-l: 50%;
+
+	/* Warning — derived */
+	--color-warning: hsl(var(--color-warning-h) var(--color-warning-s) var(--color-warning-l));
+	--color-warning-hover: hsl(
+		var(--color-warning-h) var(--color-warning-s) calc(var(--color-warning-l) - 7%)
 	);
+	--color-warning-contrast: #ffffff;
 
 	/* Star — source (h/s/l) */
 	--color-star-h: 41;

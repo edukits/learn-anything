@@ -104,7 +104,7 @@
 	}
 
 	.path-node.done {
-		border-color: var(--color-correct);
+		border-color: var(--color-success);
 	}
 
 	.path-node.active {

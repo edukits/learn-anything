@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
 
-	type ButtonVariant = 'primary' | 'secondary' | 'ghost';
+	type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'success' | 'danger' | 'warning';
 	type ButtonSize = 'sm' | 'md' | 'lg';
 
 	type SharedButtonProps = {
@@ -93,6 +93,36 @@
 {/if}
 
 <style>
+	@property --btn-grad-from {
+		syntax: '<color>';
+		inherits: false;
+		initial-value: transparent;
+	}
+
+	@property --btn-grad-to {
+		syntax: '<color>';
+		inherits: false;
+		initial-value: transparent;
+	}
+
+	@property --btn-inset {
+		syntax: '<color>';
+		inherits: false;
+		initial-value: transparent;
+	}
+
+	@property --btn-shadow-color {
+		syntax: '<color>';
+		inherits: false;
+		initial-value: transparent;
+	}
+
+	@property --btn-shadow-spread {
+		syntax: '<length>';
+		inherits: false;
+		initial-value: 0px;
+	}
+
 	.button {
 		align-items: center;
 		appearance: none;
@@ -107,12 +137,21 @@
 		line-height: 1;
 		min-inline-size: max-content;
 		text-decoration: none;
+
+		background: linear-gradient(to bottom, var(--btn-grad-from), var(--btn-grad-to));
+		box-shadow:
+			0 2px 1px inset var(--btn-inset),
+			0 1px var(--btn-shadow-spread) 0 var(--btn-shadow-color);
+
 		transition:
-			background 150ms ease-out,
-			border-color 150ms ease-out,
-			box-shadow 150ms ease-out,
-			color 150ms ease-out,
-			transform 150ms ease-out;
+			--btn-grad-from 120ms ease-out,
+			--btn-grad-to 120ms ease-out,
+			--btn-inset 200ms cubic-bezier(0.22, 1, 0.36, 1),
+			--btn-shadow-color 200ms cubic-bezier(0.22, 1, 0.36, 1),
+			--btn-shadow-spread 200ms cubic-bezier(0.22, 1, 0.36, 1),
+			border-color 120ms ease-out,
+			color 120ms ease-out,
+			transform 100ms cubic-bezier(0.22, 1, 0.36, 1);
 	}
 
 	.button:focus-visible {
@@ -147,57 +186,192 @@
 		padding-inline: var(--space-5);
 	}
 
+	/* ── Primary ── */
+
 	[data-variant='primary'] {
-		background: linear-gradient(
-			to bottom,
-			hsl(var(--color-accent-h) var(--color-accent-s) var(--color-accent-l)),
-			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 15%))
+		--btn-grad-from: hsl(var(--color-accent-h) var(--color-accent-s) var(--color-accent-l));
+		--btn-grad-to: hsl(
+			var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 15%)
 		);
+		--btn-inset: hsl(
+			var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) + 10%)
+		);
+		--btn-shadow-color: transparent;
+		--btn-shadow-spread: 0px;
 		border-color: hsl(
 			var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 25%)
 		);
-		box-shadow: 0 2px 1px inset
-			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) + 10%));
 		color: var(--color-accent-contrast);
 	}
 
 	[data-variant='primary']:hover:not(:disabled) {
-		background: linear-gradient(
-			to bottom,
-			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 10%)),
-			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 5%))
+		--btn-grad-from: hsl(
+			var(--color-accent-h) calc(var(--color-accent-s) + 4%) calc(var(--color-accent-l) + 3%)
 		);
+		--btn-grad-to: hsl(
+			var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 8%)
+		);
+		--btn-inset: hsl(
+			var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) + 14%)
+		);
+		--btn-shadow-color: hsl(
+			var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 20%) / 0.35
+		);
+		--btn-shadow-spread: 3px;
 		border-color: hsl(
-			var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 15%)
+			var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 18%)
 		);
 	}
 
+	/* ── Secondary ── */
+
 	[data-variant='secondary'] {
-		background: linear-gradient(
-			to bottom,
-			hsl(var(--color-accent-h) 20% 98%),
-			hsl(var(--color-accent-h) 20% 93%)
-		);
+		--btn-grad-from: hsl(var(--color-accent-h) 20% 98%);
+		--btn-grad-to: hsl(var(--color-accent-h) 20% 93%);
+		--btn-inset: hsl(var(--color-accent-h) 15% 100%);
+		--btn-shadow-color: transparent;
+		--btn-shadow-spread: 0px;
 		border-color: hsl(var(--color-accent-h) 22% 82%);
-		box-shadow: 0 2px 1px inset hsl(var(--color-accent-h) 15% 100%);
 		color: var(--color-text);
 	}
 
 	[data-variant='secondary']:hover:not(:disabled) {
-		background: linear-gradient(
-			to bottom,
-			hsl(var(--color-accent-h) 20% 96%),
-			hsl(var(--color-accent-h) 20% 90%)
-		);
-		border-color: hsl(var(--color-accent-h) 22% 78%);
+		--btn-grad-from: hsl(var(--color-accent-h) 22% 99%);
+		--btn-grad-to: hsl(var(--color-accent-h) 22% 91%);
+		--btn-shadow-color: hsl(var(--color-accent-h) 15% 50% / 0.12);
+		--btn-shadow-spread: 3px;
+		border-color: hsl(var(--color-accent-h) 24% 74%);
 	}
 
+	/* ── Ghost ── */
+
 	[data-variant='ghost'] {
-		background: transparent;
+		--btn-grad-from: transparent;
+		--btn-grad-to: transparent;
+		--btn-inset: transparent;
+		--btn-shadow-color: transparent;
+		--btn-shadow-spread: 0px;
 		color: var(--color-accent);
 	}
 
 	[data-variant='ghost']:hover:not(:disabled) {
-		background: color-mix(in srgb, var(--color-accent), transparent 92%);
+		--btn-grad-from: color-mix(in srgb, var(--color-accent), transparent 90%);
+		--btn-grad-to: color-mix(in srgb, var(--color-accent), transparent 90%);
+		--btn-shadow-color: color-mix(in srgb, var(--color-accent), transparent 82%);
+		--btn-shadow-spread: 0px;
+		box-shadow:
+			0 0 0 inset transparent,
+			0 0 0 1px var(--btn-shadow-color);
+	}
+
+	/* ── Success ── */
+
+	[data-variant='success'] {
+		--btn-grad-from: hsl(var(--color-success-h) var(--color-success-s) var(--color-success-l));
+		--btn-grad-to: hsl(
+			var(--color-success-h) var(--color-success-s) calc(var(--color-success-l) - 12%)
+		);
+		--btn-inset: hsl(
+			var(--color-success-h) calc(var(--color-success-s) - 15%) calc(var(--color-success-l) + 14%)
+		);
+		--btn-shadow-color: transparent;
+		--btn-shadow-spread: 0px;
+		border-color: hsl(
+			var(--color-success-h) var(--color-success-s) calc(var(--color-success-l) - 20%)
+		);
+		color: var(--color-success-contrast);
+	}
+
+	[data-variant='success']:hover:not(:disabled) {
+		--btn-grad-from: hsl(
+			var(--color-success-h) calc(var(--color-success-s) + 4%) calc(var(--color-success-l) + 3%)
+		);
+		--btn-grad-to: hsl(
+			var(--color-success-h) var(--color-success-s) calc(var(--color-success-l) - 6%)
+		);
+		--btn-inset: hsl(
+			var(--color-success-h) calc(var(--color-success-s) - 15%) calc(var(--color-success-l) + 14%)
+		);
+		--btn-shadow-color: hsl(
+			var(--color-success-h) var(--color-success-s) calc(var(--color-success-l) - 20%) / 0.35
+		);
+		--btn-shadow-spread: 3px;
+		border-color: hsl(
+			var(--color-success-h) var(--color-success-s) calc(var(--color-success-l) - 14%)
+		);
+	}
+
+	/* ── Danger ── */
+
+	[data-variant='danger'] {
+		--btn-grad-from: hsl(var(--color-danger-h) var(--color-danger-s) var(--color-danger-l));
+		--btn-grad-to: hsl(
+			var(--color-danger-h) var(--color-danger-s) calc(var(--color-danger-l) - 12%)
+		);
+		--btn-inset: hsl(
+			var(--color-danger-h) var(--color-danger-s) calc(var(--color-danger-l) + 10%)
+		);
+		--btn-shadow-color: transparent;
+		--btn-shadow-spread: 0px;
+		border-color: hsl(
+			var(--color-danger-h) var(--color-danger-s) calc(var(--color-danger-l) - 20%)
+		);
+		color: var(--color-danger-contrast);
+	}
+
+	[data-variant='danger']:hover:not(:disabled) {
+		--btn-grad-from: hsl(
+			var(--color-danger-h) calc(var(--color-danger-s) + 4%) calc(var(--color-danger-l) + 3%)
+		);
+		--btn-grad-to: hsl(
+			var(--color-danger-h) var(--color-danger-s) calc(var(--color-danger-l) - 6%)
+		);
+		--btn-inset: hsl(
+			var(--color-danger-h) var(--color-danger-s) calc(var(--color-danger-l) + 14%)
+		);
+		--btn-shadow-color: hsl(
+			var(--color-danger-h) var(--color-danger-s) calc(var(--color-danger-l) - 20%) / 0.35
+		);
+		--btn-shadow-spread: 3px;
+		border-color: hsl(
+			var(--color-danger-h) var(--color-danger-s) calc(var(--color-danger-l) - 14%)
+		);
+	}
+
+	/* ── Warning ── */
+
+	[data-variant='warning'] {
+		--btn-grad-from: hsl(var(--color-warning-h) var(--color-warning-s) var(--color-warning-l));
+		--btn-grad-to: hsl(
+			var(--color-warning-h) var(--color-warning-s) calc(var(--color-warning-l) - 12%)
+		);
+		--btn-inset: hsl(
+			var(--color-warning-h) var(--color-warning-s) calc(var(--color-warning-l) + 10%)
+		);
+		--btn-shadow-color: transparent;
+		--btn-shadow-spread: 0px;
+		border-color: hsl(
+			var(--color-warning-h) var(--color-warning-s) calc(var(--color-warning-l) - 20%)
+		);
+		color: var(--color-warning-contrast);
+	}
+
+	[data-variant='warning']:hover:not(:disabled) {
+		--btn-grad-from: hsl(
+			var(--color-warning-h) calc(var(--color-warning-s) + 4%) calc(var(--color-warning-l) + 3%)
+		);
+		--btn-grad-to: hsl(
+			var(--color-warning-h) var(--color-warning-s) calc(var(--color-warning-l) - 6%)
+		);
+		--btn-inset: hsl(
+			var(--color-warning-h) var(--color-warning-s) calc(var(--color-warning-l) + 14%)
+		);
+		--btn-shadow-color: hsl(
+			var(--color-warning-h) var(--color-warning-s) calc(var(--color-warning-l) - 20%) / 0.35
+		);
+		--btn-shadow-spread: 3px;
+		border-color: hsl(
+			var(--color-warning-h) var(--color-warning-s) calc(var(--color-warning-l) - 14%)
+		);
 	}
 </style>

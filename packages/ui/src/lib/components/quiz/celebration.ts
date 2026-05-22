@@ -58,7 +58,7 @@ function mixHexColor(hexColor: string, target: number, amount: number) {
 }
 
 function getCorrectConfettiColors() {
-	const correctColor = getCssVariableColorHex('--color-correct', '#22a06b');
+	const correctColor = getCssVariableColorHex('--color-success', '#22a06b');
 
 	return [correctColor, mixHexColor(correctColor, 255, 0.34), mixHexColor(correctColor, 0, 0.2)];
 }

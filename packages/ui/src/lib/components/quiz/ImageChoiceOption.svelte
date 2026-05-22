@@ -121,17 +121,17 @@
 	}
 
 	.correct {
-		--accent: var(--color-correct);
+		--accent: var(--color-success);
 		color: hsl(
-			var(--color-correct-h) calc(var(--color-correct-s) + 25%) calc(var(--color-correct-l) - 35%)
+			var(--color-success-h) calc(var(--color-success-s) + 25%) calc(var(--color-success-l) - 35%)
 		);
 	}
 
 	.incorrect {
-		--accent: var(--color-incorrect);
+		--accent: var(--color-danger);
 		color: hsl(
-			var(--color-incorrect-h) calc(var(--color-incorrect-s) + 25%)
-				calc(var(--color-incorrect-l) - 35%)
+			var(--color-danger-h) calc(var(--color-danger-s) + 25%)
+				calc(var(--color-danger-l) - 35%)
 		);
 	}
 
