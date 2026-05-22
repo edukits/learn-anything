@@ -31,6 +31,7 @@ See also:
 - `auth.md`
 - `content-architecture.md`
 - `content-generation.md`
+- `ui-ux-v1.md`
 
 ## Content hierarchy
 
@@ -119,3 +120,5 @@ The v1 MVP is deliberately small: a signed-in high-school learner can complete o
 9. Serve only the latest published content to users. Historical attempts should still store the exact content ids and versions seen.
 10. Defer streaks, XP, rewards, leaderboards, broad public discovery, anonymous practice, and public previews until the quiz/progress loop works reliably.
 11. Expand generation and publishing to more subjects once the Literary Devices pipeline is reliable.
+
+See `ui-ux-v1.md` for the first user experience plan.
