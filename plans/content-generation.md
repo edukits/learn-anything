@@ -12,7 +12,22 @@ Support three common content operations:
 2. **Add**: introduce new source material and generate additional content without disturbing unrelated existing content.
 3. **Revise**: improve or regenerate existing content when source material, prompts, schemas, or quality requirements change.
 
-The first release should use hand-authored JSONL artifacts for English Literary Devices. AI generation can be added after the import, validation, release, and practice loop works end to end.
+The first release should use small hand-authored JSONL artifacts for English Literary Devices. These artifacts can be committed to Git as a bootstrap exception. AI generation can be added after the import, validation, release, and practice loop works end to end.
+
+Initial Literary Devices scope:
+
+- metaphor
+- simile
+- personification
+- imagery
+- alliteration
+- hyperbole
+- irony
+- symbolism
+- foreshadowing
+- onomatopoeia
+
+The first learning path should contain one intro lesson plus one mixed practice quiz covering the initial devices.
 
 ## Source material
 
@@ -104,6 +119,8 @@ Every generated object should have:
 Existing content should not be overwritten in place. Regenerated content creates a new version.
 
 Quiz questions should remain reusable and independent from quizzes. Quizzes reference questions through relationships, not by embedding the full question body.
+
+The first release should use multiple-choice questions only. Future releases can add other question types already supported by the UI library.
 
 Production content bodies are imported into Postgres. Object Storage keeps the immutable JSONL artifacts and media files, but the app should not need to fetch JSONL artifacts at runtime to render published lessons or questions.
 
@@ -205,9 +222,9 @@ The first version can rely on manual review plus generated quality reports. More
 
 Generation is not publication.
 
-Generated artifacts become available to users only after they are:
+Generated or hand-authored artifacts become available to users only after they are:
 
-1. uploaded,
+1. stored in the approved artifact location,
 2. validated,
 3. imported into staging,
 4. reviewed,
@@ -224,6 +241,8 @@ Start with:
 - hand-authored English Literary Devices JSONL artifacts
 - one JSON schema per content type
 - JSONL output for lessons, quizzes, and questions
+- one intro lesson
+- one mixed multiple-choice practice quiz
 - a manifest file
 - a validation script
 - manual upload/import steps

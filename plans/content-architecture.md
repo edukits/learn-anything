@@ -48,12 +48,13 @@ Git should store:
 - validators
 - import scripts
 - small sample fixtures
+- small v1 hand-authored Literary Devices JSONL artifacts
 - release manifests
 - quality reports
 
-Git should not store actual content.
+Git should not store generated bulk content. The first Literary Devices release is small enough that its hand-authored JSONL artifacts may be committed to Git as a bootstrap exception.
 
-The manifest committed to Git points to the generated artifacts in Supabase Object Storage.
+For normal generated runs, the manifest committed to Git points to the generated artifacts in Supabase Object Storage. For the first small hand-authored Literary Devices release, the manifest may point to JSONL artifacts committed in Git.
 
 ## Database role
 
@@ -136,6 +137,8 @@ content_bundle
 
 Important: quiz questions should be independent from quizzes.
 
+For the first Literary Devices release, quiz questions should be multiple choice only. The UI library can support additional question types later, but the first content/import path should not need to handle them.
+
 Use a join table:
 ```
 quiz_question_to_quiz
@@ -189,8 +192,8 @@ This gives the app flexibility to:
 ## Publishing flow
 
 1. Generate or hand-author content locally.
-2. Write compressed JSONL artifacts.
-3. Upload artifacts to Supabase Object Storage.
+2. Write JSONL artifacts.
+3. Upload artifacts to Supabase Object Storage for normal release runs, or keep the first small hand-authored Literary Devices artifacts in Git.
 4. Generate manifest.
 5. Commit manifest, schema, prompt, and validation report to Git.
 6. CI validates checksums and schemas.
@@ -209,7 +212,7 @@ Supabase Object Storage:
   immutable release files
 
 Git:
-  source code, schemas, prompts, manifests, validation reports
+  source code, schemas, prompts, manifests, validation reports, small bootstrap fixtures
 
 Postgres:
   published production content
