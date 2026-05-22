@@ -9,47 +9,56 @@
 	let { engagement }: Props = $props();
 
 	let dailyGoalLabel = $derived(
-		engagement.daily_goal_remaining === 0 ? 'Daily goal met' : `${engagement.daily_goal_remaining} XP to daily goal`
+		engagement.daily_goal_remaining === 0
+			? 'Daily goal met'
+			: `${engagement.daily_goal_remaining} XP to daily goal`
 	);
-	let streakLabel = $derived(`${engagement.current_streak} ${engagement.current_streak === 1 ? 'day' : 'days'} streak`);
+	let streakLabel = $derived(
+		`${engagement.current_streak} ${engagement.current_streak === 1 ? 'day' : 'days'} streak`
+	);
 </script>
 
 <section class="daily-strip" aria-label="Daily progress">
-	<div class="daily-meter">
-		<div>
-			<strong>{engagement.xp_today}/{engagement.daily_xp_goal} XP</strong>
-			<span>{dailyGoalLabel}</span>
+	<div class="daily-strip-content layout-content">
+		<div class="daily-meter">
+			<div>
+				<strong>{engagement.xp_today}/{engagement.daily_xp_goal} XP</strong>
+				<span>{dailyGoalLabel}</span>
+			</div>
+			<div
+				class="meter"
+				role="progressbar"
+				aria-label="Daily XP goal progress"
+				aria-valuemin="0"
+				aria-valuemax={engagement.daily_xp_goal}
+				aria-valuenow={Math.min(engagement.xp_today, engagement.daily_xp_goal)}
+			>
+				<span style:width={`${engagement.daily_goal_percent}%`}></span>
+			</div>
 		</div>
-		<div
-			class="meter"
-			role="progressbar"
-			aria-label="Daily XP goal progress"
-			aria-valuemin="0"
-			aria-valuemax={engagement.daily_xp_goal}
-			aria-valuenow={Math.min(engagement.xp_today, engagement.daily_xp_goal)}
-		>
-			<span style:width={`${engagement.daily_goal_percent}%`}></span>
+		<div class="daily-stat">
+			<Flame size={18} />
+			<span>{streakLabel}</span>
 		</div>
-	</div>
-	<div class="daily-stat">
-		<Flame size={18} />
-		<span>{streakLabel}</span>
-	</div>
-	<div class="daily-stat">
-		<Star size={18} />
-		<span>{engagement.xp_total} XP total</span>
+		<div class="daily-stat">
+			<Star size={18} />
+			<span>{engagement.xp_total} XP total</span>
+		</div>
 	</div>
 </section>
 
 <style>
 	.daily-strip {
-		align-items: center;
 		background: color-mix(in srgb, var(--color-surface), var(--color-surface-raised) 55%);
 		border-block-end: 1px solid var(--color-border);
+	}
+
+	.daily-strip-content {
+		align-items: center;
 		display: grid;
 		gap: 16px;
 		grid-template-columns: minmax(220px, 1fr) auto auto;
-		padding: 12px clamp(16px, 4vw, 36px);
+		padding-block: 12px;
 	}
 
 	.daily-meter {
@@ -97,7 +106,7 @@
 	}
 
 	@media (max-width: 860px) {
-		.daily-strip {
+		.daily-strip-content {
 			align-items: start;
 			grid-template-columns: 1fr;
 		}

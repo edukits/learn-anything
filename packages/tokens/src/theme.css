@@ -61,7 +61,9 @@
 	--color-incorrect-l: 55%;
 
 	/* Incorrect — derived */
-	--color-incorrect: hsl(var(--color-incorrect-h) var(--color-incorrect-s) var(--color-incorrect-l));
+	--color-incorrect: hsl(
+		var(--color-incorrect-h) var(--color-incorrect-s) var(--color-incorrect-l)
+	);
 	--color-incorrect-hover: hsl(
 		var(--color-incorrect-h) var(--color-incorrect-s) calc(var(--color-incorrect-l) - 7%)
 	);
@@ -92,6 +94,10 @@
 	--space-8: 2rem;
 	--space-10: 2.5rem;
 	--space-12: 3rem;
+
+	/* Layout */
+	--layout-content-max-inline-size: 70rem;
+	--layout-page-gutter: clamp(1rem, 4vw, 2.25rem);
 
 	/* Radius */
 	--radius-sm: 0.25rem;

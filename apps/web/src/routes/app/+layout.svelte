@@ -3,51 +3,68 @@
 	import { DailyProgressStrip } from '$lib/features/engagement';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { ChevronDown, ClipboardCheck, Map, Medal, RotateCcw, Sparkles, Trophy, TrendingUp } from '@lucide/svelte';
+	import {
+		ChevronDown,
+		ClipboardCheck,
+		Map,
+		Medal,
+		RotateCcw,
+		Sparkles,
+		Trophy,
+		TrendingUp
+	} from '@lucide/svelte';
 
 	let { data, children }: LayoutProps = $props();
-	let activeEnrollments = $derived(data.enrollments.filter((enrollment) => enrollment.status === 'active'));
-	let activeEnrollment = $derived(
-		activeEnrollments.find((enrollment) => page.params.topic === enrollment.topic_slug) ?? activeEnrollments[0] ?? null
+	let activeEnrollments = $derived(
+		data.enrollments.filter((enrollment) => enrollment.status === 'active')
 	);
-	let activeTopicHref = $derived(activeEnrollment ? `/app/topics/${activeEnrollment.topic_slug}` : '/subjects');
+	let activeEnrollment = $derived(
+		activeEnrollments.find((enrollment) => page.params.topic === enrollment.topic_slug) ??
+			activeEnrollments[0] ??
+			null
+	);
+	let activeTopicHref = $derived(
+		activeEnrollment ? `/app/topics/${activeEnrollment.topic_slug}` : '/subjects'
+	);
 	let reviewHref = $derived(activeEnrollment ? `${activeTopicHref}/review` : '/subjects');
 </script>
 
 <div class="app-shell">
-	<header class="sub-nav">
-		<label class="topic-switcher">
-			<span>Topic</span>
-			<div>
-				<select
-					aria-label="Switch active topic"
-					value={activeEnrollment?.topic_slug ?? ''}
-					onchange={(event) => {
-						const topicSlug = event.currentTarget.value;
-						if (topicSlug) void goto(`/app/topics/${topicSlug}`);
-					}}
-				>
-					{#if activeEnrollments.length === 0}
-						<option value="">Choose topic</option>
-					{/if}
-					{#each activeEnrollments as enrollment (enrollment.topic_area_id)}
-						<option value={enrollment.topic_slug}>{enrollment.topic_name}</option>
-					{/each}
-				</select>
-				<ChevronDown size={16} />
-			</div>
-		</label>
-		<nav aria-label="App navigation">
-			<a href={activeTopicHref}><Map size={18} /> Map</a>
-			<a href={reviewHref}><RotateCcw size={18} /> Review</a>
-			<a href="/app/daily-plan"><Sparkles size={18} /> Daily plan</a>
-			<a href="/app/progress"><TrendingUp size={18} /> Progress</a>
-			<a href="/app/achievements"><Medal size={18} /> Rewards</a>
-			<a href="/app/leaderboard"><Trophy size={18} /> Leaderboard</a>
-			{#if data.adminRole}
-				<a href="/app/content-admin"><ClipboardCheck size={18} /> Admin</a>
-			{/if}
-		</nav>
+	<header class="sub-nav-strip">
+		<div class="sub-nav layout-content">
+			<label class="topic-switcher">
+				<span>Topic</span>
+				<div>
+					<select
+						aria-label="Switch active topic"
+						value={activeEnrollment?.topic_slug ?? ''}
+						onchange={(event) => {
+							const topicSlug = event.currentTarget.value;
+							if (topicSlug) void goto(`/app/topics/${topicSlug}`);
+						}}
+					>
+						{#if activeEnrollments.length === 0}
+							<option value="">Choose topic</option>
+						{/if}
+						{#each activeEnrollments as enrollment (enrollment.topic_area_id)}
+							<option value={enrollment.topic_slug}>{enrollment.topic_name}</option>
+						{/each}
+					</select>
+					<ChevronDown size={16} />
+				</div>
+			</label>
+			<nav aria-label="App navigation">
+				<a href={activeTopicHref}><Map size={18} /> Map</a>
+				<a href={reviewHref}><RotateCcw size={18} /> Review</a>
+				<a href="/app/daily-plan"><Sparkles size={18} /> Daily plan</a>
+				<a href="/app/progress"><TrendingUp size={18} /> Progress</a>
+				<a href="/app/achievements"><Medal size={18} /> Rewards</a>
+				<a href="/app/leaderboard"><Trophy size={18} /> Leaderboard</a>
+				{#if data.adminRole}
+					<a href="/app/content-admin"><ClipboardCheck size={18} /> Admin</a>
+				{/if}
+			</nav>
+		</div>
 	</header>
 
 	<DailyProgressStrip engagement={data.engagement} />
@@ -62,13 +79,16 @@
 		min-block-size: 100svh;
 	}
 
-	.sub-nav {
-		align-items: center;
+	.sub-nav-strip {
 		background: var(--color-surface);
 		border-block-end: 1px solid var(--color-border);
+	}
+
+	.sub-nav {
+		align-items: center;
 		display: flex;
 		gap: 24px;
-		padding: 12px clamp(16px, 4vw, 36px);
+		padding-block: 12px;
 	}
 
 	nav a {

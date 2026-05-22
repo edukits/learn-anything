@@ -21,8 +21,12 @@ a {
 	text-decoration: none;
 }
 
+.layout-content,
 .page {
-	inline-size: min(1120px, calc(100% - 32px));
+	inline-size: min(
+		var(--layout-content-max-inline-size),
+		calc(100% - (var(--layout-page-gutter) * 2))
+	);
 	margin-inline: auto;
 }
 
@@ -65,10 +69,4 @@ a {
 	background: color-mix(in srgb, var(--color-correct), transparent 90%);
 	border: 1px solid color-mix(in srgb, var(--color-correct), transparent 55%);
 	color: var(--color-text);
-}
-
-@media (max-width: 720px) {
-	.page {
-		inline-size: min(100% - 24px, 1120px);
-	}
 }

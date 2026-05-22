@@ -25,7 +25,7 @@
 </script>
 
 <div class="global-nav-strip">
-	<header class="global-nav">
+	<header class="global-nav layout-content">
 		<a class="brand" href={user ? '/app' : '/'}>
 			<BookOpenCheck size={24} /> Learn Anything
 		</a>
@@ -113,9 +113,7 @@
 		display: grid;
 		gap: 24px;
 		grid-template-columns: auto 1fr auto;
-		margin-inline: auto;
-		max-inline-size: 1440px;
-		padding: 12px clamp(16px, 4vw, 36px);
+		padding-block: 12px;
 	}
 
 	.brand {
