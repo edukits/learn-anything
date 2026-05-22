@@ -1,10 +1,9 @@
 <script lang="ts">
 	import type { LayoutProps } from './$types';
 	import { DailyProgressStrip } from '$lib/features/engagement';
-	import { Button } from '@learn-anything/ui';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { BookOpenCheck, ChevronDown, ClipboardCheck, Map, Medal, RotateCcw, Sparkles, Trophy, TrendingUp } from '@lucide/svelte';
+	import { ChevronDown, ClipboardCheck, Map, Medal, RotateCcw, Sparkles, Trophy, TrendingUp } from '@lucide/svelte';
 
 	let { data, children }: LayoutProps = $props();
 	let activeEnrollments = $derived(data.enrollments.filter((enrollment) => enrollment.status === 'active'));
@@ -16,8 +15,7 @@
 </script>
 
 <div class="app-shell">
-	<header>
-		<a class="brand" href="/app"><BookOpenCheck size={22} /> Learn Anything</a>
+	<header class="sub-nav">
 		<label class="topic-switcher">
 			<span>Topic</span>
 			<div>
@@ -50,10 +48,6 @@
 				<a href="/app/content-admin"><ClipboardCheck size={18} /> Admin</a>
 			{/if}
 		</nav>
-		<form method="POST" action="/app/logout">
-			<span>{data.user.email}</span>
-			<Button variant="ghost" size="sm" type="submit" label="Log out" />
-		</form>
 	</header>
 
 	<DailyProgressStrip engagement={data.engagement} />
@@ -68,20 +62,15 @@
 		min-block-size: 100svh;
 	}
 
-	header {
+	.sub-nav {
 		align-items: center;
 		background: var(--color-surface);
 		border-block-end: 1px solid var(--color-border);
-		display: grid;
-		gap: 14px;
-		grid-template-columns: minmax(180px, 1fr) auto auto minmax(220px, 1fr);
+		display: flex;
+		gap: 24px;
 		padding: 12px clamp(16px, 4vw, 36px);
-		position: sticky;
-		top: 0;
-		z-index: 10;
 	}
 
-	.brand,
 	nav a {
 		align-items: center;
 		display: inline-flex;
@@ -91,8 +80,9 @@
 
 	nav {
 		display: flex;
+		flex-wrap: wrap;
 		gap: 10px;
-		justify-content: center;
+		flex: 1;
 	}
 
 	.topic-switcher {
@@ -139,33 +129,20 @@
 		background: var(--color-surface-raised);
 	}
 
-	form {
-		align-items: center;
-		display: flex;
-		gap: 10px;
-		justify-content: end;
-	}
-
-	form span {
-		color: var(--color-text-muted);
-		font-size: 0.9rem;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
 	.shell-body {
 		padding-block: 28px 48px;
 	}
 
 	@media (max-width: 860px) {
-		header {
-			grid-template-columns: 1fr;
+		.sub-nav {
+			flex-direction: column;
+			align-items: stretch;
 		}
 
-		nav,
-		form {
+		nav {
 			justify-content: start;
+			overflow-x: auto;
+			padding-bottom: 4px;
 		}
 	}
 </style>
