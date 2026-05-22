@@ -14,5 +14,8 @@
 		"check": "pnpm run lint",
 		"lint": "oxlint src --no-error-on-unmatched-pattern",
 		"test": "pnpm run check"
+	},
+	"dependencies": {
+		"@earendil-works/pi-coding-agent": "^0.75.4"
 	}
 }
