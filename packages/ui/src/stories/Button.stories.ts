@@ -1,6 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/sveltekit';
 import Button from '../lib/components/Button.svelte';
 
+type ButtonStoryArgs = {
+	disabled?: boolean;
+	label?: string;
+	size?: 'sm' | 'md' | 'lg';
+	variant?: 'primary' | 'secondary' | 'ghost';
+};
+
 const meta = {
 	title: 'Components/Button',
 	component: Button,
@@ -20,10 +27,10 @@ const meta = {
 			options: ['sm', 'md', 'lg']
 		}
 	}
-} satisfies Meta<typeof Button>;
+} satisfies Meta<ButtonStoryArgs>;
 
 export default meta;
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<ButtonStoryArgs>;
 
 export const Primary: Story = {};
 

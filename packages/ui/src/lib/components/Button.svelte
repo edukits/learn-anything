@@ -1,43 +1,81 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import type { HTMLAnchorAttributes } from 'svelte/elements';
-	import type { HTMLButtonAttributes } from 'svelte/elements';
+	import type { HTMLAnchorAttributes, HTMLButtonAttributes } from 'svelte/elements';
 
 	type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 	type ButtonSize = 'sm' | 'md' | 'lg';
 
-	type NativeButtonProps = Omit<
-		HTMLButtonAttributes,
-		'class' | 'children' | 'label' | 'size' | 'type' | 'variant'
-	>;
-	type ButtonProps = NativeButtonProps & {
+	type SharedButtonProps = {
 		variant?: ButtonVariant;
 		size?: ButtonSize;
-		href?: string;
-		target?: HTMLAnchorAttributes['target'];
-		rel?: string;
-		type?: 'button' | 'submit' | 'reset';
 		label?: string;
 		class?: string;
 		children?: Snippet;
 	};
 
-	let {
-		variant = 'primary',
-		size = 'md',
-		href,
-		target,
-		rel,
-		type = 'button',
-		label = 'Button',
-		children,
-		class: className = '',
-		...rest
-	}: ButtonProps = $props();
+	type NativeButtonProps = Omit<
+		HTMLButtonAttributes,
+		'class' | 'children' | 'href' | 'label' | 'size' | 'type' | 'variant'
+	>;
+
+	type NativeAnchorProps = Omit<
+		HTMLAnchorAttributes,
+		'class' | 'children' | 'disabled' | 'label' | 'size' | 'variant'
+	>;
+
+	type ButtonElementProps = SharedButtonProps &
+		NativeButtonProps & {
+			href?: undefined;
+			type?: 'button' | 'submit' | 'reset';
+		};
+
+	type AnchorElementProps = SharedButtonProps &
+		NativeAnchorProps & {
+			href: NonNullable<HTMLAnchorAttributes['href']>;
+			disabled?: never;
+		};
+
+	type ButtonProps = ButtonElementProps | AnchorElementProps;
+
+	let props: ButtonProps = $props();
+
+	let variant = $derived(props.variant ?? 'primary');
+	let size = $derived(props.size ?? 'md');
+	let label = $derived(props.label ?? 'Button');
+	let children = $derived(props.children);
+	let className = $derived(props.class ?? '');
+
+	let anchorProps = $derived.by(() => {
+		const {
+			variant: _variant,
+			size: _size,
+			label: _label,
+			children: _children,
+			class: _className,
+			...attributes
+		} = props as AnchorElementProps;
+
+		return attributes;
+	});
+
+	let buttonProps = $derived.by(() => {
+		const {
+			variant: _variant,
+			size: _size,
+			label: _label,
+			children: _children,
+			class: _className,
+			href: _href,
+			type = 'button',
+			...attributes
+		} = props as ButtonElementProps;
+
+		return { ...attributes, type };
+	});
 </script>
 
-{#if href}
-	<a {href} {target} {rel} class={['button', className]} data-variant={variant} data-size={size}>
+{#if props.href}
+	<a {...anchorProps} class={['button', className]} data-variant={variant} data-size={size}>
 		{#if children}
 			{@render children()}
 		{:else}
@@ -45,7 +83,7 @@
 		{/if}
 	</a>
 {:else}
-	<button {...rest} {type} class={['button', className]} data-variant={variant} data-size={size}>
+	<button {...buttonProps} class={['button', className]} data-variant={variant} data-size={size}>
 		{#if children}
 			{@render children()}
 		{:else}
@@ -55,30 +93,6 @@
 {/if}
 
 <style>
-	@property --tone-top {
-		syntax: '<percentage>';
-		inherits: false;
-		initial-value: 59%;
-	}
-
-	@property --tone-bottom {
-		syntax: '<percentage>';
-		inherits: false;
-		initial-value: 44%;
-	}
-
-	@property --tone-border {
-		syntax: '<percentage>';
-		inherits: false;
-		initial-value: 34%;
-	}
-
-	@property --tone-inset {
-		syntax: '<percentage>';
-		inherits: false;
-		initial-value: 69%;
-	}
-
 	.button {
 		align-items: center;
 		appearance: none;
@@ -134,59 +148,48 @@
 	}
 
 	[data-variant='primary'] {
-		--tone-top: var(--color-accent-l);
-		--tone-bottom: calc(var(--color-accent-l) - 15%);
-		--tone-border: calc(var(--color-accent-l) - 25%);
-		--tone-inset: calc(var(--color-accent-l) + 10%);
 		background: linear-gradient(
 			to bottom,
-			hsl(var(--color-accent-h) var(--color-accent-s) var(--tone-top)),
-			hsl(var(--color-accent-h) var(--color-accent-s) var(--tone-bottom))
+			hsl(var(--color-accent-h) var(--color-accent-s) var(--color-accent-l)),
+			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 15%))
 		);
-		border-color: hsl(var(--color-accent-h) var(--color-accent-s) var(--tone-border));
-		box-shadow: 0 2px 1px inset hsl(var(--color-accent-h) var(--color-accent-s) var(--tone-inset));
+		border-color: hsl(
+			var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 25%)
+		);
+		box-shadow: 0 2px 1px inset
+			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) + 10%));
 		color: var(--color-accent-contrast);
-		transition:
-			--tone-top 100ms ease-out,
-			--tone-bottom 100ms ease-out,
-			--tone-border 100ms ease-out,
-			--tone-inset 100ms ease-out,
-			transform 150ms ease-out;
 	}
 
 	[data-variant='primary']:hover:not(:disabled) {
-		--tone-top: calc(var(--color-accent-l) - 10%);
-		--tone-bottom: calc(var(--color-accent-l) - 5%);
-		--tone-border: calc(var(--color-accent-l) - 15%);
-		--tone-inset: calc(var(--color-accent-l) + 10%);
+		background: linear-gradient(
+			to bottom,
+			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 10%)),
+			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 5%))
+		);
+		border-color: hsl(
+			var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 15%)
+		);
 	}
 
 	[data-variant='secondary'] {
-		--tone-top: 98%;
-		--tone-bottom: 93%;
-		--tone-border: 82%;
-		--tone-inset: 100%;
 		background: linear-gradient(
 			to bottom,
-			hsl(var(--color-accent-h) 20% var(--tone-top)),
-			hsl(var(--color-accent-h) 20% var(--tone-bottom))
+			hsl(var(--color-accent-h) 20% 98%),
+			hsl(var(--color-accent-h) 20% 93%)
 		);
-		border-color: hsl(var(--color-accent-h) 22% var(--tone-border));
-		box-shadow: 0 2px 1px inset hsl(var(--color-accent-h) 15% var(--tone-inset));
+		border-color: hsl(var(--color-accent-h) 22% 82%);
+		box-shadow: 0 2px 1px inset hsl(var(--color-accent-h) 15% 100%);
 		color: var(--color-text);
-		transition:
-			--tone-top 100ms ease-out,
-			--tone-bottom 100ms ease-out,
-			--tone-border 100ms ease-out,
-			--tone-inset 100ms ease-out,
-			transform 150ms ease-out;
 	}
 
 	[data-variant='secondary']:hover:not(:disabled) {
-		--tone-top: 96%;
-		--tone-bottom: 90%;
-		--tone-border: 78%;
-		--tone-inset: 100%;
+		background: linear-gradient(
+			to bottom,
+			hsl(var(--color-accent-h) 20% 96%),
+			hsl(var(--color-accent-h) 20% 90%)
+		);
+		border-color: hsl(var(--color-accent-h) 22% 78%);
 	}
 
 	[data-variant='ghost'] {
