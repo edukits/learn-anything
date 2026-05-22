@@ -75,6 +75,7 @@
 	let gradingIndicatorElement = $state<HTMLElement>();
 	let hasTrackedInputState = $state(false);
 	let previousInputState = $state('neutral');
+	let playCorrectMarkerEntrance = $state(false);
 	let lastRenderedValue = $state('');
 	let hasAnswer = $derived(isMathAnswered(getAnswer()));
 	let isLocked = $derived(disabled || submitted);
@@ -108,7 +109,10 @@
 		previousInputState = inputState;
 
 		if (celebrations && inputState === 'correct' && previous !== 'correct') {
+			playCorrectMarkerEntrance = true;
 			void tick().then(() => celebrateCorrectAnswer(gradingIndicatorElement));
+		} else if (inputState !== 'correct') {
+			playCorrectMarkerEntrance = false;
 		}
 	});
 
@@ -245,6 +249,8 @@
 					bind:element={gradingIndicatorElement}
 					class="state-icon"
 					state="correct"
+					animateCorrectMarker={playCorrectMarkerEntrance}
+					triggerCorrectAnimation={playCorrectMarkerEntrance}
 				/>
 			{:else if inputState === 'incorrect'}
 				<GradingIndicator class="state-icon" state="incorrect" />

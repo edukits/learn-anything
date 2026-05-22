@@ -10,6 +10,8 @@
 		size?: string;
 		dotSize?: string;
 		iconSize?: number;
+		animateCorrectMarker?: boolean;
+		triggerCorrectAnimation?: boolean;
 		ariaLabel?: string;
 		element?: HTMLElement;
 		class?: string;
@@ -23,6 +25,8 @@
 		size = '1.5rem',
 		dotSize = 'calc(var(--grading-size) * 0.45)',
 		iconSize = 14,
+		animateCorrectMarker = false,
+		triggerCorrectAnimation = false,
 		ariaLabel,
 		element = $bindable<HTMLElement>(),
 		class: className = ''
@@ -30,6 +34,7 @@
 
 	let hasTrackedState = $state(false);
 	let previousGradeState = $state<MultipleChoiceOptionState>('neutral');
+	let previousCorrectAnimationTrigger = $state(false);
 	let playCorrectAnimation = $state(false);
 	let resolvedAriaLabel = $derived(
 		ariaLabel ??
@@ -40,18 +45,24 @@
 		if (!hasTrackedState) {
 			hasTrackedState = true;
 			previousGradeState = gradeState;
+			previousCorrectAnimationTrigger = triggerCorrectAnimation;
 			return;
 		}
 
 		const previous = previousGradeState;
+		const previousTrigger = previousCorrectAnimationTrigger;
 
-		if (gradeState === 'correct' && previous !== 'correct') {
+		if (
+			gradeState === 'correct' &&
+			(previous !== 'correct' || (triggerCorrectAnimation && !previousTrigger))
+		) {
 			playCorrectAnimation = true;
 		} else if (gradeState !== 'correct') {
 			playCorrectAnimation = false;
 		}
 
 		previousGradeState = gradeState;
+		previousCorrectAnimationTrigger = triggerCorrectAnimation;
 	});
 </script>
 
@@ -64,6 +75,7 @@
 		selected && 'selected',
 		selected && `selected-mark-${selectedMark}`,
 		playCorrectAnimation && 'correct-animated',
+		animateCorrectMarker && 'correct-marker-entrance',
 		className
 	]}
 	style:--grading-size={size}
@@ -131,6 +143,11 @@
 		transform: rotate(45deg);
 	}
 
+	.state-correct.correct-marker-entrance {
+		animation: correct-marker-in 260ms cubic-bezier(0.16, 1, 0.3, 1);
+		animation-fill-mode: both;
+	}
+
 	.state-incorrect {
 		--accent: var(--color-incorrect);
 		background: var(--accent);
@@ -175,6 +192,18 @@
 			filter: blur(0);
 			opacity: 1;
 			transform: rotate(-45deg) scale(1);
+		}
+	}
+
+	@keyframes correct-marker-in {
+		from {
+			opacity: 0;
+			transform: rotate(45deg) scale(0.72);
+		}
+
+		to {
+			opacity: 1;
+			transform: rotate(45deg) scale(1);
 		}
 	}
 </style>
