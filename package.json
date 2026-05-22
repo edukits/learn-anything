@@ -15,6 +15,8 @@
 		"lint": "turbo lint",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
+		"content:validate": "node tools/content/validate-run.mjs curriculum-artifacts/runs/run_2026_05_21_english_literary_devices_v1/manifest.json",
+		"content:import:local": "node tools/content/import-run.mjs curriculum-artifacts/runs/run_2026_05_21_english_literary_devices_v1/manifest.json",
 		"birefnet:remove-bg": "UV_CACHE_DIR=tools/birefnet-bg-remove/.uv-cache uv run --project tools/birefnet-bg-remove python tools/birefnet-bg-remove/remove_background.py",
 		"storybook": "pnpm --filter @learn-anything/ui storybook",
 		"build-storybook": "pnpm --filter @learn-anything/ui build-storybook",
@@ -22,10 +24,13 @@
 	},
 	"devDependencies": {
 		"@learn-anything/config": "workspace:*",
+		"@supabase/supabase-js": "^2.88.0",
 		"oxlint": "^1.66.0",
 		"prettier": "^3.8.3",
 		"prettier-plugin-svelte": "^4.0.0",
+		"supabase": "^2.67.1",
 		"turbo": "^2.9.14",
-		"@types/node": "^25.9.1"
+		"@types/node": "^25.9.1",
+		"zod": "^4.2.0"
 	}
 }

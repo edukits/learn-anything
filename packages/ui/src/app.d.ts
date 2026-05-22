@@ -3,5 +3,9 @@ declare module '*.jpeg' {
 	const src: string;
 	export default src;
 }
+declare module '*.png' {
+	const src: string;
+	export default src;
+}
 declare module 'katex/dist/katex.min.css';
 declare module 'mathlive/fonts.css';

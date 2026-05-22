@@ -1,0 +1,35 @@
+{
+	"name": "@learn-anything/web",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev --host 127.0.0.1",
+		"build": "vite build",
+		"preview": "vite preview --host 127.0.0.1",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"lint": "oxlint src",
+		"test": "pnpm run check"
+	},
+	"dependencies": {
+		"@learn-anything/tokens": "workspace:*",
+		"@learn-anything/ui": "workspace:*",
+		"@lucide/svelte": "^1.16.0",
+		"@supabase/ssr": "^0.8.0",
+		"@supabase/supabase-js": "^2.88.0",
+		"bits-ui": "^2.18.1",
+		"svelte": "^5.55.9",
+		"vite": "^8.0.13",
+		"zod": "^4.2.0"
+	},
+	"devDependencies": {
+		"@learn-anything/config": "workspace:*",
+		"@sveltejs/adapter-cloudflare": "^7.2.8",
+		"@sveltejs/kit": "^2.60.1",
+		"@sveltejs/vite-plugin-svelte": "^7.1.2",
+		"@types/node": "^25.9.1",
+		"oxlint": "^1.66.0",
+		"svelte-check": "^4.4.8",
+		"typescript": "^6.0.3"
+	}
+}

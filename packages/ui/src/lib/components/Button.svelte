@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import type { HTMLAnchorAttributes } from 'svelte/elements';
 	import type { HTMLButtonAttributes } from 'svelte/elements';
 
 	type ButtonVariant = 'primary' | 'secondary' | 'ghost';
@@ -9,10 +10,12 @@
 		HTMLButtonAttributes,
 		'class' | 'children' | 'label' | 'size' | 'type' | 'variant'
 	>;
-
 	type ButtonProps = NativeButtonProps & {
 		variant?: ButtonVariant;
 		size?: ButtonSize;
+		href?: string;
+		target?: HTMLAnchorAttributes['target'];
+		rel?: string;
 		type?: 'button' | 'submit' | 'reset';
 		label?: string;
 		class?: string;
@@ -22,6 +25,9 @@
 	let {
 		variant = 'primary',
 		size = 'md',
+		href,
+		target,
+		rel,
 		type = 'button',
 		label = 'Button',
 		children,
@@ -30,13 +36,23 @@
 	}: ButtonProps = $props();
 </script>
 
-<button {...rest} {type} class={['button', className]} data-variant={variant} data-size={size}>
-	{#if children}
-		{@render children()}
-	{:else}
-		{label}
-	{/if}
-</button>
+{#if href}
+	<a {href} {target} {rel} class={['button', className]} data-variant={variant} data-size={size}>
+		{#if children}
+			{@render children()}
+		{:else}
+			{label}
+		{/if}
+	</a>
+{:else}
+	<button {...rest} {type} class={['button', className]} data-variant={variant} data-size={size}>
+		{#if children}
+			{@render children()}
+		{:else}
+			{label}
+		{/if}
+	</button>
+{/if}
 
 <style>
 	@property --tone-top {
@@ -72,6 +88,7 @@
 		display: inline-flex;
 		font-family: var(--font-display);
 		font-weight: 600;
+		gap: var(--space-2);
 		justify-content: center;
 		line-height: 1;
 		min-inline-size: max-content;

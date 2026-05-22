@@ -1,0 +1,16 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://learn-anything.local/content-schemas/v1/quiz-question-link.schema.json",
+	"title": "Quiz question link",
+	"type": "object",
+	"required": ["quiz_id", "quiz_version", "question_id", "question_version", "ordering", "weight"],
+	"properties": {
+		"quiz_id": { "type": "string", "minLength": 1 },
+		"quiz_version": { "type": "integer", "minimum": 1 },
+		"question_id": { "type": "string", "minLength": 1 },
+		"question_version": { "type": "integer", "minimum": 1 },
+		"ordering": { "type": "integer", "minimum": 1 },
+		"weight": { "type": "number", "exclusiveMinimum": 0 }
+	},
+	"additionalProperties": false
+}

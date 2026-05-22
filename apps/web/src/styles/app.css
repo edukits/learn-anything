@@ -1,0 +1,74 @@
+:root {
+	color: var(--color-text);
+	background: var(--color-canvas);
+	font-family: var(--font-sans);
+	font-size: 16px;
+	line-height: 1.5;
+}
+
+body {
+	margin: 0;
+	min-inline-size: 320px;
+}
+
+button,
+input {
+	font: inherit;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.page {
+	inline-size: min(1120px, calc(100% - 32px));
+	margin-inline: auto;
+}
+
+.stack {
+	display: grid;
+	gap: 24px;
+}
+
+.muted {
+	color: var(--color-text-muted);
+}
+
+.eyebrow {
+	color: var(--color-text-muted);
+	font-size: 0.78rem;
+	font-weight: 750;
+	letter-spacing: 0;
+	text-transform: uppercase;
+}
+
+.button-row {
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+
+.message {
+	border-radius: var(--radius-md);
+	padding: 12px 14px;
+}
+
+.message.error {
+	background: color-mix(in srgb, var(--color-incorrect), transparent 90%);
+	border: 1px solid color-mix(in srgb, var(--color-incorrect), transparent 55%);
+	color: var(--color-text);
+}
+
+.message.success {
+	background: color-mix(in srgb, var(--color-correct), transparent 90%);
+	border: 1px solid color-mix(in srgb, var(--color-correct), transparent 55%);
+	color: var(--color-text);
+}
+
+@media (max-width: 720px) {
+	.page {
+		inline-size: min(100% - 24px, 1120px);
+	}
+}

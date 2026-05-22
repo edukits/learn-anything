@@ -1,0 +1,36 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://learn-anything.local/content-schemas/v1/quiz-question.schema.json",
+	"title": "Quiz question",
+	"type": "object",
+	"required": ["id", "version", "topic_area_id", "skill_id", "device", "question_type", "difficulty", "prompt", "choices", "correct_choice_id", "explanation", "content_run_id", "schema_version", "source_refs"],
+	"properties": {
+		"id": { "type": "string", "minLength": 1 },
+		"version": { "type": "integer", "minimum": 1 },
+		"topic_area_id": { "type": "string", "minLength": 1 },
+		"skill_id": { "type": "string", "minLength": 1 },
+		"device": { "type": "string", "minLength": 1 },
+		"question_type": { "enum": ["recognition", "application"] },
+		"difficulty": { "enum": ["easy", "medium", "hard"] },
+		"prompt": { "type": "string", "minLength": 1 },
+		"choices": {
+			"type": "array",
+			"minItems": 2,
+			"items": {
+				"type": "object",
+				"required": ["id", "label"],
+				"properties": {
+					"id": { "type": "string", "minLength": 1 },
+					"label": { "type": "string", "minLength": 1 }
+				},
+				"additionalProperties": false
+			}
+		},
+		"correct_choice_id": { "type": "string", "minLength": 1 },
+		"explanation": { "type": "string", "minLength": 1 },
+		"content_run_id": { "type": "string", "minLength": 1 },
+		"schema_version": { "type": "integer", "minimum": 1 },
+		"source_refs": { "type": "array", "items": { "$ref": "subject-area.schema.json#/$defs/source_ref" } }
+	},
+	"additionalProperties": false
+}

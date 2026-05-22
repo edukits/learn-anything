@@ -1,0 +1,37 @@
+{
+	"run_id": "run_2026_05_21_english_literary_devices_v1",
+	"title": "English Literary Devices v1",
+	"schema_version": 1,
+	"authoring_mode": "hand-authored",
+	"subject_area_id": "subject_english",
+	"topic_area_id": "topic_literary_devices",
+	"source_refs": [
+		{
+			"source_id": "source_english_literary_devices_notes_v1",
+			"path": "content-sources/english/literary-devices/source.md",
+			"metadata_path": "content-sources/english/literary-devices/metadata.json"
+		}
+	],
+	"artifacts": {
+		"subject_areas": "subject-areas.jsonl",
+		"topic_areas": "topic-areas.jsonl",
+		"skills": "skills.jsonl",
+		"lessons": "lessons.jsonl",
+		"quizzes": "quizzes.jsonl",
+		"questions": "questions.jsonl",
+		"quiz_question_links": "quiz-question-links.jsonl",
+		"learning_paths": "learning-paths.jsonl",
+		"releases": "releases.jsonl"
+	},
+	"schemas": {
+		"subject_areas": "../../../../content-schemas/v1/subject-area.schema.json",
+		"topic_areas": "../../../../content-schemas/v1/topic-area.schema.json",
+		"skills": "../../../../content-schemas/v1/skill.schema.json",
+		"lessons": "../../../../content-schemas/v1/lesson.schema.json",
+		"quizzes": "../../../../content-schemas/v1/quiz.schema.json",
+		"questions": "../../../../content-schemas/v1/quiz-question.schema.json",
+		"quiz_question_links": "../../../../content-schemas/v1/quiz-question-link.schema.json",
+		"learning_paths": "../../../../content-schemas/v1/learning-path.schema.json",
+		"releases": "../../../../content-schemas/v1/release.schema.json"
+	}
+}

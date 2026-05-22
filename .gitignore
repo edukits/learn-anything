@@ -1,5 +1,7 @@
 node_modules/
 .turbo/
+.playwright-mcp/
+.wrangler/
 .corepack/
 .pnpm-store/
 .venv/
