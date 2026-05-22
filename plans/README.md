@@ -24,9 +24,9 @@ Use a simple, scalable stack:
 - **Supabase Auth** for authentication.
 - **Supabase Postgres** for runtime content indexes, relationships, releases, and user progress.
 - **Supabase Object Storage** for generated content artifacts and media.
-- **Cloudflare Pages** for v1 deployment.
+- **Cloudflare Pages** for deployment.
 
-The v1 product app should be created as a new SvelteKit app under `apps/web`. The existing `apps/demo` app remains a demo/playground for package and component development.
+The product app lives under `apps/web`. The existing `apps/demo` app remains a demo/playground for package and component development.
 
 See also:
 
@@ -35,6 +35,7 @@ See also:
 - `content-generation.md`
 - `local-development.md`
 - `ui-ux-v1.md`
+- `v2-roadmap.md`
 
 ## Content hierarchy
 
@@ -106,25 +107,41 @@ Principles:
 - Design content relationships around reusable questions, skills, lessons, and learning paths.
 - Publish content through explicit releases, not direct generation.
 
-## Initial implementation focus
+## Current baseline: v1 MVP
 
-Start with one narrow end-to-end vertical slice: English Literary Devices.
+The v1 MVP is the narrow English Literary Devices vertical slice:
 
-The v1 MVP is deliberately small: a signed-in high-school learner can complete one Literary Devices quiz and see stored progress.
+- SvelteKit product app at `apps/web`
+- Supabase Auth with protected app routes
+- Supabase Postgres schema for content releases, attempts, answers, lesson completions, and progress
+- hand-authored English Literary Devices JSONL content artifacts
+- schema validation and content import tooling
+- one intro lesson, one mixed multiple-choice quiz, and a progress view
+- server-side quiz grading and persisted attempt history
 
-1. Set up local Supabase first so auth, migrations, RLS, content import, and storage assumptions can be tested locally.
-2. Create the v1 SvelteKit app at `apps/web`.
-3. Add required app dependencies, including Supabase client/server packages, schema validation tooling, the Cloudflare Pages adapter, and Bits UI primitives where appropriate.
-4. Ship authentication with Supabase magic links, protected app routes, and RLS policies for user-owned data.
-5. Define the core content schema for subject areas, topic areas, skills, lessons, quizzes, questions, releases, attempts, and progress.
-6. Create small hand-authored JSONL artifacts for the initial Literary Devices topic and commit them to Git for v1.
-7. Include curriculum records in JSONL from day one: subject area, topic area, skills, lesson, quiz, questions, quiz-question relationships, and release metadata.
-8. Import validated JSONL content into local Supabase Postgres.
-9. Store production lesson bodies, quiz bodies, question bodies, answers, and explanations in Postgres for runtime serving.
-10. Publish the imported Literary Devices content through an explicit content release.
-11. Build the authenticated app shell, one intro lesson, one mixed multiple-choice practice quiz, server-side attempt storage, and a minimal progress view.
-12. Serve only the latest published content to users. Historical attempts should still store the exact content ids and versions seen.
-13. Defer hosted Supabase setup, streaks, XP, rewards, leaderboards, broad public discovery, anonymous practice, and public previews until the local quiz/progress loop works reliably.
-14. Expand generation and publishing to more subjects once the Literary Devices pipeline is reliable.
+Keep `ui-ux-v1.md` as the historical product contract for this MVP.
 
-See `ui-ux-v1.md` for the first user experience plan.
+## V2 focus
+
+V2 should turn the v1 slice into the first real learning platform surface without jumping directly to a broad marketplace.
+
+The v2 theme is: **discover, return, and improve**.
+
+Priorities:
+
+1. Add public discovery and preview pages so users can understand available learning paths before signing in.
+2. Expand from one Literary Devices quiz to a small topic experience with multiple lessons, multiple quizzes, and richer progress.
+3. Add the first durable engagement loop: XP, streaks, daily goals, and clearer completion state.
+4. Add adaptive review from historical answers, starting with missed-question and weak-skill practice.
+5. Harden content operations with hosted Supabase environments, release review, import repeatability, and rollback expectations.
+
+Non-goals for v2:
+
+- global leaderboards
+- rewards economy or shop mechanics
+- anonymous persisted progress
+- many unrelated subjects at once
+- full AI-generated curriculum at production scale
+- collaborative/social learning
+
+See `v2-roadmap.md` for the v2 plan.

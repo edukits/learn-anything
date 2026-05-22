@@ -1,8 +1,8 @@
 # Local Development
 
-Use the Supabase CLI local stack for database, auth, storage, and local review. Local Supabase setup is the first implementation step for v1. The local workflow should mirror production closely enough that migrations, RLS policies, auth flows, storage buckets, and the JSONL content import path are exercised before anything is pushed to a hosted Supabase project.
+Use the Supabase CLI local stack for database, auth, storage, and local review. The local workflow should mirror production closely enough that migrations, RLS policies, auth flows, storage buckets, and the JSONL content import path are exercised before anything is pushed to a hosted Supabase project.
 
-Do not set up hosted Supabase at the start of v1. Build and verify the full quiz/progress loop against local Supabase first.
+V1 was intentionally local-first. V2 should add hosted staging and production Supabase projects after the local quiz/progress loop is working.
 
 ## Prerequisites
 
@@ -11,7 +11,7 @@ Do not set up hosted Supabase at the start of v1. Build and verify the full quiz
 - Docker-compatible container runtime
 - Supabase CLI installed as a local dev dependency or run through the package manager
 
-The v1 web app should live in `apps/web`. Development should run locally against the Supabase local stack while still using a Cloudflare Pages-compatible SvelteKit adapter for the deployment target.
+The product web app lives in `apps/web`. Development should run locally against the Supabase local stack while still using a Cloudflare Pages-compatible SvelteKit adapter for the deployment target.
 
 Expected dependency additions include:
 
@@ -70,7 +70,7 @@ Apply migrations to a clean local database:
 corepack pnpm exec supabase db reset
 ```
 
-For v1, migrations should create:
+Current migrations should create:
 
 - content tables
 - release tables
@@ -79,11 +79,21 @@ For v1, migrations should create:
 - storage buckets/policies if needed
 - fixed system data only, if any
 
+V2 migrations should add:
+
+- XP events
+- streak events
+- daily goal settings
+- review sessions
+- review session question links
+- activity events, if needed for history
+- RLS policies for all new user-owned tables
+
 Do not put curriculum content directly in SQL migrations. Literary Devices curriculum content should use the same JSONL artifact/import workflow planned for later generated content.
 
 ## Local content import workflow
 
-After `supabase db reset`, import the v1 JSONL artifacts into the local database with the same import script that will later run against staging.
+After `supabase db reset`, import JSONL artifacts into the local database with the same import script that will later run against staging.
 
 The local import should:
 
@@ -101,7 +111,7 @@ The app should then read from local Supabase exactly as it would read from stagi
 
 Use the local Supabase Auth service for sign-in testing.
 
-V1 auth testing should cover:
+Auth testing should cover:
 
 - email magic-link sign-in
 - callback route session exchange
@@ -114,7 +124,7 @@ Use the local email testing tool exposed by the Supabase stack rather than sendi
 
 ## Local storage workflow
 
-Supabase Object Storage should be available in the local stack. For v1, storage may only be needed for validating the future artifact/media path.
+Supabase Object Storage should be available in the local stack. In v2, storage should be exercised for hosted artifact/media assumptions before the release path depends on it.
 
 If storage is used locally:
 
@@ -124,7 +134,7 @@ If storage is used locally:
 
 ## Hosted project workflow
 
-Local development is the source of truth for schema changes. Hosted Supabase is deferred until the local v1 loop works end to end.
+Local development is the source of truth for schema changes. For v2, hosted staging should be introduced before production.
 
 Before pushing to a hosted Supabase project:
 
@@ -135,6 +145,16 @@ Before pushing to a hosted Supabase project:
 5. Push migrations to the hosted project only after local verification.
 
 Hosted staging should receive the same migrations and JSONL artifacts that passed locally.
+
+V2 hosted workflow:
+
+1. Apply migrations to hosted staging.
+2. Import the candidate content release into staging.
+3. Run smoke tests for auth, protected routes, quiz submission, progress, XP/streak writes, and review sessions.
+4. Run manual content QA against staging.
+5. Promote the same migration set and content artifacts to production.
+6. Publish the production content release only after production import succeeds.
+7. Keep a rollback note for the previous published release id.
 
 ## Useful commands
 

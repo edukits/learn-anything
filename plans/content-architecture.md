@@ -100,6 +100,15 @@ xp_events
 spaced_repetition_state
 ```
 
+V2 should extend user data without coupling it to curriculum rows:
+```
+daily_goal_settings
+streak_events
+review_sessions
+review_session_questions
+activity_events
+```
+
 ## Content model
 
 Suggested content types (for now):
@@ -183,7 +192,7 @@ Use scoped release bundles so the platform can publish or roll back Literary Dev
 
 `content_release_items` should record the exact content ids and versions included in the release. Production queries should serve only content versions attached to the latest published release state for that scope.
 
-For v1, users always follow the latest published content. Do not pin active users to older releases. Historical attempts should still store the exact content ids and versions the user saw so past quiz history remains understandable after content changes.
+For the current product, users always follow the latest published content. Do not pin active users to older releases. Historical attempts should still store the exact content ids and versions the user saw so past quiz history remains understandable after content changes.
 
 This gives the app flexibility to:
 - publish the first English Literary Devices slice independently
@@ -218,6 +227,29 @@ Question records should include enough metadata to support review and future pra
 - correct answer
 - explanation
 - source references
+
+## V2 content expansion
+
+V2 should expand the Literary Devices topic before adding many unrelated subjects. This keeps the content model honest while limiting product scope.
+
+The next Literary Devices release should include:
+
+- multiple lessons
+- multiple quizzes
+- reusable questions shared across regular quizzes and review sessions
+- enough question metadata to select weak-skill review items
+- public preview metadata for discovery pages
+- release notes that summarize added, revised, and retired content
+
+Recommended minimum:
+
+- 3 lessons
+- 3 quizzes
+- 45 questions
+- question coverage for each initial literary device
+- recognition and application question types
+
+Review sessions should select from published question versions only. Retired or unpublished questions can remain in history but should not appear in new review sessions.
 
 ## Publishing flow
 
