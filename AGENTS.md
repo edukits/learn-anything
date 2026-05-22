@@ -2,7 +2,7 @@
 
 ## Runtime
 
-- Use Node `22.15.1` from `.nvmrc`; avoid Codex-bundled Node 24.
+- Use Node `22.19.0` from `.nvmrc`; avoid Codex-bundled Node 24.
 - Use `corepack pnpm ...`; PNPM is pinned to `10.15.0`.
 - If Turbo cannot find `pnpm`, create a local shim:
 
