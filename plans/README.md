@@ -36,6 +36,7 @@ See also:
 - `local-development.md`
 - `ui-ux-v1.md`
 - `v2-roadmap.md`
+- `v3-roadmap.md`
 
 ## Content hierarchy
 
@@ -145,3 +146,28 @@ Non-goals for v2:
 - collaborative/social learning
 
 See `v2-roadmap.md` for the v2 plan.
+
+## V3 direction
+
+V3 should move from the first repeatable learning surface to the first broad platform shape.
+
+The v3 theme is: **expand, personalize, and compete**.
+
+Priorities:
+
+1. Add a data-driven multi-subject catalog with at least two non-Literary-Devices topics.
+2. Generalize topic enrollment, path progress, review, diagnostics, recommendations, and app routing.
+3. Add mastery estimates, spaced repetition, and a daily personalized learning plan.
+4. Expand production question types beyond multiple choice where the subject requires it.
+5. Introduce first durable reward, achievement, and opt-in leaderboard loops.
+6. Turn content generation into an internal content factory with review, staging, publish, and rollback controls.
+
+Non-goals for v3:
+
+- native mobile app packaging
+- third-party creator marketplace
+- unrestricted user-generated courses
+- fully autonomous AI publication without human review
+- high-stakes certification or proctored exams
+
+See `v3-roadmap.md` for the v3 plan.
