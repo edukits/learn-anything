@@ -181,13 +181,43 @@ Use scoped release bundles so the platform can publish or roll back Literary Dev
 - learning path
 - specific content bundle
 
-`content_release_items` should record the exact content ids and versions included in the release. Production queries should serve only content versions attached to the currently published release state for that scope.
+`content_release_items` should record the exact content ids and versions included in the release. Production queries should serve only content versions attached to the latest published release state for that scope.
+
+For v1, users always follow the latest published content. Do not pin active users to older releases. Historical attempts should still store the exact content ids and versions the user saw so past quiz history remains understandable after content changes.
 
 This gives the app flexibility to:
 - publish the first English Literary Devices slice independently
 - revise individual questions without disturbing unrelated topics
 - keep user progress history tied to the version the user actually saw
 - roll back a bad content bundle while keeping other subjects live
+
+## First content slice
+
+The first Literary Devices release should use the same artifact/import system intended for later generated content. Do not seed curriculum content directly with SQL migrations except for fixed system data if needed.
+
+The initial hand-authored JSONL artifacts should include:
+
+- subject area: English
+- topic area: Literary Devices
+- skills for the initial literary devices
+- one intro lesson
+- one mixed multiple-choice practice quiz
+- reusable quiz questions
+- quiz-question relationships
+- release metadata or a release manifest
+
+The initial quiz is for high-school learners and should mix recognition questions with application questions based on short passages or examples.
+
+Question records should include enough metadata to support review and future practice selection:
+
+- literary device or skill
+- question type, such as recognition or application
+- difficulty
+- prompt
+- choices
+- correct answer
+- explanation
+- source references
 
 ## Publishing flow
 

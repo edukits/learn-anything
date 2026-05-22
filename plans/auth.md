@@ -34,7 +34,9 @@ Protected:
 
 ## RLS rule
 
-User-owned tables must include a `user_id` column referencing the authenticated Supabase user. Policies should allow a user to select, insert, update, and delete only rows where `user_id = auth.uid()`.
+User-owned tables must include a `user_id` column referencing the authenticated Supabase user. RLS policies should ensure users can read only their own private rows.
+
+Writes need stricter per-table rules. Quiz attempts, attempt answers, progress, streaks, and XP are derived or historical data, so the client should not be allowed to arbitrarily insert, update, or delete them. For v1, attempt and progress writes should go through SvelteKit server actions or API routes. Server-side code should validate the authenticated user, verify the quiz and answers belong to the latest published content, compute the score, and update progress.
 
 Content tables are read-only to normal authenticated users. Content import and publishing should use a service role or controlled admin path, not client-side writes.
 

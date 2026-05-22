@@ -106,13 +106,16 @@ Principles:
 
 Start with one narrow end-to-end vertical slice: English Literary Devices.
 
+The v1 MVP is deliberately small: a signed-in high-school learner can complete one Literary Devices quiz and see stored progress.
+
 1. Ship authentication with Supabase magic links, protected app routes, and RLS policies for user-owned data.
-2. Define the core content schema for subject areas, topic areas, skills, lessons, quizzes, questions, releases, and user progress.
+2. Define the core content schema for subject areas, topic areas, skills, lessons, quizzes, questions, releases, attempts, and progress.
 3. Create small hand-authored JSONL artifacts for the initial Literary Devices topic and commit them to Git for v1.
-4. Import validated JSONL content into Supabase Postgres.
-5. Store production lesson bodies, quiz bodies, question bodies, answers, and explanations in Postgres for runtime serving.
-6. Publish the imported literary devices content through an explicit content release.
-7. Build the authenticated app shell, one intro lesson, one mixed multiple-choice practice quiz, attempt storage, and a minimal progress view.
-8. Add public discovery pages for English and Literary Devices.
-9. Add streaks, XP, and rewards after the first practice/progress loop works reliably.
-10. Expand generation and publishing to more subjects once the Literary Devices pipeline is reliable.
+4. Include curriculum records in JSONL from day one: subject area, topic area, skills, lesson, quiz, questions, quiz-question relationships, and release metadata.
+5. Import validated JSONL content into Supabase Postgres.
+6. Store production lesson bodies, quiz bodies, question bodies, answers, and explanations in Postgres for runtime serving.
+7. Publish the imported Literary Devices content through an explicit content release.
+8. Build the authenticated app shell, one intro lesson, one mixed multiple-choice practice quiz, server-side attempt storage, and a minimal progress view.
+9. Serve only the latest published content to users. Historical attempts should still store the exact content ids and versions seen.
+10. Defer streaks, XP, rewards, leaderboards, broad public discovery, anonymous practice, and public previews until the quiz/progress loop works reliably.
+11. Expand generation and publishing to more subjects once the Literary Devices pipeline is reliable.

@@ -14,6 +14,8 @@ Support three common content operations:
 
 The first release should use small hand-authored JSONL artifacts for English Literary Devices. These artifacts can be committed to Git as a bootstrap exception. AI generation can be added after the import, validation, release, and practice loop works end to end.
 
+Use the same JSONL artifact/import pattern for v1 that later generated content will use. Curriculum content should not be seeded directly through SQL migrations unless it is fixed system data.
+
 Initial Literary Devices scope:
 
 - metaphor
@@ -27,7 +29,7 @@ Initial Literary Devices scope:
 - foreshadowing
 - onomatopoeia
 
-The first learning path should contain one intro lesson plus one mixed practice quiz covering the initial devices.
+The first learning path should contain one intro lesson plus one mixed practice quiz covering the initial devices. The target learner is high school. The quiz should include both recognition questions and application questions.
 
 ## Source material
 
@@ -122,6 +124,17 @@ Quiz questions should remain reusable and independent from quizzes. Quizzes refe
 
 The first release should use multiple-choice questions only. Future releases can add other question types already supported by the UI library.
 
+Initial question records should include:
+
+- literary device or skill
+- question type, such as recognition or application
+- difficulty
+- prompt
+- choices
+- correct answer
+- explanation
+- source references
+
 Production content bodies are imported into Postgres. Object Storage keeps the immutable JSONL artifacts and media files, but the app should not need to fetch JSONL artifacts at runtime to render published lessons or questions.
 
 ## Workflows
@@ -130,7 +143,7 @@ Production content bodies are imported into Postgres. Object Storage keeps the i
 
 1. Add initial grounding documents.
 2. Create hand-authored JSONL artifacts or run generation scripts.
-3. Produce JSONL artifacts for topics, skills, lessons, quizzes, questions, and media references.
+3. Produce JSONL artifacts for subject areas, topic areas, skills, lessons, quizzes, questions, quiz-question relationships, release metadata, and media references.
 4. Validate schema, references, duplicates, and basic quality rules.
 5. Bundle and compress artifacts.
 6. Upload artifacts to Supabase Object Storage.
@@ -183,7 +196,7 @@ Allow current curriculum to change:
 - merge or split smaller modules
 - hide retired content from current practice
 
-Progress views should be computed against the currently published release for the relevant scope. Historical attempts should keep references to the exact content id and version the user saw.
+Progress views should be computed against the latest published release for the relevant scope. Users always follow the latest published content. Historical attempts should keep references to the exact content id and version the user saw.
 
 If a module changes, it is acceptable for current module completion to be recalculated from the currently published content. Historical XP and streaks should not be removed just because curriculum content changed.
 
@@ -240,9 +253,9 @@ Start with:
 - one source document folder
 - hand-authored English Literary Devices JSONL artifacts
 - one JSON schema per content type
-- JSONL output for lessons, quizzes, and questions
+- JSONL output for subject areas, topic areas, skills, lessons, quizzes, questions, quiz-question relationships, and release metadata
 - one intro lesson
-- one mixed multiple-choice practice quiz
+- one mixed multiple-choice practice quiz for high-school learners
 - a manifest file
 - a validation script
 - manual upload/import steps
