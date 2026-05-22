@@ -262,3 +262,28 @@ Start with:
 - one staging review pass
 
 Then expand to generation scripts, topics, skills, media, partial regeneration, and richer quality checks.
+
+## V2 generation and review
+
+V2 should use the existing hand-authored/imported Literary Devices release as the control group, then expand the same topic through a second content release.
+
+The v2 content workflow should add:
+
+- release notes for each run
+- diff reports between the current published release and the candidate release
+- coverage reports by device, question type, and difficulty
+- answer-key validation across every quiz and review-eligible question
+- manual QA samples for each lesson and quiz
+- staging import before production publication
+
+AI generation can be piloted for draft questions or lesson variants, but production publication still requires validation, review, and explicit release publishing. Generated drafts should not become visible in production simply because a run completed successfully.
+
+For adaptive review, question artifacts should include enough metadata to select useful review sessions:
+
+- skill or device
+- question type
+- difficulty
+- prerequisite lesson or path item
+- review eligibility
+- source references
+- retired/replaced status where applicable
