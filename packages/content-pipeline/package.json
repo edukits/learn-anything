@@ -16,6 +16,7 @@
 		"test": "pnpm run check"
 	},
 	"dependencies": {
+		"@earendil-works/pi-ai": "^0.75.4",
 		"@earendil-works/pi-coding-agent": "^0.75.4"
 	}
 }

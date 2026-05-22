@@ -154,6 +154,9 @@ importers:
 
   packages/content-pipeline:
     dependencies:
+      '@earendil-works/pi-ai':
+        specifier: ^0.75.4
+        version: 0.75.4(ws@8.20.1)(zod@4.4.3)
       '@earendil-works/pi-coding-agent':
         specifier: ^0.75.4
         version: 0.75.4(ws@8.20.1)(zod@4.4.3)
