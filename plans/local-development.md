@@ -1,6 +1,8 @@
 # Local Development
 
-Use the Supabase CLI local stack for database, auth, storage, and local review. The local workflow should mirror production closely enough that migrations, RLS policies, auth flows, storage buckets, and the JSONL content import path are exercised before anything is pushed to a hosted Supabase project.
+Use the Supabase CLI local stack for database, auth, storage, and local review. Local Supabase setup is the first implementation step for v1. The local workflow should mirror production closely enough that migrations, RLS policies, auth flows, storage buckets, and the JSONL content import path are exercised before anything is pushed to a hosted Supabase project.
+
+Do not set up hosted Supabase at the start of v1. Build and verify the full quiz/progress loop against local Supabase first.
 
 ## Prerequisites
 
@@ -8,6 +10,16 @@ Use the Supabase CLI local stack for database, auth, storage, and local review. 
 - PNPM through Corepack
 - Docker-compatible container runtime
 - Supabase CLI installed as a local dev dependency or run through the package manager
+
+The v1 web app should live in `apps/web`. Development should run locally against the Supabase local stack while still using a Cloudflare Pages-compatible SvelteKit adapter for the deployment target.
+
+Expected dependency additions include:
+
+- Supabase CLI as a dev dependency
+- Supabase client/server packages for SvelteKit auth and data access
+- schema validation tooling for JSONL artifacts and server-side request validation
+- Cloudflare Pages SvelteKit adapter
+- Bits UI primitives where appropriate for accessible app UI controls
 
 Prefer project-local commands, for example:
 
@@ -112,7 +124,7 @@ If storage is used locally:
 
 ## Hosted project workflow
 
-Local development is the source of truth for schema changes.
+Local development is the source of truth for schema changes. Hosted Supabase is deferred until the local v1 loop works end to end.
 
 Before pushing to a hosted Supabase project:
 

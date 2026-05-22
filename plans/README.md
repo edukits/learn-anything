@@ -24,7 +24,9 @@ Use a simple, scalable stack:
 - **Supabase Auth** for authentication.
 - **Supabase Postgres** for runtime content indexes, relationships, releases, and user progress.
 - **Supabase Object Storage** for generated content artifacts and media.
-- **Cloudflare** for deployment.
+- **Cloudflare Pages** for v1 deployment.
+
+The v1 product app should be created as a new SvelteKit app under `apps/web`. The existing `apps/demo` app remains a demo/playground for package and component development.
 
 See also:
 
@@ -110,16 +112,19 @@ Start with one narrow end-to-end vertical slice: English Literary Devices.
 
 The v1 MVP is deliberately small: a signed-in high-school learner can complete one Literary Devices quiz and see stored progress.
 
-1. Ship authentication with Supabase magic links, protected app routes, and RLS policies for user-owned data.
-2. Define the core content schema for subject areas, topic areas, skills, lessons, quizzes, questions, releases, attempts, and progress.
-3. Create small hand-authored JSONL artifacts for the initial Literary Devices topic and commit them to Git for v1.
-4. Include curriculum records in JSONL from day one: subject area, topic area, skills, lesson, quiz, questions, quiz-question relationships, and release metadata.
-5. Import validated JSONL content into Supabase Postgres.
-6. Store production lesson bodies, quiz bodies, question bodies, answers, and explanations in Postgres for runtime serving.
-7. Publish the imported Literary Devices content through an explicit content release.
-8. Build the authenticated app shell, one intro lesson, one mixed multiple-choice practice quiz, server-side attempt storage, and a minimal progress view.
-9. Serve only the latest published content to users. Historical attempts should still store the exact content ids and versions seen.
-10. Defer streaks, XP, rewards, leaderboards, broad public discovery, anonymous practice, and public previews until the quiz/progress loop works reliably.
-11. Expand generation and publishing to more subjects once the Literary Devices pipeline is reliable.
+1. Set up local Supabase first so auth, migrations, RLS, content import, and storage assumptions can be tested locally.
+2. Create the v1 SvelteKit app at `apps/web`.
+3. Add required app dependencies, including Supabase client/server packages, schema validation tooling, the Cloudflare Pages adapter, and Bits UI primitives where appropriate.
+4. Ship authentication with Supabase magic links, protected app routes, and RLS policies for user-owned data.
+5. Define the core content schema for subject areas, topic areas, skills, lessons, quizzes, questions, releases, attempts, and progress.
+6. Create small hand-authored JSONL artifacts for the initial Literary Devices topic and commit them to Git for v1.
+7. Include curriculum records in JSONL from day one: subject area, topic area, skills, lesson, quiz, questions, quiz-question relationships, and release metadata.
+8. Import validated JSONL content into local Supabase Postgres.
+9. Store production lesson bodies, quiz bodies, question bodies, answers, and explanations in Postgres for runtime serving.
+10. Publish the imported Literary Devices content through an explicit content release.
+11. Build the authenticated app shell, one intro lesson, one mixed multiple-choice practice quiz, server-side attempt storage, and a minimal progress view.
+12. Serve only the latest published content to users. Historical attempts should still store the exact content ids and versions seen.
+13. Defer hosted Supabase setup, streaks, XP, rewards, leaderboards, broad public discovery, anonymous practice, and public previews until the local quiz/progress loop works reliably.
+14. Expand generation and publishing to more subjects once the Literary Devices pipeline is reliable.
 
 See `ui-ux-v1.md` for the first user experience plan.

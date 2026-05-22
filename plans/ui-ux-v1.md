@@ -4,6 +4,8 @@ The v1 product experience is a narrow, polished learning loop for English Litera
 
 Goal: a signed-in high-school learner completes the intro lesson, unlocks one mixed practice quiz, receives immediate feedback after each question, and sees quiz-level plus device-level progress.
 
+The v1 app should be implemented as a new SvelteKit app under `apps/web`. Reuse the existing `packages/ui` quiz components as the base, and use Bits UI primitives where appropriate for accessible controls, menus, dialogs, and other app UI building blocks.
+
 ## Product feel
 
 The app shell should feel like a game map, not a generic study dashboard.
