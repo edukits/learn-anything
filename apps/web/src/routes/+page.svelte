@@ -1,26 +1,34 @@
 <script lang="ts">
+	import type { PageProps } from './$types';
 	import { Button } from '@learn-anything/ui';
-	import { ArrowRight, BookOpen, Trophy } from '@lucide/svelte';
+	import { ArrowRight, BookOpen, Clock, Layers, Trophy } from '@lucide/svelte';
+	import { pluralize } from '$lib/shared/utils/format';
+
+	let { data }: PageProps = $props();
+
+	let ctaHref = $derived(data.isSignedIn ? data.topic.app_path : '/sign-in');
+	let ctaLabel = $derived(data.isSignedIn ? 'Open path' : 'Start learning');
 </script>
 
 <main class="home page">
 	<section class="hero">
 		<div class="hero-copy">
-			<p class="eyebrow">Learn Anything v1</p>
-			<h1>Literary Devices</h1>
-			<p>
-				A focused learning path for high-school readers: finish a short intro lesson, unlock a
-				15-question mixed practice quiz, and track progress by device.
-			</p>
+			<p class="eyebrow">{data.topic.level_label}</p>
+			<h1>{data.topic.name}</h1>
+			<p>{data.topic.public_summary}</p>
 			<div class="button-row">
-				<Button href="/sign-in" size="lg">Start learning <ArrowRight size={18} /></Button>
-				<Button href="/app" variant="secondary" size="lg" label="Open app" />
+				<Button href={ctaHref} size="lg">{ctaLabel} <ArrowRight size={18} /></Button>
+				<Button href={`/topics/${data.topic.slug}/preview`} variant="secondary" size="lg" label="Preview" />
 			</div>
 		</div>
 		<div class="path-preview" aria-label="Literary Devices path preview">
-			<div class="path-node done"><BookOpen size={24} /> Intro lesson</div>
+			<div class="path-node done"><BookOpen size={24} /> {pluralize(data.topic.lesson_count, 'lesson')}</div>
 			<div class="path-line"></div>
-			<div class="path-node active"><Trophy size={24} /> Mixed practice</div>
+			<div class="path-node active"><Trophy size={24} /> {pluralize(data.topic.quiz_count, 'quiz', 'quizzes')}</div>
+			<div class="metrics">
+				<span><Clock size={16} /> {data.topic.estimated_minutes} min</span>
+				<span><Layers size={16} /> {data.topic.covered_devices.length} devices</span>
+			</div>
 		</div>
 	</section>
 </main>
@@ -65,6 +73,22 @@
 		gap: 18px;
 		min-block-size: 420px;
 		padding: 28px;
+	}
+
+	.metrics {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 10px;
+	}
+
+	.metrics span {
+		align-items: center;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		display: inline-flex;
+		gap: 6px;
+		padding: 8px 10px;
 	}
 
 	.path-node {

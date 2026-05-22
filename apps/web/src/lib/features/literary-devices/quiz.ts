@@ -9,8 +9,6 @@ export type LiteraryDeviceQuizQuestion = {
 		id: string;
 		label: string;
 	}[];
-	correct_choice_id: string;
-	explanation: string;
 };
 
 export function buildLiteraryDeviceQuizQuestions(
@@ -20,10 +18,8 @@ export function buildLiteraryDeviceQuizQuestions(
 		id: question.question_id,
 		eyebrow: `${question.device} · ${question.question_type}`,
 		question: question.prompt,
-		feedback: question.explanation,
 		response: {
 			type: 'multiple-choice',
-			correctValue: question.correct_choice_id,
 			options: question.choices.map((choice) => ({
 				value: choice.id,
 				label: choice.label

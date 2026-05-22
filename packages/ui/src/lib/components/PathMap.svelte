@@ -1,7 +1,7 @@
 <script lang="ts" module>
-	export type PathMapItemState = 'available' | 'active' | 'complete' | 'locked';
+	export type PathMapItemState = 'available' | 'active' | 'completed' | 'locked' | 'review';
 	export type PathMapItemKind = 'lesson' | 'practice' | 'quiz' | 'review' | 'milestone';
-	export type PathMapIcon = 'book' | 'check' | 'lock' | 'play' | 'target' | 'trophy';
+	export type PathMapIcon = 'book' | 'check' | 'lock' | 'play' | 'refresh' | 'target' | 'trophy';
 	export type PathMapDensity = 'comfortable' | 'compact';
 
 	export type PathMapItem = {
@@ -18,7 +18,7 @@
 </script>
 
 <script lang="ts">
-	import { BookOpen, Check, Lock, Play, Target, Trophy } from '@lucide/svelte';
+	import { BookOpen, Check, Lock, Play, RotateCcw, Target, Trophy } from '@lucide/svelte';
 
 	type PathMapProps = {
 		items: PathMapItem[];
@@ -32,6 +32,7 @@
 		check: Check,
 		lock: Lock,
 		play: Play,
+		refresh: RotateCcw,
 		target: Target,
 		trophy: Trophy
 	};
@@ -50,10 +51,15 @@
 	function resolveIcon(item: PathMapItem) {
 		if (item.icon) return iconComponents[item.icon];
 		if (item.state === 'locked') return Lock;
-		if (item.state === 'complete') return Check;
+		if (item.state === 'completed') return Check;
+		if (item.state === 'review') return RotateCcw;
 		if (item.kind === 'quiz' || item.kind === 'milestone') return Trophy;
 		if (item.kind === 'practice' || item.kind === 'review') return Target;
 		return item.state === 'active' ? Play : BookOpen;
+	}
+
+	function normalizeState(state: PathMapItemState | undefined) {
+		return state ?? 'available';
 	}
 </script>
 
@@ -78,7 +84,7 @@
 
 <section class={['path-map', className]} data-density={density} aria-label={ariaLabel}>
 	{#each items as item, index (item.id)}
-		{@const state = item.state ?? 'available'}
+		{@const state = normalizeState(item.state)}
 		<div class="step">
 			{#if isLinked(item)}
 				<a class="node" data-state={state} data-kind={item.kind ?? 'lesson'} href={item.href} aria-current={state === 'active' ? 'step' : undefined}>
@@ -154,10 +160,17 @@
 		box-shadow: var(--shadow-sm);
 	}
 
-	.node[data-state='complete'] {
+	.node[data-state='completed'] {
 		--path-item-accent-h: var(--color-correct-h);
 		--path-item-accent-l: var(--color-correct-l);
 		--path-item-accent-s: var(--color-correct-s);
+		border-color: color-mix(in srgb, var(--path-item-accent), var(--color-border) 34%);
+	}
+
+	.node[data-state='review'] {
+		--path-item-accent-h: var(--color-star-h);
+		--path-item-accent-l: var(--color-star-l);
+		--path-item-accent-s: var(--color-star-s);
 		border-color: color-mix(in srgb, var(--path-item-accent), var(--color-border) 34%);
 	}
 
@@ -239,10 +252,17 @@
 		margin-inline-start: calc(1.6875rem + var(--space-5));
 	}
 
-	.connector[data-state='complete'] {
+	.connector[data-state='completed'] {
 		--path-item-accent-h: var(--color-correct-h);
 		--path-item-accent-l: var(--color-correct-l);
 		--path-item-accent-s: var(--color-correct-s);
+		background: color-mix(in srgb, var(--path-item-accent), var(--color-border) 24%);
+	}
+
+	.connector[data-state='review'] {
+		--path-item-accent-h: var(--color-star-h);
+		--path-item-accent-l: var(--color-star-l);
+		--path-item-accent-s: var(--color-star-s);
 		background: color-mix(in srgb, var(--path-item-accent), var(--color-border) 24%);
 	}
 

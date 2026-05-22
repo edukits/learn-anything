@@ -1,44 +1,61 @@
 <script lang="ts">
+	import type { PageProps } from './$types';
 	import { PageHeader } from '$lib/features/literary-devices';
 	import { PathMap } from '@learn-anything/ui';
 	import type { PathMapItem } from '@learn-anything/ui';
 
-	let { data } = $props();
+	let { data }: PageProps = $props();
 
-	let quizLocked = $derived(!data.progress.intro_lesson_completed);
-	let progressPercent = $derived(
-		(data.progress.intro_lesson_completed ? 50 : 0) + (data.progress.quiz_completed ? 50 : 0)
+	let completedCount = $derived(
+		data.pathProgress.filter((item) => item.state === 'completed' || item.state === 'review').length
 	);
-	let pathItems: PathMapItem[] = $derived([
-		{
-			id: 'intro-lesson',
-			title: data.lesson.title,
-			meta: data.progress.intro_lesson_completed
-				? 'Completed'
-				: `${data.lesson.estimated_minutes} min lesson`,
-			href: '/app/literary-devices/intro',
-			state: data.progress.intro_lesson_completed ? 'complete' : 'active',
-			kind: 'lesson'
-		},
-		{
-			id: 'mixed-practice',
-			title: data.quiz.title,
-			meta: quizLocked
-				? 'Complete the intro lesson to unlock'
-				: data.progress.quiz_completed
-					? `Best score ${Math.round(data.progress.best_score ?? 0)}%`
-					: `${data.quiz.question_count} questions`,
-			href: quizLocked ? undefined : '/app/literary-devices/quiz',
-			state: quizLocked ? 'locked' : data.progress.quiz_completed ? 'complete' : 'available',
-			kind: 'quiz'
-		}
-	]);
+	let progressPercent = $derived(
+		data.pathProgress.length === 0 ? 0 : Math.round((completedCount / data.pathProgress.length) * 100)
+	);
+	let pathItems: PathMapItem[] = $derived(
+		[
+			...data.pathProgress.map((item) => ({
+				id: item.id,
+				title: item.title,
+				description: item.item_type === 'lesson' ? item.summary : item.description,
+				meta:
+					item.item_type === 'lesson'
+						? item.state === 'completed'
+							? 'Completed'
+							: `${item.estimated_minutes} min lesson`
+						: item.total_attempts > 0
+							? `Best score ${Math.round(item.best_score ?? 0)}%`
+							: `${item.question_count} questions`,
+				href:
+					item.state === 'locked'
+						? undefined
+						: item.item_type === 'lesson'
+							? `/app/literary-devices/lesson/${item.item_id}`
+							: `/app/literary-devices/quiz/${item.item_id}`,
+				state: item.state,
+				kind: item.item_type
+			})),
+			...(data.reviewSummary.available
+				? [
+						{
+							id: 'adaptive-review',
+							title: 'Adaptive review',
+							description: data.reviewSummary.reason_labels.join(' · '),
+							meta: `${data.reviewSummary.question_count} questions`,
+							href: '/app/literary-devices/review',
+							state: 'review' as const,
+							kind: 'review' as const
+						}
+					]
+				: [])
+		]
+	);
 </script>
 
 <main class="page stack">
 	<section class="map-row">
 		<div class="map-heading">
-			<PageHeader eyebrow="English" title="Literary Devices" description={data.lesson.summary} />
+			<PageHeader eyebrow="English" title={data.path.title} description={data.path.summary} />
 			<div class="progress">
 				<strong>{progressPercent}%</strong>
 				<span>path progress</span>

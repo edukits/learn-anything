@@ -1,0 +1,45 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://learn-anything.local/content-schemas/v1/topic-discovery-metadata.schema.json",
+	"title": "Topic discovery metadata",
+	"type": "object",
+	"additionalProperties": false,
+	"required": [
+		"topic_area_id",
+		"release_id",
+		"slug",
+		"name",
+		"public_summary",
+		"preview_markdown",
+		"app_path",
+		"level_label",
+		"estimated_minutes",
+		"lesson_count",
+		"quiz_count",
+		"covered_skill_ids",
+		"covered_devices"
+	],
+	"properties": {
+		"topic_area_id": { "type": "string", "minLength": 1 },
+		"release_id": { "type": "string", "minLength": 1 },
+		"slug": { "type": "string", "minLength": 1 },
+		"name": { "type": "string", "minLength": 1 },
+		"public_summary": { "type": "string", "minLength": 1 },
+		"preview_markdown": { "type": "string", "minLength": 1 },
+		"app_path": { "type": "string", "pattern": "^/app/[a-z0-9-]+$" },
+		"level_label": { "type": "string", "minLength": 1 },
+		"estimated_minutes": { "type": "integer", "minimum": 1 },
+		"lesson_count": { "type": "integer", "minimum": 0 },
+		"quiz_count": { "type": "integer", "minimum": 0 },
+		"covered_skill_ids": {
+			"type": "array",
+			"minItems": 1,
+			"items": { "type": "string", "minLength": 1 }
+		},
+		"covered_devices": {
+			"type": "array",
+			"minItems": 1,
+			"items": { "type": "string", "minLength": 1 }
+		}
+	}
+}

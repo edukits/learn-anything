@@ -1,0 +1,26 @@
+{
+  "run_id": "run_2026_05_22_english_literary_devices_v2",
+  "valid": true,
+  "counts": {
+    "subject_areas": 1,
+    "topic_areas": 1,
+    "skills": 10,
+    "lessons": 3,
+    "quizzes": 3,
+    "questions": 45,
+    "quiz_question_links": 45,
+    "learning_paths": 1,
+    "releases": 1,
+    "topic_discovery_metadata": 1
+  },
+  "checks": [
+    "JSONL parses successfully",
+    "Records match v1 schemas",
+    "Stable ids and versions are unique",
+    "Question answer keys point to declared choices",
+    "Quiz-to-question references are complete and ordered",
+    "Release items point to imported content versions",
+    "Public discovery metadata references imported topics, releases, and skills"
+  ],
+  "failures": []
+}

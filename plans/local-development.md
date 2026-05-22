@@ -95,6 +95,11 @@ Do not put curriculum content directly in SQL migrations. Literary Devices curri
 
 After `supabase db reset`, import JSONL artifacts into the local database with the same import script that will later run against staging.
 
+```sh
+corepack pnpm content:validate
+corepack pnpm content:import:local
+```
+
 The local import should:
 
 - validate schemas
@@ -152,9 +157,11 @@ V2 hosted workflow:
 2. Import the candidate content release into staging.
 3. Run smoke tests for auth, protected routes, quiz submission, progress, XP/streak writes, and review sessions.
 4. Run manual content QA against staging.
-5. Promote the same migration set and content artifacts to production.
+5. Promote the same migration set and content artifacts to production with an explicit production confirmation.
 6. Publish the production content release only after production import succeeds.
 7. Keep a rollback note for the previous published release id.
+
+See `release-operations.md` for the staging QA checklist and rollback procedure.
 
 ## Useful commands
 

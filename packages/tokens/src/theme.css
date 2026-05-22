@@ -66,10 +66,15 @@
 		var(--color-incorrect-h) var(--color-incorrect-s) calc(var(--color-incorrect-l) - 7%)
 	);
 
+	/* Star — source (h/s/l) */
+	--color-star-h: 41;
+	--color-star-s: 100%;
+	--color-star-l: 50%;
+
 	/* Semantic */
 	--color-focus: var(--color-accent);
 	--color-pro: #a82bff;
-	--color-star: #ffae00;
+	--color-star: hsl(var(--color-star-h) var(--color-star-s) var(--color-star-l));
 
 	/* Typography */
 	--font-display: Konnect, Inter, ui-sans-serif, system-ui, sans-serif;

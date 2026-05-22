@@ -1,13 +1,15 @@
 import type { PageServerLoad } from './$types';
-import { getLiteraryDevicesContent, getUserProgress } from '$lib/server/content';
+import { getReviewSummary } from '$lib/features/literary-devices/server/review.server';
+import { loadProtectedLiteraryDevices } from '$lib/features/literary-devices/server/route-data.server';
 
-export const load: PageServerLoad = async ({ locals, parent }) => {
-	const { user } = await parent();
-	const content = await getLiteraryDevicesContent(locals.supabase);
-	const progress = await getUserProgress(locals.supabase, user.id, content.release.id);
+export const load: PageServerLoad = async ({ locals }) => {
+	const { user, content, progress, pathProgress } = await loadProtectedLiteraryDevices(locals);
+	const reviewSummary = await getReviewSummary(locals.supabase, user.id, content);
 
 	return {
 		...content,
-		progress
+		progress,
+		pathProgress,
+		reviewSummary
 	};
 };

@@ -28,7 +28,7 @@ const completePath: PathMapItem[] = [
 		title: 'Intro lesson',
 		meta: 'Completed',
 		href: '#',
-		state: 'complete',
+		state: 'completed',
 		kind: 'lesson'
 	},
 	{
@@ -36,7 +36,7 @@ const completePath: PathMapItem[] = [
 		title: 'Mixed practice',
 		meta: 'Best score 87%',
 		href: '#',
-		state: 'complete',
+		state: 'completed',
 		kind: 'quiz'
 	}
 ];
@@ -48,7 +48,7 @@ const multiStepPath: PathMapItem[] = [
 		eyebrow: 'Lesson',
 		meta: 'Completed',
 		href: '#',
-		state: 'complete',
+		state: 'completed',
 		kind: 'lesson'
 	},
 	{
@@ -80,8 +80,46 @@ const multiStepPath: PathMapItem[] = [
 	}
 ];
 
+const adaptiveReviewPath: PathMapItem[] = [
+	{
+		id: 'intro',
+		title: 'Intro lesson',
+		eyebrow: 'Lesson',
+		meta: 'Completed',
+		href: '#',
+		state: 'completed',
+		kind: 'lesson'
+	},
+	{
+		id: 'practice',
+		title: 'Mixed practice',
+		eyebrow: 'Quiz',
+		meta: 'Best score 87%',
+		href: '#',
+		state: 'completed',
+		kind: 'quiz'
+	},
+	{
+		id: 'adaptive-review',
+		title: 'Adaptive review',
+		description: 'Spacing decay detected · Low-confidence items',
+		meta: '8 questions',
+		href: '#',
+		state: 'review',
+		kind: 'review'
+	},
+	{
+		id: 'mastery',
+		title: 'Mastery check',
+		eyebrow: 'Quiz',
+		meta: '15 questions',
+		state: 'locked',
+		kind: 'quiz'
+	}
+];
+
 const compactPath: PathMapItem[] = [
-	{ id: 'one', title: 'Warm-up', meta: 'Done', href: '#', state: 'complete', kind: 'lesson' },
+	{ id: 'one', title: 'Warm-up', meta: 'Done', href: '#', state: 'completed', kind: 'lesson' },
 	{ id: 'two', title: 'Core set', meta: 'Current', href: '#', state: 'active', kind: 'practice' },
 	{ id: 'three', title: 'Error review', meta: 'Available', href: '#', kind: 'review' },
 	{ id: 'four', title: 'Challenge', meta: 'Locked', state: 'locked', kind: 'milestone' }
@@ -118,6 +156,12 @@ export const Completed: Story = {
 export const MultiStep: Story = {
 	args: {
 		items: multiStepPath
+	}
+};
+
+export const AdaptiveReview: Story = {
+	args: {
+		items: adaptiveReviewPath
 	}
 };
 

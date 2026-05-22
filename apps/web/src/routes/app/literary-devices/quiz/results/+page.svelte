@@ -1,9 +1,13 @@
 <script lang="ts">
+	import type { PageProps } from './$types';
 	import { DeviceStatsPanel, MetricGrid } from '$lib/features/literary-devices';
 	import type { MetricItem } from '$lib/features/literary-devices';
 	import { Button } from '@learn-anything/ui';
 
-	let { data } = $props();
+	let { data }: PageProps = $props();
+	let resultLabel = $derived(data.attempt?.attempt_kind === 'review' ? 'Review results' : 'Quiz results');
+	let retryHref = $derived(data.attempt?.attempt_kind === 'review' ? '/app/literary-devices/review' : '/app/literary-devices/quiz');
+	let retryLabel = $derived(data.attempt?.attempt_kind === 'review' ? 'Review again' : 'Practice again');
 
 	let resultMetrics: MetricItem[] = $derived(
 		data.attempt
@@ -30,23 +34,23 @@
 
 <main class="page stack">
 	<section class="results">
-		<p class="eyebrow">Quiz results</p>
+		<p class="eyebrow">{resultLabel}</p>
 		{#if data.attempt}
 			<h1>{Math.round(data.attempt.score)}%</h1>
 			<p class="muted">
 				{data.attempt.correct_count} correct out of {data.attempt.question_count} · Completed
-				{new Date(data.attempt.completed_at).toLocaleString()}
+				{data.attemptCompletedAtLabel}
 			</p>
 
 			<MetricGrid metrics={resultMetrics} variant="inset" columns="fixed" />
 
 			<div class="button-row">
-				<Button href="/app/literary-devices/quiz" label="Practice again" />
+				<Button href={retryHref} label={retryLabel} />
 				<Button href="/app/literary-devices" variant="secondary" label="Return to map" />
 			</div>
 		{:else}
 			<h1>No attempts yet</h1>
-			<p class="muted">Finish the mixed practice quiz to see results here.</p>
+			<p class="muted">Finish a quiz or review session to see results here.</p>
 			<Button href="/app/literary-devices/quiz" label="Start quiz" />
 		{/if}
 	</section>

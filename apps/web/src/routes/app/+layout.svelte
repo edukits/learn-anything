@@ -1,8 +1,10 @@
 <script lang="ts">
+	import type { LayoutProps } from './$types';
+	import { DailyProgressStrip } from '$lib/features/literary-devices';
 	import { Button } from '@learn-anything/ui';
-	import { BookOpenCheck, Map, TrendingUp } from '@lucide/svelte';
+	import { BookOpenCheck, Map, RotateCcw, TrendingUp } from '@lucide/svelte';
 
-	let { data, children } = $props();
+	let { data, children }: LayoutProps = $props();
 </script>
 
 <div class="app-shell">
@@ -11,6 +13,7 @@
 		<span class="topic-name">Literary Devices</span>
 		<nav aria-label="App navigation">
 			<a href="/app/literary-devices"><Map size={18} /> Map</a>
+			<a href="/app/literary-devices/review"><RotateCcw size={18} /> Review</a>
 			<a href="/app/progress"><TrendingUp size={18} /> Progress</a>
 		</nav>
 		<form method="POST" action="/app/logout">
@@ -18,6 +21,8 @@
 			<Button variant="ghost" size="sm" type="submit" label="Log out" />
 		</form>
 	</header>
+
+	<DailyProgressStrip engagement={data.engagement} />
 
 	<div class="shell-body">
 		{@render children()}

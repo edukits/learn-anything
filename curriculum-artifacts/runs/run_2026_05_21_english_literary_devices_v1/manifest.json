@@ -21,7 +21,8 @@
 		"questions": "questions.jsonl",
 		"quiz_question_links": "quiz-question-links.jsonl",
 		"learning_paths": "learning-paths.jsonl",
-		"releases": "releases.jsonl"
+		"releases": "releases.jsonl",
+		"topic_discovery_metadata": "topic-discovery-metadata.jsonl"
 	},
 	"schemas": {
 		"subject_areas": "../../../../content-schemas/v1/subject-area.schema.json",
@@ -32,6 +33,7 @@
 		"questions": "../../../../content-schemas/v1/quiz-question.schema.json",
 		"quiz_question_links": "../../../../content-schemas/v1/quiz-question-link.schema.json",
 		"learning_paths": "../../../../content-schemas/v1/learning-path.schema.json",
-		"releases": "../../../../content-schemas/v1/release.schema.json"
+		"releases": "../../../../content-schemas/v1/release.schema.json",
+		"topic_discovery_metadata": "../../../../content-schemas/v1/topic-discovery-metadata.schema.json"
 	}
 }

@@ -146,6 +146,22 @@ const releaseSchema = z.object({
 	manifest: z.record(z.string(), z.unknown())
 });
 
+const topicDiscoverySchema = z.object({
+	topic_area_id: z.string().min(1),
+	release_id: z.string().min(1),
+	slug: z.string().min(1),
+	name: z.string().min(1),
+	public_summary: z.string().min(1),
+	preview_markdown: z.string().min(1),
+	app_path: z.string().regex(/^\/app\/[a-z0-9-]+$/),
+	level_label: z.string().min(1),
+	estimated_minutes: z.number().int().positive(),
+	lesson_count: z.number().int().nonnegative(),
+	quiz_count: z.number().int().nonnegative(),
+	covered_skill_ids: z.array(z.string().min(1)).min(1),
+	covered_devices: z.array(z.string().min(1)).min(1)
+});
+
 const artifactSchemas = {
 	subject_areas: subjectAreaSchema,
 	topic_areas: topicAreaSchema,
@@ -155,7 +171,8 @@ const artifactSchemas = {
 	questions: questionSchema,
 	quiz_question_links: quizQuestionLinkSchema,
 	learning_paths: learningPathSchema,
-	releases: releaseSchema
+	releases: releaseSchema,
+	topic_discovery_metadata: topicDiscoverySchema
 };
 
 async function readJson(path) {
@@ -243,6 +260,7 @@ export async function loadAndValidateRun(manifestPath) {
 	const links = artifacts.quiz_question_links ?? [];
 	const learningPaths = artifacts.learning_paths ?? [];
 	const releases = artifacts.releases ?? [];
+	const topicDiscoveryMetadata = artifacts.topic_discovery_metadata ?? [];
 
 	for (const [name, records] of Object.entries({
 		subject_areas: subjectAreas,
@@ -326,10 +344,20 @@ export async function loadAndValidateRun(manifestPath) {
 	}
 
 	for (const learningPath of learningPaths) {
+		const orderSet = new Set();
 		for (const item of learningPath.items) {
 			const itemMap = item.item_type === 'lesson' ? lessonMap : quizMap;
 			if (!itemMap.has(refKey(item.item_id, item.item_version))) {
 				failures.push(`Learning path ${keyFor(learningPath)} references missing ${item.item_type} ${item.item_id}@${item.item_version}`);
+			}
+			if (orderSet.has(item.ordering)) {
+				failures.push(`Learning path ${keyFor(learningPath)} has duplicate ordering ${item.ordering}`);
+			}
+			orderSet.add(item.ordering);
+		}
+		for (let ordering = 1; ordering <= learningPath.items.length; ordering += 1) {
+			if (!orderSet.has(ordering)) {
+				failures.push(`Learning path ${keyFor(learningPath)} is missing item ordering ${ordering}`);
 			}
 		}
 	}
@@ -356,12 +384,85 @@ export async function loadAndValidateRun(manifestPath) {
 		}
 	}
 
+	const releaseIds = new Set(releases.map((release) => release.id));
+	const discoveryReleaseIds = new Set();
+
+	for (const release of releases) {
+		if (release.status !== 'published' || release.scope_type !== 'topic_area') {
+			continue;
+		}
+
+		const hasDiscoveryMetadata = topicDiscoveryMetadata.some(
+			(metadata) => metadata.release_id === release.id && metadata.topic_area_id === release.scope_id
+		);
+		if (!hasDiscoveryMetadata) {
+			failures.push(`Published topic release ${release.id} is missing public discovery metadata`);
+		}
+	}
+
+	for (const metadata of topicDiscoveryMetadata) {
+		if (discoveryReleaseIds.has(metadata.release_id)) {
+			failures.push(`Discovery metadata contains duplicate release ${metadata.release_id}`);
+		}
+		discoveryReleaseIds.add(metadata.release_id);
+
+		const release = releases.find((candidate) => candidate.id === metadata.release_id);
+		if (!releaseIds.has(metadata.release_id)) {
+			failures.push(`Discovery metadata for ${metadata.topic_area_id} references missing release ${metadata.release_id}`);
+		}
+		if (release && (release.scope_type !== 'topic_area' || release.scope_id !== metadata.topic_area_id)) {
+			failures.push(`Discovery metadata for ${metadata.topic_area_id} does not match release ${metadata.release_id} scope`);
+		}
+		const topic = topicAreas.find((candidate) => candidate.id === metadata.topic_area_id);
+		if (!topic) {
+			failures.push(`Discovery metadata references missing topic ${metadata.topic_area_id}`);
+		}
+		if (topic && topic.slug !== metadata.slug) {
+			failures.push(`Discovery metadata for ${metadata.topic_area_id} has slug ${metadata.slug}, expected ${topic.slug}`);
+		}
+		if (topic && metadata.app_path !== `/app/${topic.slug}`) {
+			failures.push(`Discovery metadata for ${metadata.topic_area_id} has app_path ${metadata.app_path}, expected /app/${topic.slug}`);
+		}
+		const releaseItems = release?.items ?? [];
+		const releaseLessonCount = releaseItems.filter((item) => item.content_type === 'lesson').length;
+		const releaseQuizCount = releaseItems.filter((item) => item.content_type === 'quiz').length;
+		const releaseSkillIds = releaseItems
+			.filter((item) => item.content_type === 'skill')
+			.map((item) => item.content_id)
+			.toSorted();
+		const releaseDevices = releaseSkillIds
+			.map((skillId) => skills.find((skill) => skill.id === skillId)?.name)
+			.filter(Boolean)
+			.toSorted();
+		const metadataSkillIds = metadata.covered_skill_ids.toSorted();
+		const metadataDevices = metadata.covered_devices.toSorted();
+
+		if (metadata.lesson_count !== releaseLessonCount) {
+			failures.push(`Discovery metadata for ${metadata.topic_area_id} declares ${metadata.lesson_count} lessons but release has ${releaseLessonCount}`);
+		}
+		if (metadata.quiz_count !== releaseQuizCount) {
+			failures.push(`Discovery metadata for ${metadata.topic_area_id} declares ${metadata.quiz_count} quizzes but release has ${releaseQuizCount}`);
+		}
+		if (JSON.stringify(metadataSkillIds) !== JSON.stringify(releaseSkillIds)) {
+			failures.push(`Discovery metadata for ${metadata.topic_area_id} covered_skill_ids do not match release skills`);
+		}
+		if (JSON.stringify(metadataDevices) !== JSON.stringify(releaseDevices)) {
+			failures.push(`Discovery metadata for ${metadata.topic_area_id} covered_devices do not match release skills`);
+		}
+		for (const skillId of metadata.covered_skill_ids) {
+			if (!skills.some((skill) => skill.id === skillId)) {
+				failures.push(`Discovery metadata for ${metadata.topic_area_id} references missing skill ${skillId}`);
+			}
+		}
+	}
+
 	checks.push('JSONL parses successfully');
 	checks.push('Records match v1 schemas');
 	checks.push('Stable ids and versions are unique');
 	checks.push('Question answer keys point to declared choices');
 	checks.push('Quiz-to-question references are complete and ordered');
 	checks.push('Release items point to imported content versions');
+	checks.push('Public discovery metadata references imported topics, releases, and skills');
 
 	const counts = Object.fromEntries(
 		Object.entries(artifacts).map(([name, records]) => [name, records.length])
@@ -375,7 +476,6 @@ export async function loadAndValidateRun(manifestPath) {
 		report: {
 			run_id: manifest.run_id,
 			valid: failures.length === 0,
-			generated_at: new Date().toISOString(),
 			counts,
 			checks,
 			failures

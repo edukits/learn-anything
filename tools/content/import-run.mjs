@@ -1,55 +1,48 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { loadAndValidateRun, writeValidationReport } from './content-run.mjs';
+import { getTargetSupabaseEnv, loadReleaseEnvironment, parseReleaseArgs } from './release-env.mjs';
 
-function loadEnvFile(path) {
-	if (!existsSync(path)) {
-		return;
-	}
+let manifestPath;
+let target;
+let confirmProduction;
 
-	for (const line of readFileSync(path, 'utf8').split('\n')) {
-		const trimmed = line.trim();
-		if (!trimmed || trimmed.startsWith('#')) {
-			continue;
-		}
-		const separatorIndex = trimmed.indexOf('=');
-		if (separatorIndex === -1) {
-			continue;
-		}
-		const key = trimmed.slice(0, separatorIndex);
-		const value = trimmed.slice(separatorIndex + 1).replace(/^"|"$/g, '');
-		process.env[key] ??= value;
-	}
-}
-
-loadEnvFile('.env.local');
-loadEnvFile('.env');
-
-const manifestPath = process.argv[2];
-
-if (!manifestPath) {
-	console.error('Usage: node tools/content/import-run.mjs <manifest.json>');
+try {
+	({ manifestPath, target, confirmProduction } = parseReleaseArgs(process.argv.slice(2), {
+		allowConfirmProduction: true
+	}));
+} catch (error) {
+	console.error(error instanceof Error ? error.message : String(error));
+	console.error(
+		'Usage: node tools/content/import-run.mjs <manifest.json> --target <local|staging|production> [--confirm-production]'
+	);
 	process.exit(1);
 }
 
+loadReleaseEnvironment(target);
+
 const run = await loadAndValidateRun(manifestPath);
-await writeValidationReport(run);
+const reportPath = await writeValidationReport(run);
 
 if (!run.report.valid) {
 	console.error('Refusing to import invalid content. Run content:validate for details.');
 	process.exit(1);
 }
 
-const supabaseUrl = process.env.SUPABASE_URL ?? process.env.PUBLIC_SUPABASE_URL;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
-
-if (!supabaseUrl || !serviceKey) {
-	console.error('Missing SUPABASE_URL/PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY/SUPABASE_SECRET_KEY.');
+if (target === 'production' && !confirmProduction) {
+	console.error('Refusing production import without --confirm-production.');
 	process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, serviceKey, {
+let env;
+try {
+	env = getTargetSupabaseEnv(target);
+} catch (error) {
+	console.error(error instanceof Error ? error.message : String(error));
+	process.exit(1);
+}
+
+const supabase = createClient(env.url, env.key, {
 	auth: {
 		persistSession: false,
 		autoRefreshToken: false
@@ -76,8 +69,11 @@ const {
 	questions,
 	quiz_question_links: quizQuestionLinks,
 	learning_paths: learningPaths,
-	releases
+	releases,
+	topic_discovery_metadata: topicDiscoveryMetadata = []
 } = run.artifacts;
+
+const targetReleaseStatusById = new Map(releases.map((release) => [release.id, release.status]));
 
 await upsert(
 	'content_runs',
@@ -273,10 +269,10 @@ await upsert(
 		title,
 		scope_type,
 		scope_id,
-		status,
+		status: status === 'published' ? 'draft' : status,
 		content_run_id,
 		manifest,
-		published_at: published_at ?? null
+		published_at: status === 'published' ? null : (published_at ?? null)
 	})),
 	'id'
 );
@@ -303,4 +299,58 @@ await upsert(
 	'release_id,content_type,content_id,content_version'
 );
 
-console.log(`Imported ${run.manifest.run_id} into ${supabaseUrl}`);
+await upsert(
+	'topic_discovery_metadata',
+	topicDiscoveryMetadata.map(
+		({
+			topic_area_id,
+			release_id,
+			slug,
+			name,
+			public_summary,
+			preview_markdown,
+			app_path,
+			level_label,
+			estimated_minutes,
+			lesson_count,
+			quiz_count,
+			covered_skill_ids,
+			covered_devices
+		}) => ({
+			topic_area_id,
+			release_id,
+			slug,
+			name,
+			public_summary,
+			preview_markdown,
+			app_path,
+			level_label,
+			estimated_minutes,
+			lesson_count,
+			quiz_count,
+			covered_skill_ids,
+			covered_devices
+		})
+	),
+	'release_id'
+);
+
+await upsert(
+	'content_releases',
+	releases
+		.filter((release) => targetReleaseStatusById.get(release.id) === 'published')
+		.map(({ id, slug, title, scope_type, scope_id, content_run_id, manifest, published_at }) => ({
+			id,
+			slug,
+			title,
+			scope_type,
+			scope_id,
+			status: 'published',
+			content_run_id,
+			manifest,
+			published_at: published_at ?? new Date().toISOString()
+		})),
+	'id'
+);
+
+console.log(`Imported ${run.manifest.run_id} into ${target} (${env.url}). Validation report: ${reportPath}`);
