@@ -5,7 +5,7 @@
 </script>
 
 <main class="page stack">
-	<section class="surface results">
+	<section class="results">
 		<p class="eyebrow">Quiz results</p>
 		{#if data.attempt}
 			<h1>{Math.round(data.attempt.score)}%</h1>
@@ -40,7 +40,7 @@
 		{/if}
 	</section>
 
-	<section class="surface breakdown">
+	<section class="breakdown">
 		<h2>Device breakdown</h2>
 		{#if data.deviceStats.length}
 			<div class="stats">
@@ -67,6 +67,9 @@
 
 	.results,
 	.breakdown {
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
 		display: grid;
 		gap: 18px;
 		padding: clamp(20px, 5vw, 40px);

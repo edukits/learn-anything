@@ -5,7 +5,7 @@
 </script>
 
 <main class="page lesson-page">
-	<article class="surface lesson">
+	<article class="lesson">
 		<p class="eyebrow">Lesson</p>
 		<RichText content={data.lesson.body_markdown} />
 

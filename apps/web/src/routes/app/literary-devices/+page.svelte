@@ -42,7 +42,7 @@
 				<h1>Literary Devices</h1>
 				<p class="muted">{data.lesson.summary}</p>
 			</div>
-			<div class="progress surface">
+			<div class="progress">
 				<strong>{progressPercent}%</strong>
 				<span>path progress</span>
 				<div aria-hidden="true"><span style:width={`${progressPercent}%`}></span></div>
@@ -56,7 +56,7 @@
 
 	<section class="skills">
 		{#each data.skills as skill (skill.skill_id)}
-			<article class="surface skill">
+			<article class="skill">
 				<h2>{skill.name}</h2>
 				<p>{skill.summary}</p>
 			</article>

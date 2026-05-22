@@ -12,29 +12,29 @@
 	</section>
 
 	<section class="summary-grid">
-		<article class="surface metric">
+		<article class="metric">
 			<span>Intro lesson</span>
 			<strong>{data.progress.intro_lesson_completed ? 'Complete' : 'Open'}</strong>
 		</article>
-		<article class="surface metric">
+		<article class="metric">
 			<span>Quiz</span>
 			<strong>{data.progress.quiz_completed ? 'Complete' : 'Not started'}</strong>
 		</article>
-		<article class="surface metric">
+		<article class="metric">
 			<span>Latest score</span>
 			<strong>{data.progress.latest_score === null ? '-' : `${Math.round(data.progress.latest_score)}%`}</strong>
 		</article>
-		<article class="surface metric">
+		<article class="metric">
 			<span>Best score</span>
 			<strong>{data.progress.best_score === null ? '-' : `${Math.round(data.progress.best_score)}%`}</strong>
 		</article>
-		<article class="surface metric">
+		<article class="metric">
 			<span>Total attempts</span>
 			<strong>{data.progress.total_attempts}</strong>
 		</article>
 	</section>
 
-	<section class="surface device-panel">
+	<section class="device-panel">
 		<h2>Device accuracy</h2>
 		{#if data.deviceStats.length}
 			<div class="stats">
@@ -68,6 +68,9 @@
 
 	.metric,
 	.device-panel {
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
 		display: grid;
 		gap: 10px;
 		padding: 18px;

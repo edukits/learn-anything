@@ -41,7 +41,7 @@
 
 <main class="page quiz-page">
 	{#if data.locked}
-		<section class="surface locked">
+		<section class="locked">
 			<Lock size={32} />
 			<h1>Quiz locked</h1>
 			<p>Complete the intro lesson to unlock mixed practice.</p>
@@ -57,7 +57,7 @@
 				<div class="pill">{answeredCount} answered</div>
 			</div>
 
-			<article class="surface question-card">
+			<article class="question-card">
 				<p class="tag">{currentQuestion.device} · {currentQuestion.question_type}</p>
 				<h2>{currentQuestion.prompt}</h2>
 

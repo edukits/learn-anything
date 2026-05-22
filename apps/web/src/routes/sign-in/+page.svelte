@@ -5,7 +5,7 @@
 </script>
 
 <main class="sign-in page">
-	<section class="surface panel">
+	<section class="panel">
 		<h1>Sign In</h1>
 
 		{#if form?.error}
@@ -35,6 +35,10 @@
 	}
 
 	.panel {
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		box-shadow: var(--shadow-md);
 		display: grid;
 		gap: 18px;
 		inline-size: min(100%, 520px);
