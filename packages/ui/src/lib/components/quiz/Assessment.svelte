@@ -269,6 +269,14 @@
 		recordQuestionResult(question);
 	}
 
+	function isQuestionFeedbackVisible(question: QuizQuestionData) {
+		if (!question.feedback) {
+			return false;
+		}
+
+		return mode === 'exam' ? examSubmitted : questionSubmitted[question.id];
+	}
+
 	function submitExam() {
 		if (!allAnswered || examSubmitted) {
 			return;
@@ -504,6 +512,13 @@
 							onsubmit={() => recordQuestionResult(question)}
 						/>
 					{/if}
+
+					{#if isQuestionFeedbackVisible(question)}
+						<div class="question-feedback">
+							<CheckCircle size={20} strokeWidth={2.4} />
+							<p>{question.feedback}</p>
+						</div>
+					{/if}
 				</Question>
 			{/each}
 		</div>
@@ -663,6 +678,27 @@
 		border-block-start: 1px solid color-mix(in srgb, var(--color-border), transparent 16%);
 		margin-block-start: var(--space-6);
 		padding-block-start: var(--space-6);
+	}
+
+	.question-feedback {
+		align-items: start;
+		background: color-mix(in srgb, var(--color-correct), transparent 90%);
+		border: 1px solid color-mix(in srgb, var(--color-correct), transparent 55%);
+		border-radius: var(--radius-md);
+		color: var(--color-text);
+		display: grid;
+		gap: var(--space-3);
+		grid-template-columns: auto 1fr;
+		margin-block-start: var(--space-4);
+		padding: var(--space-4);
+	}
+
+	.question-feedback :global(svg) {
+		color: var(--color-correct);
+	}
+
+	.question-feedback p {
+		margin: 0;
 	}
 
 	.assessment-actions {

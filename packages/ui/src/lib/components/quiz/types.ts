@@ -233,6 +233,7 @@ export type QuizQuestionData = {
 	eyebrow?: string;
 	question: string;
 	description?: string;
+	feedback?: string;
 	response: QuizQuestionResponse;
 };
 
