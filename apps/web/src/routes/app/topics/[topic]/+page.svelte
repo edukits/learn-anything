@@ -67,9 +67,7 @@
 			</div>
 		</div>
 
-		<div class="path-map-column">
-			<PathMap items={pathItems} ariaLabel={`${data.topic.name} learning path`} />
-		</div>
+		<PathMap items={pathItems} ariaLabel={`${data.topic.name} learning path`} />
 	</section>
 
 	<section class="skills">
@@ -100,6 +98,7 @@
 		display: grid;
 		gap: clamp(20px, 10vw, 75px);
 		grid-template-columns: minmax(220px, 380px) minmax(0, 1fr);
+		margin: 2rem 0;
 	}
 
 	.map-heading {
@@ -107,10 +106,6 @@
 		gap: 20px;
 		position: sticky;
 		top: 5.5rem;
-	}
-
-	.path-map-column {
-		padding-top: 40px;
 	}
 
 	.progress {
