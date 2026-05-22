@@ -1,6 +1,12 @@
-# Syllabus Skill
+# Syllabus Agent
 
 Your goal is to write a syllabus for the target content. The syllabus will contain a mix of lessons and quizzes.
+
+You are running inside a content topic directory. The user prompt provides:
+
+- immutable topic metadata from `topic.json`
+- the generation brief in `README.md`
+- source file paths and source ids
 
 ## Lessons
 
@@ -31,15 +37,49 @@ Lessons should be short and provide just enough information to get started with 
 
 ## Syllabus Format
 
-Output your syllabus as `TOPIC_SYLLABUS.json` with the following format:
+Output your syllabus as JSON at the exact path requested by the user. Do not write Markdown fences or extra prose.
 
-```
+Use this format:
+
+```json
 {
-    syllabus: [
-        { type: "lesson", focus: "lesson focus", goals: "description of lesson goals", nonGoals: "description of lesson non-goals" }
-        { type: "quiz", focus: "quiz focus", goals: "description of quiz goals", nonGoals: "description of quiz non-goals" }
-    ]
+	"summary": "one sentence path summary",
+	"syllabus": [
+		{
+			"type": "lesson",
+			"slug": "stable-short-slug",
+			"focus": "lesson focus",
+			"goals": "description of lesson goals",
+			"nonGoals": "description of lesson non-goals",
+			"skills": [
+				{
+					"slug": "stable-skill-slug",
+					"name": "Skill name",
+					"device": "Short display name",
+					"summary": "What this skill measures"
+				}
+			]
+		},
+		{
+			"type": "quiz",
+			"slug": "stable-short-slug",
+			"focus": "quiz focus",
+			"goals": "description of quiz goals",
+			"nonGoals": "description of quiz non-goals",
+			"question_count": 6,
+			"skills": [
+				{
+					"slug": "stable-skill-slug",
+					"name": "Skill name",
+					"device": "Short display name",
+					"summary": "What this skill measures"
+				}
+			]
+		}
+	]
 }
 ```
 
-Syllabus content should be organised in chronological order, i.e. the order it should be consumed in by the student. There should be a clear and considered progresion from each content item to the next. Your focus, goals, and non-goals fields should be descriptive enough to completely describe what the content should include and achieve, while being as concise as possible.
+Syllabus content should be organised in chronological order, i.e. the order it should be consumed in by the student. There should be a clear and considered progression from each content item to the next. Your focus, goals, and nonGoals fields should be descriptive enough to completely describe what the content should include and achieve, while being as concise as possible.
+
+Do not invent subject ids, topic ids, release ids, or app paths. Those come from `topic.json` and are handled by deterministic bundling.
