@@ -38,6 +38,7 @@ See also:
 - `ui-ux-v1.md`
 - `v2-roadmap.md`
 - `v3-roadmap.md`
+- `v4-roadmap.md`
 
 ## Content hierarchy
 
@@ -172,3 +173,29 @@ Non-goals for v3:
 - high-stakes certification or proctored exams
 
 See `v3-roadmap.md` for the v3 plan.
+
+## V4 direction
+
+V4 should move from the first broad platform shape to a scalable learning system.
+
+The v4 theme is: **scale, guide, and prove**.
+
+Priorities:
+
+1. Grow the catalog into a searchable topic graph with subjects, collections, prerequisites, and related topics.
+2. Add explicit learner goals and multi-week adaptive plans based on time budget, deadlines, mastery, and prerequisite gaps.
+3. Deepen practice with worked examples, hints, richer interactions, and exam-style simulations.
+4. Add a bounded grounded learning coach for hints, explanations, and next-action help without making unreviewed AI a grading or publishing authority.
+5. Support lightweight cohorts, assignments, and accountability while preserving learner privacy.
+6. Improve content quality operations with item analytics, issue reporting, reviewer queues, and release risk summaries.
+
+Non-goals for v4:
+
+- native mobile app packaging
+- third-party creator marketplace
+- unrestricted user-generated courses
+- fully autonomous AI publication without human review
+- high-stakes certification or proctored exams
+- full LMS replacement features
+
+See `v4-roadmap.md` for the v4 plan.
