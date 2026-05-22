@@ -31,6 +31,7 @@ See also:
 - `auth.md`
 - `content-architecture.md`
 - `content-generation.md`
+- `local-development.md`
 - `ui-ux-v1.md`
 
 ## Content hierarchy
