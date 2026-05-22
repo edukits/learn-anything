@@ -1,6 +1,6 @@
 # Content Generation
 
-Generate curriculum content from source documents, write it as versioned JSONL artifacts, upload those artifacts to Supabase Object Storage, and publish only validated releases into the database.
+Generate or hand-author curriculum content from source documents, write it as versioned JSONL artifacts, upload those artifacts to Supabase Object Storage, and publish only validated releases into the database.
 
 This plan sits before and feeds into `content-architecture.md`.
 
@@ -8,9 +8,11 @@ This plan sits before and feeds into `content-architecture.md`.
 
 Support three common content operations:
 
-1. **Create**: start from an empty database and generate the first lessons, quizzes, questions, topics, skills, and media.
+1. **Create**: start from an empty database and create the first lessons, quizzes, questions, topics, skills, and media.
 2. **Add**: introduce new source material and generate additional content without disturbing unrelated existing content.
 3. **Revise**: improve or regenerate existing content when source material, prompts, schemas, or quality requirements change.
+
+The first release should use hand-authored JSONL artifacts for English Literary Devices. AI generation can be added after the import, validation, release, and practice loop works end to end.
 
 ## Source material
 
@@ -42,14 +44,13 @@ Metadata should include:
 - source id
 - subject/topic
 - author or origin
-- license/usage notes
 - version
 - date added
 - notes for generation
 
-## Generation run
+## Content run
 
-A generation run is a reproducible attempt to create or update content.
+A content run is a reproducible attempt to create or update content. For the first release, the run may be hand-authored instead of AI-generated.
 
 Inputs:
 
@@ -59,6 +60,8 @@ Inputs:
 - schemas
 - model settings
 - previous content, when revising
+
+For hand-authored runs, prompt templates and model settings can be omitted or recorded as `null`.
 
 Outputs:
 
@@ -102,12 +105,14 @@ Existing content should not be overwritten in place. Regenerated content creates
 
 Quiz questions should remain reusable and independent from quizzes. Quizzes reference questions through relationships, not by embedding the full question body.
 
+Production content bodies are imported into Postgres. Object Storage keeps the immutable JSONL artifacts and media files, but the app should not need to fetch JSONL artifacts at runtime to render published lessons or questions.
+
 ## Workflows
 
 ### 1. Create from empty state
 
 1. Add initial grounding documents.
-2. Run generation scripts.
+2. Create hand-authored JSONL artifacts or run generation scripts.
 3. Produce JSONL artifacts for topics, skills, lessons, quizzes, questions, and media references.
 4. Validate schema, references, duplicates, and basic quality rules.
 5. Bundle and compress artifacts.
@@ -141,6 +146,29 @@ Quiz questions should remain reusable and independent from quizzes. Quizzes refe
 9. Import into staging.
 10. Review changed samples.
 11. Publish a new content release.
+
+## Progress and content revisions
+
+User progress should be durable even when curriculum content changes.
+
+Keep:
+- earned XP
+- streak history
+- quiz attempts
+- lesson completions
+- question responses where they are useful for history, analytics, or future restoration
+
+Allow current curriculum to change:
+- add new questions
+- retire old questions
+- replace a question with a new id
+- create a new version of a corrected question
+- merge or split smaller modules
+- hide retired content from current practice
+
+Progress views should be computed against the currently published release for the relevant scope. Historical attempts should keep references to the exact content id and version the user saw.
+
+If a module changes, it is acceptable for current module completion to be recalculated from the currently published content. Historical XP and streaks should not be removed just because curriculum content changed.
 
 ## Validation
 
@@ -193,7 +221,7 @@ Production should serve only published content releases.
 Start with:
 
 - one source document folder
-- one generation script
+- hand-authored English Literary Devices JSONL artifacts
 - one JSON schema per content type
 - JSONL output for lessons, quizzes, and questions
 - a manifest file
@@ -201,4 +229,4 @@ Start with:
 - manual upload/import steps
 - one staging review pass
 
-Then expand to topics, skills, media, partial regeneration, and richer quality checks.
+Then expand to generation scripts, topics, skills, media, partial regeneration, and richer quality checks.
