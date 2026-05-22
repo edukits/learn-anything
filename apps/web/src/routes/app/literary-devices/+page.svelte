@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { PageHeader } from '$lib/features/literary-devices';
 	import { PathMap } from '@learn-anything/ui';
 	import type { PathMapItem } from '@learn-anything/ui';
 
@@ -37,11 +38,7 @@
 <main class="page stack">
 	<section class="map-row">
 		<div class="map-heading">
-			<div>
-				<p class="eyebrow">English</p>
-				<h1>Literary Devices</h1>
-				<p class="muted">{data.lesson.summary}</p>
-			</div>
+			<PageHeader eyebrow="English" title="Literary Devices" description={data.lesson.summary} />
 			<div class="progress">
 				<strong>{progressPercent}%</strong>
 				<span>path progress</span>
@@ -81,13 +78,6 @@
 
 	.path-map-column {
 		padding-top: 40px;
-	}
-
-	h1 {
-		font-size: clamp(2.4rem, 5vw, 3rem);
-		letter-spacing: 0;
-		line-height: 0.95;
-		margin: 0.75rem 0;
 	}
 
 	.progress {
