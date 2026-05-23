@@ -6,7 +6,8 @@
 		RotateCcw,
 		Sparkles,
 		Trophy,
-		TrendingUp
+		TrendingUp,
+		UserRound
 	} from '@lucide/svelte';
 	import NavLink from './NavLink.svelte';
 	import NavStrip from './NavStrip.svelte';
@@ -74,13 +75,20 @@
 				icon: Medal,
 				isActive: (pathname) => pathname.startsWith('/app/achievements')
 			},
-			{
-				id: 'leaderboard',
-				label: 'Leaderboard',
-				href: '/app/leaderboard',
-				icon: Trophy,
-				isActive: (pathname) => pathname.startsWith('/app/leaderboard')
-			},
+		{
+			id: 'leaderboard',
+			label: 'Leaderboard',
+			href: '/app/leaderboard',
+			icon: Trophy,
+			isActive: (pathname) => pathname.startsWith('/app/leaderboard')
+		},
+		{
+			id: 'profile',
+			label: 'Profile',
+			href: '/app/profile',
+			icon: UserRound,
+			isActive: (pathname) => pathname.startsWith('/app/profile')
+		},
 			...(showAdmin
 				? [
 						{
