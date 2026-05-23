@@ -57,7 +57,7 @@ create table public.streak_events (
 
 create table public.daily_goal_settings (
 	user_id uuid primary key references auth.users(id) on delete cascade,
-	daily_xp_goal int not null default 10 check (daily_xp_goal > 0),
+	daily_xp_goal int not null default 50 check (daily_xp_goal > 0),
 	created_at timestamptz not null default now(),
 	updated_at timestamptz not null default now()
 );

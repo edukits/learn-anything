@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { EngagementSummary } from '../types';
 
-export const DEFAULT_DAILY_XP_GOAL = 10;
+export const DEFAULT_DAILY_XP_GOAL = 50;
 export const ENGAGEMENT_TIME_ZONE = 'America/Los_Angeles';
 const DAY_PARTS_FORMATTER = new Intl.DateTimeFormat('en-US', {
 	timeZone: ENGAGEMENT_TIME_ZONE,
