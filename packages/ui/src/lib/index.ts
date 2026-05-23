@@ -1,4 +1,6 @@
 export { default as Button } from './components/Button.svelte';
+export { default as Tabs } from './components/Tabs.svelte';
+export type { TabItem } from './components/Tabs.svelte';
 export { default as ProgressBar } from './components/ProgressBar.svelte';
 export { default as Select } from './components/Select.svelte';
 export {

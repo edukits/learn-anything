@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import { Button } from '@learn-anything/ui';
+	import { Button, Tabs, type TabItem } from '@learn-anything/ui';
 	import { ShieldCheck, Trophy, UserRound } from '@lucide/svelte';
+	import { goto } from '$app/navigation';
 
 	let { data, form }: PageProps = $props();
 	let selectedTopicId = $derived(data.activeTopicId ?? '');
@@ -9,6 +10,13 @@
 		data.enrollments.find((enrollment) => enrollment.topic_area_id === selectedTopicId)?.topic_name ??
 			'Weekly league'
 	);
+	let leaderboardTabs = $derived.by((): TabItem[] => [
+		{ value: null, label: 'Weekly league' },
+		...data.enrollments.map((enrollment) => ({
+			value: enrollment.topic_area_id,
+			label: enrollment.topic_name
+		}))
+	]);
 	let profileForm = $derived({
 		displayName: form?.values?.displayName ?? data.profile.display_name,
 		avatarUrl: form?.values?.avatarUrl ?? data.profile.avatar_url ?? '',
@@ -16,6 +24,10 @@
 		bio: form?.values?.bio ?? data.profile.bio ?? '',
 		leaderboardOptIn: form?.values?.leaderboardOptIn ?? data.profile.leaderboard_opt_in
 	});
+
+	function handleLeaderboardTabChange(topicId: string | null) {
+		void goto(topicId ? `/app/leaderboard?topic=${topicId}` : '/app/leaderboard');
+	}
 </script>
 
 <main class="page leaderboard-page">
@@ -80,17 +92,12 @@
 	</section>
 
 	<section class="leaderboard-panel">
-		<div class="tabs" aria-label="Leaderboard scopes">
-			<a class:active={!selectedTopicId} href="/app/leaderboard">Weekly league</a>
-			{#each data.enrollments as enrollment (enrollment.topic_area_id)}
-				<a
-					class:active={selectedTopicId === enrollment.topic_area_id}
-					href={`/app/leaderboard?topic=${enrollment.topic_area_id}`}
-				>
-					{enrollment.topic_name}
-				</a>
-			{/each}
-		</div>
+		<Tabs
+			items={leaderboardTabs}
+			value={data.activeTopicId}
+			ariaLabel="Leaderboard scopes"
+			onchange={handleLeaderboardTabChange}
+		/>
 
 		{#if data.profile.leaderboard_opt_in}
 			{#if data.entries.length}
@@ -181,7 +188,6 @@
 	}
 
 	label span,
-	.tabs a,
 	li > span {
 		font-size: 0.85rem;
 		font-weight: 780;
@@ -212,24 +218,6 @@
 	.checkbox input {
 		inline-size: 18px;
 		block-size: 18px;
-	}
-
-	.tabs {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-	}
-
-	.tabs a {
-		background: var(--color-surface-raised);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
-		padding: 8px 10px;
-	}
-
-	.tabs a.active {
-		background: var(--color-text);
-		color: var(--color-surface);
 	}
 
 	ol {

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
+	import { Tabs, type TabItem } from '@learn-anything/ui';
 	import {
 		Award,
 		BadgeCheck,
@@ -27,6 +28,10 @@
 
 	let categories = $derived([...new Set(data.achievements.map((a) => a.category))]);
 	let activeCategory = $state<string | null>(null);
+	let categoryTabs = $derived.by((): TabItem[] => [
+		{ value: null, label: 'All' },
+		...categories.map((category) => ({ value: category, label: category }))
+	]);
 	let filteredAchievements = $derived(
 		activeCategory
 			? data.achievements.filter((a) => a.category === activeCategory)
@@ -155,26 +160,7 @@
 		</div>
 
 		{#if categories.length > 1}
-			<div class="category-tabs" role="tablist" aria-label="Filter by category">
-				<button
-					role="tab"
-					class:active={activeCategory === null}
-					aria-selected={activeCategory === null}
-					onclick={() => (activeCategory = null)}
-				>
-					All
-				</button>
-				{#each categories as category (category)}
-					<button
-						role="tab"
-						class:active={activeCategory === category}
-						aria-selected={activeCategory === category}
-						onclick={() => (activeCategory = category)}
-					>
-						{category}
-					</button>
-				{/each}
-			</div>
+			<Tabs items={categoryTabs} bind:value={activeCategory} ariaLabel="Filter by category" />
 		{/if}
 
 		<div class="achievement-grid">
@@ -533,44 +519,11 @@
 		white-space: nowrap;
 	}
 
-	/* ---- Category tabs ---- */
+	/* ---- Achievements ---- */
 
 	.achievements-section {
 		display: grid;
 		gap: 16px;
-	}
-
-	.category-tabs {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 6px;
-	}
-
-	.category-tabs button {
-		background: var(--color-surface-raised);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
-		color: var(--color-text-muted);
-		cursor: pointer;
-		font-size: 0.82rem;
-		font-weight: 700;
-		padding: 7px 14px;
-		text-transform: capitalize;
-		transition:
-			background 0.12s,
-			color 0.12s,
-			border-color 0.12s;
-	}
-
-	.category-tabs button:hover {
-		background: var(--color-surface);
-		color: var(--color-text);
-	}
-
-	.category-tabs button.active {
-		background: var(--color-text);
-		border-color: var(--color-text);
-		color: var(--color-surface);
 	}
 
 	/* ---- Achievement grid ---- */
