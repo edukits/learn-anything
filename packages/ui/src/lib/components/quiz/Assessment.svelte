@@ -656,14 +656,6 @@
 		gap: 0;
 	}
 
-	.assessment[data-mode='quiz'] .question-list {
-		background: var(--color-surface);
-		border: 1px solid color-mix(in srgb, var(--color-border), transparent 12%);
-		border-radius: var(--radius-lg);
-		box-shadow: var(--shadow-md);
-		padding: var(--space-6);
-	}
-
 	.question-list :global(.assessment-question + .assessment-question) {
 		border-block-start: 1px solid color-mix(in srgb, var(--color-border), transparent 16%);
 		margin-block-start: var(--space-6);
