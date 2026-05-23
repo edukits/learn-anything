@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { DropdownMenu as BitsDropdownMenu, type DropdownMenuRootProps } from 'bits-ui';
 	import type { Snippet } from 'svelte';
+	import '../../styles/overlay-panel.css';
 
 	export type DropdownMenuHeader = {
 		title: string;
@@ -37,9 +38,15 @@
 	);
 
 	let contentStyle = $derived(
-		[minWidth ? `min-inline-size: ${minWidth}` : null, maxWidth ? `max-inline-size: ${maxWidth}` : null]
+		[
+			minWidth ? `--overlay-panel-min-inline-size: ${minWidth}` : null,
+			maxWidth ? `--overlay-panel-max-inline-size: ${maxWidth}` : null,
+			'--overlay-panel-anchor-inline-size: var(--bits-menu-anchor-width)',
+			'--overlay-panel-available-inline-size: var(--bits-menu-content-available-width)',
+			'--overlay-panel-available-block-size: var(--bits-menu-content-available-height)'
+		]
 			.filter(Boolean)
-			.join('; ') || undefined
+			.join('; ')
 	);
 </script>
 
@@ -49,7 +56,7 @@
 	</BitsDropdownMenu.Trigger>
 	<BitsDropdownMenu.Portal>
 		<BitsDropdownMenu.Content
-			class="dropdown-menu-content"
+			class="dropdown-menu-content overlay-panel"
 			style={contentStyle}
 			{align}
 			sideOffset={6}
@@ -84,24 +91,14 @@
 		font-family: var(--font-display);
 		font-size: inherit;
 		font-weight: 600;
-		gap: var(--space-1);
+		gap: var(--space-2);
+		line-height: 1;
 		padding: var(--space-2) var(--space-3);
-		transition:
-			background 150ms ease,
-			border-color 150ms ease,
-			box-shadow 150ms ease,
-			color 150ms ease;
+		transition: color 120ms ease-out;
 	}
 
 	:global(.dropdown-menu-trigger-nav:hover),
 	:global(.dropdown-menu-trigger-nav[data-state='open']) {
-		background: linear-gradient(
-			to bottom,
-			color-mix(in srgb, var(--color-accent), transparent 92%),
-			color-mix(in srgb, var(--color-accent), transparent 94%)
-		);
-		border-color: color-mix(in srgb, var(--color-accent), transparent 86%);
-		box-shadow: 0 1px 0 inset rgb(255 255 255 / 0.45);
 		color: var(--color-text);
 	}
 
@@ -157,8 +154,6 @@
 			0 4px 10px rgb(20 24 31 / 0.06);
 		display: flex;
 		flex-direction: column;
-		max-inline-size: min(22rem, calc(100vw - 2rem));
-		overflow: hidden;
 		padding: var(--space-2);
 		z-index: 50;
 	}
@@ -208,7 +203,6 @@
 	:global(.dropdown-menu-group) {
 		display: grid;
 		gap: var(--space-1);
-		min-inline-size: 0;
 	}
 
 	:global(.dropdown-menu-content .dropdown-menu-link),
@@ -226,7 +220,6 @@
 		font-size: 0.9375rem;
 		font-weight: 500;
 		gap: var(--space-2);
-		min-inline-size: 0;
 		outline: 0;
 		padding: var(--space-2) var(--space-3);
 		text-align: start;
@@ -252,24 +245,20 @@
 
 	:global(.dropdown-menu-content .dropdown-menu-link strong) {
 		color: var(--color-text);
+		display: block;
 		font-size: 0.9375rem;
 		font-weight: 600;
-		max-inline-size: 100%;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		overflow-wrap: anywhere;
+		white-space: normal;
 	}
 
 	:global(.dropdown-menu-content .dropdown-menu-link span) {
 		color: var(--color-text-muted);
-		display: -webkit-box;
+		display: block;
 		font-size: 0.8125rem;
-		line-clamp: 2;
-		line-height: 1.4;
-		max-inline-size: 100%;
-		overflow: hidden;
-		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 2;
+		line-height: 1.45;
+		overflow-wrap: anywhere;
+		white-space: normal;
 	}
 
 	:global(.dropdown-menu-empty) {

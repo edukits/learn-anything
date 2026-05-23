@@ -4,6 +4,7 @@
 	import { Select } from 'bits-ui';
 	import type { HTMLInputAttributes } from 'svelte/elements';
 	import Button from '../Button.svelte';
+	import '../../styles/overlay-panel.css';
 	import { celebrateCorrectAnswer } from './celebration';
 	import GradingIndicator from './GradingIndicator.svelte';
 	import {
@@ -229,8 +230,12 @@
 				<ChevronDown size={14} strokeWidth={2.5} />
 			</Select.Trigger>
 			<Select.Portal>
-				<Select.Content class="numeric-unit-content" sideOffset={6}>
-					<Select.Viewport class="numeric-unit-viewport">
+				<Select.Content
+					class="numeric-unit-content overlay-panel"
+					style="--overlay-panel-anchor-inline-size: var(--bits-select-anchor-width); --overlay-panel-available-inline-size: var(--bits-select-content-available-width); --overlay-panel-available-block-size: var(--bits-select-content-available-height); --overlay-panel-min-inline-size: 6rem; --overlay-panel-max-inline-size: 16rem;"
+					sideOffset={6}
+				>
+					<Select.Viewport class="numeric-unit-viewport overlay-panel__viewport">
 						{#each unitOptions as unitOption (unitOption.value)}
 							<Select.Item
 								class="numeric-unit-item"
@@ -239,7 +244,7 @@
 								disabled={unitOption.disabled}
 							>
 								{#snippet children({ selected })}
-									<span>{unitOption.label ?? unitOption.value}</span>
+									<span class="overlay-panel__text">{unitOption.label ?? unitOption.value}</span>
 									{#if selected}
 										<Check size={14} strokeWidth={3} />
 									{/if}
@@ -540,10 +545,6 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		box-shadow: 0 16px 36px rgb(20 24 31 / 0.12);
-		inline-size: var(--bits-select-anchor-width);
-		max-block-size: min(18rem, var(--bits-select-content-available-height));
-		min-inline-size: var(--bits-select-anchor-width);
-		overflow: hidden;
 		padding: var(--space-1);
 		z-index: 40;
 	}
@@ -551,8 +552,6 @@
 	:global(.numeric-unit-viewport) {
 		display: grid;
 		gap: 1px;
-		max-block-size: inherit;
-		overflow-y: auto;
 	}
 
 	:global(.numeric-unit-item) {

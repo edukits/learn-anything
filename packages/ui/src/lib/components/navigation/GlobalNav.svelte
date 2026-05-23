@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { tick } from 'svelte';
+	import { Spring, prefersReducedMotion } from 'svelte/motion';
 	import { BookOpenCheck, ChevronDown, LogOut, User } from '@lucide/svelte';
 	import Button from '../Button.svelte';
 	import DropdownMenu from './DropdownMenu.svelte';
@@ -23,7 +25,48 @@
 	let myLearningCurrent = $derived(
 		currentPathname === '/app' || currentPathname.startsWith('/app/')
 	);
+
+	let navEl: HTMLElement | undefined = $state();
+	let indicatorVisible = $state(false);
+	let indicatorMeasured = $state(false);
+
+	const indicatorLeft = new Spring(0, { stiffness: 0.25, damping: 0.65, precision: 0.01 });
+	const indicatorWidth = new Spring(0, { stiffness: 0.25, damping: 0.65, precision: 0.01 });
+
+	async function updateIndicator({ instant = false } = {}) {
+		await tick();
+
+		if (!navEl) {
+			indicatorVisible = false;
+			return;
+		}
+
+		const activeEl = navEl.querySelector<HTMLElement>('[aria-current="page"]');
+		if (!activeEl) {
+			indicatorVisible = false;
+			return;
+		}
+
+		const navRect = navEl.getBoundingClientRect();
+		const activeRect = activeEl.getBoundingClientRect();
+		const inset = 8;
+		const snap = instant || !indicatorMeasured || prefersReducedMotion.current;
+
+		indicatorVisible = true;
+		indicatorMeasured = true;
+
+		indicatorLeft.set(activeRect.left - navRect.left + inset, { instant: snap });
+		indicatorWidth.set(Math.max(activeRect.width - inset * 2, 0), { instant: snap });
+	}
+
+	$effect(() => {
+		currentPathname;
+		user;
+		updateIndicator();
+	});
 </script>
+
+<svelte:window onresize={() => updateIndicator({ instant: true })} />
 
 <NavStrip tone="global" sticky class={className}>
 	<header class="global-nav">
@@ -34,10 +77,16 @@
 			Learn Anything
 		</a>
 
-		<nav aria-label="Global navigation" class="nav-links">
+		<nav
+			bind:this={navEl}
+			aria-label="Global navigation"
+			class="nav-links"
+			style:--indicator-left="{indicatorLeft.current}px"
+			style:--indicator-width="{indicatorWidth.current}px"
+			style:--indicator-opacity={indicatorVisible ? 1 : 0}
+		>
 			<DropdownMenu
 				minWidth="280px"
-				maxWidth="320px"
 				header={{ title: 'Browse Subjects', actionHref: '/subjects', actionLabel: 'View all' }}
 			>
 				{#snippet trigger()}
@@ -71,6 +120,8 @@
 					My Learning
 				</NavLink>
 			{/if}
+
+			<span class="active-indicator" aria-hidden="true"></span>
 		</nav>
 
 		<div class="auth-controls">
@@ -155,6 +206,21 @@
 		align-items: center;
 		display: flex;
 		gap: var(--space-1);
+		position: relative;
+	}
+
+	.active-indicator {
+		background: var(--color-accent);
+		block-size: 2px;
+		border-radius: 1px;
+		bottom: calc(-1 * var(--space-3) - 1px);
+		inline-size: var(--indicator-width);
+		left: 0;
+		opacity: var(--indicator-opacity);
+		pointer-events: none;
+		position: absolute;
+		transform: translateX(var(--indicator-left));
+		transition: opacity 120ms ease;
 	}
 
 	.auth-controls {

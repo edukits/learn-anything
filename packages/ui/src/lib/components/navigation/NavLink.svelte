@@ -88,24 +88,17 @@
 	/* ── Global variant ── */
 
 	[data-variant='global'] {
-		--nav-link-grad-from: transparent;
-		--nav-link-grad-to: transparent;
-		background: linear-gradient(to bottom, var(--nav-link-grad-from), var(--nav-link-grad-to));
+		background: transparent;
+		border-color: transparent;
 		padding: var(--space-2) var(--space-3);
 	}
 
-	[data-variant='global']:hover,
-	[data-variant='global'][data-current] {
-		--nav-link-grad-from: color-mix(in srgb, var(--color-accent), transparent 92%);
-		--nav-link-grad-to: color-mix(in srgb, var(--color-accent), transparent 94%);
-		border-color: color-mix(in srgb, var(--color-accent), transparent 86%);
+	[data-variant='global']:hover {
 		color: var(--color-text);
 	}
 
 	[data-variant='global'][data-current] {
-		--nav-link-inset: rgb(255 255 255 / 0.45);
-		box-shadow: 0 1px 0 inset var(--nav-link-inset);
-		color: var(--color-accent);
+		color: var(--color-text);
 		font-weight: 700;
 	}
 

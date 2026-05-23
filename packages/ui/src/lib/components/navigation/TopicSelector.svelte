@@ -2,6 +2,7 @@
 	import { Check, ChevronDown } from '@lucide/svelte';
 	import { Select } from 'bits-ui';
 	import type { NavTopic } from './types';
+	import '../../styles/overlay-panel.css';
 
 	let {
 		topics = [],
@@ -34,15 +35,20 @@
 		<ChevronDown size={16} strokeWidth={2.25} aria-hidden="true" />
 	</Select.Trigger>
 	<Select.Portal>
-		<Select.Content class="topic-selector-content" sideOffset={6} align="start">
-			<Select.Viewport class="topic-selector-viewport">
+		<Select.Content
+			class="topic-selector-content overlay-panel"
+			style="--overlay-panel-anchor-inline-size: var(--bits-select-anchor-width); --overlay-panel-available-inline-size: var(--bits-select-content-available-width); --overlay-panel-available-block-size: var(--bits-select-content-available-height); --overlay-panel-min-inline-size: 14rem; --overlay-panel-max-inline-size: 28rem;"
+			sideOffset={6}
+			align="start"
+		>
+			<Select.Viewport class="topic-selector-viewport overlay-panel__viewport">
 				{#if topics.length === 0}
 					<p class="topic-selector-empty">No topics enrolled</p>
 				{:else}
 					{#each topics as topic (topic.id)}
 						<Select.Item class="topic-selector-item" value={topic.slug} label={topic.name}>
 							{#snippet children({ selected })}
-								<span class="topic-selector-item-label">{topic.name}</span>
+								<span class="topic-selector-item-label overlay-panel__text">{topic.name}</span>
 								{#if selected}
 									<Check size={14} strokeWidth={3} aria-hidden="true" />
 								{/if}
@@ -144,10 +150,6 @@
 		box-shadow:
 			0 1px 0 inset rgb(255 255 255 / 0.65),
 			0 16px 36px rgb(20 24 31 / 0.12);
-		inline-size: var(--bits-select-anchor-width);
-		max-block-size: min(18rem, var(--bits-select-content-available-height));
-		min-inline-size: var(--bits-select-anchor-width);
-		overflow: hidden;
 		padding: var(--space-1);
 		z-index: 50;
 	}
@@ -155,8 +157,6 @@
 	:global(.topic-selector-viewport) {
 		display: grid;
 		gap: 1px;
-		max-block-size: inherit;
-		overflow-y: auto;
 	}
 
 	:global(.topic-selector-item) {
@@ -170,7 +170,7 @@
 		gap: var(--space-2);
 		justify-content: space-between;
 		min-block-size: 2.375rem;
-		padding-inline: var(--space-3);
+		padding: var(--space-2) var(--space-3);
 	}
 
 	:global(.topic-selector-item[data-highlighted]) {
@@ -184,11 +184,7 @@
 	}
 
 	.topic-selector-item-label {
-		flex: 1;
-		min-inline-size: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		text-align: start;
 	}
 
 	.topic-selector-empty {

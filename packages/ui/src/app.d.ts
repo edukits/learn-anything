@@ -1,4 +1,5 @@
 declare module '@learn-anything/tokens/theme.css';
+declare module '*.css';
 declare module '*.jpeg' {
 	const src: string;
 	export default src;
