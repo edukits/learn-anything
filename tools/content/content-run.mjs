@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { z } from 'zod';
@@ -8,6 +9,19 @@ const sourceRefSchema = z.object({
 	metadata_path: z.string().min(1).optional()
 });
 
+const storageArtifactRefSchema = z
+	.object({
+		kind: z.literal('supabase_storage'),
+		bucket: z.string().min(1),
+		path: z.string().min(1),
+		sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+		bytes: z.number().int().nonnegative().optional(),
+		content_type: z.string().min(1).optional()
+	})
+	.strict();
+
+const artifactRefSchema = z.union([z.string().min(1), storageArtifactRefSchema]);
+
 const manifestSchema = z.object({
 	run_id: z.string().min(1),
 	title: z.string().min(1),
@@ -16,7 +30,7 @@ const manifestSchema = z.object({
 	subject_area_id: z.string().min(1),
 	topic_area_id: z.string().min(1),
 	source_refs: z.array(sourceRefSchema),
-	artifacts: z.record(z.string(), z.string().min(1))
+	artifacts: z.record(z.string(), artifactRefSchema)
 });
 
 const versionedBase = {
@@ -295,8 +309,66 @@ async function readJson(path) {
 	return JSON.parse(await readFile(path, 'utf8'));
 }
 
-async function readJsonl(path) {
-	const body = await readFile(path, 'utf8');
+function hashBuffer(buffer) {
+	return createHash('sha256').update(buffer).digest('hex');
+}
+
+function describeArtifactRef(ref) {
+	if (typeof ref === 'string') {
+		return ref;
+	}
+	return `${ref.bucket}/${ref.path}`;
+}
+
+async function storageObjectToBuffer(data) {
+	if (Buffer.isBuffer(data)) {
+		return data;
+	}
+	if (data instanceof ArrayBuffer) {
+		return Buffer.from(data);
+	}
+	if (typeof data?.arrayBuffer === 'function') {
+		return Buffer.from(await data.arrayBuffer());
+	}
+	if (typeof data?.text === 'function') {
+		return Buffer.from(await data.text(), 'utf8');
+	}
+	throw new Error('Unsupported Supabase Storage download response.');
+}
+
+async function readArtifactText(artifactRef, manifestDir, storageClient) {
+	if (typeof artifactRef === 'string') {
+		return readFile(resolve(manifestDir, artifactRef), 'utf8');
+	}
+
+	if (!storageClient) {
+		throw new Error(
+			`Artifact ${describeArtifactRef(artifactRef)} is in Supabase Storage; pass a target/storage client to read it.`
+		);
+	}
+
+	const { data, error } = await storageClient.storage
+		.from(artifactRef.bucket)
+		.download(artifactRef.path);
+	if (error) {
+		throw new Error(`${describeArtifactRef(artifactRef)}: ${error.message}`);
+	}
+
+	const buffer = await storageObjectToBuffer(data);
+	if (artifactRef.bytes !== undefined && buffer.byteLength !== artifactRef.bytes) {
+		throw new Error(
+			`${describeArtifactRef(artifactRef)}: expected ${artifactRef.bytes} bytes, received ${buffer.byteLength}`
+		);
+	}
+	if (artifactRef.sha256 && hashBuffer(buffer) !== artifactRef.sha256) {
+		throw new Error(`${describeArtifactRef(artifactRef)}: sha256 mismatch`);
+	}
+	return buffer.toString('utf8');
+}
+
+async function readJsonl(artifactRef, manifestDir, storageClient) {
+	const body = await readArtifactText(artifactRef, manifestDir, storageClient);
+	const source = describeArtifactRef(artifactRef);
 	return body
 		.split('\n')
 		.map((line) => line.trim())
@@ -305,7 +377,7 @@ async function readJsonl(path) {
 			try {
 				return JSON.parse(line);
 			} catch (error) {
-				throw new Error(`${path}:${index + 1}: ${error.message}`);
+				throw new Error(`${source}:${index + 1}: ${error.message}`);
 			}
 		});
 }
@@ -355,7 +427,7 @@ export function getImportBlockers(run) {
 	return blockers;
 }
 
-export async function loadAndValidateRun(manifestPath) {
+export async function loadAndValidateRun(manifestPath, options = {}) {
 	const absoluteManifestPath = resolve(manifestPath);
 	const manifestDir = dirname(absoluteManifestPath);
 	const manifest = manifestSchema.parse(await readJson(absoluteManifestPath));
@@ -363,14 +435,14 @@ export async function loadAndValidateRun(manifestPath) {
 	const failures = [];
 	const checks = [];
 
-	for (const [name, relativePath] of Object.entries(manifest.artifacts)) {
+	for (const [name, artifactRef] of Object.entries(manifest.artifacts)) {
 		const schema = artifactSchemas[name];
 		if (!schema) {
 			failures.push(`Manifest references unknown artifact type ${name}`);
 			continue;
 		}
 
-		const rows = await readJsonl(resolve(manifestDir, relativePath));
+		const rows = await readJsonl(artifactRef, manifestDir, options.storageClient);
 		artifacts[name] = rows.map((row, index) => {
 			const parsed = schema.safeParse(row);
 			if (!parsed.success) {

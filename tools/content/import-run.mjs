@@ -23,7 +23,22 @@ try {
 
 loadReleaseEnvironment(target);
 
-const run = await loadAndValidateRun(manifestPath);
+let env;
+try {
+	env = getTargetSupabaseEnv(target);
+} catch (error) {
+	console.error(error instanceof Error ? error.message : String(error));
+	process.exit(1);
+}
+
+const supabase = createClient(env.url, env.key, {
+	auth: {
+		persistSession: false,
+		autoRefreshToken: false
+	}
+});
+
+const run = await loadAndValidateRun(manifestPath, { storageClient: supabase });
 let reportPath = await writeValidationReport(run);
 let diffReport = null;
 
@@ -97,21 +112,6 @@ if (target === 'production') {
 		}
 	}
 }
-
-let env;
-try {
-	env = getTargetSupabaseEnv(target);
-} catch (error) {
-	console.error(error instanceof Error ? error.message : String(error));
-	process.exit(1);
-}
-
-const supabase = createClient(env.url, env.key, {
-	auth: {
-		persistSession: false,
-		autoRefreshToken: false
-	}
-});
 
 async function upsert(table, rows, onConflict) {
 	if (!rows.length) {

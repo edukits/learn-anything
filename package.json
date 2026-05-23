@@ -20,6 +20,8 @@
 		"content:validate:literary-devices": "node tools/content/validate-run.mjs curriculum-artifacts/runs/run_2026_05_22_english_literary_devices_v2/manifest.json",
 		"content:diff": "node tools/content/diff-run.mjs",
 		"content:diff:linear-equations": "node tools/content/diff-run.mjs curriculum-artifacts/runs/run_2026_05_22_mathematics_linear_equations_v1/manifest.json --base none",
+		"content:upload": "node tools/content/upload-run.mjs",
+		"content:download": "node tools/content/download-run.mjs",
 		"content:import:local": "node tools/content/import-run.mjs curriculum-artifacts/runs/run_2026_05_22_mathematics_linear_equations_v1/manifest.json --target local",
 		"content:import:staging": "node tools/content/import-run.mjs curriculum-artifacts/runs/run_2026_05_22_mathematics_linear_equations_v1/manifest.json --target staging",
 		"content:import:local:literary-devices": "node tools/content/import-run.mjs curriculum-artifacts/runs/run_2026_05_22_english_literary_devices_v2/manifest.json --target local",

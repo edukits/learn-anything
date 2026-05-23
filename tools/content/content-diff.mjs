@@ -212,9 +212,10 @@ export function summarizeDiff(report) {
 	);
 }
 
-export async function buildDiffReport(candidateManifestPath, baseManifestPath) {
-	const candidate = await loadAndValidateRun(candidateManifestPath);
-	const base = baseManifestPath === 'none' ? null : await loadAndValidateRun(baseManifestPath);
+export async function buildDiffReport(candidateManifestPath, baseManifestPath, options = {}) {
+	const candidate = await loadAndValidateRun(candidateManifestPath, options);
+	const base =
+		baseManifestPath === 'none' ? null : await loadAndValidateRun(baseManifestPath, options);
 	const artifactNames = new Set([
 		...Object.keys(base?.artifacts ?? {}),
 		...Object.keys(candidate.artifacts)
