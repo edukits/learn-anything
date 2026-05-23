@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { CheckCircle, RotateCcw } from '@lucide/svelte';
 	import Button from '../Button.svelte';
+	import ProgressBar from '../ProgressBar.svelte';
 	import {
 		buildMultipleChoiceAnswers,
 		buildMultipleSelectAnswers,
@@ -77,6 +78,7 @@
 
 	let quizComplete = $state(false);
 	let examSubmitted = $state(false);
+	let progressSparkTrigger = $state(0);
 	// svelte-ignore state_referenced_locally
 	let questionSubmitted = $state<Record<string, boolean>>(buildSubmittedState(questions, false));
 	let results = $state<Record<string, QuizQuestionResult>>({});
@@ -259,6 +261,9 @@
 		const result = getQuestionResult(question);
 		questionSubmitted[question.id] = true;
 		results[question.id] = result;
+		if (mode === 'quiz' && result.correct === true && (question.response.celebrations ?? celebrations)) {
+			progressSparkTrigger += 1;
+		}
 		onquestionresult?.(result);
 	}
 
@@ -311,6 +316,7 @@
 		currentPageIndex = 0;
 		quizComplete = false;
 		examSubmitted = false;
+		progressSparkTrigger = 0;
 		questionSubmitted = buildSubmittedState(questions, false);
 		results = {};
 		multipleChoiceAnswers = buildMultipleChoiceAnswers(questions);
@@ -339,16 +345,14 @@
 			{/if}
 		</div>
 
-		<div
-			class="progress-track"
-			role="progressbar"
+		<ProgressBar
+			value={progressValue}
+			size="sm"
+			sparkThreshold={0}
+			sparkTrigger={mode === 'quiz' ? progressSparkTrigger : 0}
+			disableSparks={mode !== 'quiz'}
 			aria-label={mode === 'quiz' ? 'Quiz progress' : 'Exam completion'}
-			aria-valuemin="0"
-			aria-valuemax="100"
-			aria-valuenow={progressValue}
-		>
-			<span class="progress-value" style:--progress={`${progressValue}%`}></span>
-		</div>
+		/>
 	</header>
 
 	{#if totalQuestions === 0}
@@ -603,21 +607,6 @@
 		color: var(--color-text-muted);
 		font-size: 0.9375rem;
 		font-weight: 700;
-	}
-
-	.progress-track {
-		background: color-mix(in srgb, var(--color-border), transparent 58%);
-		border-radius: var(--radius-sm);
-		block-size: 0.5rem;
-		overflow: hidden;
-	}
-
-	.progress-value {
-		background: linear-gradient(90deg, var(--color-accent), var(--color-success));
-		block-size: 100%;
-		display: block;
-		inline-size: var(--progress);
-		transition: inline-size 180ms ease-out;
 	}
 
 	.empty-state,
