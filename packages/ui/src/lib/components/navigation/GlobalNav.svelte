@@ -1,33 +1,37 @@
 <script lang="ts">
 	import { BookOpenCheck, ChevronDown, LogOut, User } from '@lucide/svelte';
-	import { Button } from '@learn-anything/ui';
+	import Button from '../Button.svelte';
+	import DropdownMenu from './DropdownMenu.svelte';
+	import NavLink from './NavLink.svelte';
+	import NavStrip from './NavStrip.svelte';
+	import type { NavSubject, NavUser } from './types';
 	import { DropdownMenu as DropdownMenuPrimitive } from 'bits-ui';
-	import { DropdownMenu } from '$lib/shared/components/dropdown-menu';
-
-	type NavSubject = {
-		id: string;
-		slug: string;
-		name: string;
-		summary: string;
-	};
-
-	type NavUser = {
-		email?: string;
-	};
 
 	let {
 		subjects = [],
-		user = null
+		user = null,
+		currentPathname = '',
+		class: className = ''
 	}: {
 		subjects?: NavSubject[];
 		user?: NavUser | null;
+		currentPathname?: string;
+		class?: string;
 	} = $props();
+
+	let brandHref = $derived(user ? '/app' : '/');
+	let myLearningCurrent = $derived(
+		currentPathname === '/app' || currentPathname.startsWith('/app/')
+	);
 </script>
 
-<div class="global-nav-strip">
-	<header class="global-nav layout-content">
-		<a class="brand" href={user ? '/app' : '/'}>
-			<BookOpenCheck size={24} /> Learn Anything
+<NavStrip tone="global" sticky class={className}>
+	<header class="global-nav">
+		<a class="brand" href={brandHref}>
+			<span class="brand-mark" aria-hidden="true">
+				<BookOpenCheck size={22} strokeWidth={2.25} />
+			</span>
+			Learn Anything
 		</a>
 
 		<nav aria-label="Global navigation" class="nav-links">
@@ -37,7 +41,7 @@
 				header={{ title: 'Browse Subjects', actionHref: '/subjects', actionLabel: 'View all' }}
 			>
 				{#snippet trigger()}
-					Catalogue <ChevronDown size={16} />
+					Catalogue <ChevronDown size={16} strokeWidth={2.25} aria-hidden="true" />
 				{/snippet}
 				{#snippet children()}
 					<div class="dropdown-menu-group">
@@ -63,7 +67,9 @@
 			</DropdownMenu>
 
 			{#if user}
-				<a class="nav-link" href="/app">My Learning</a>
+				<NavLink href="/app" variant="global" current={myLearningCurrent}>
+					My Learning
+				</NavLink>
 			{/if}
 		</nav>
 
@@ -78,14 +84,15 @@
 					triggerProps={{ 'aria-label': 'User menu' }}
 				>
 					{#snippet trigger()}
-						<div class="avatar"><User size={18} /></div>
+						<User size={18} strokeWidth={2.25} aria-hidden="true" />
 					{/snippet}
 					{#snippet children()}
 						<form method="POST" action="/app/logout">
 							<DropdownMenuPrimitive.Item closeOnSelect>
 								{#snippet child({ props })}
 									<button {...props} type="submit" class="dropdown-menu-button">
-										<LogOut size={16} /> Log out
+										<LogOut size={16} strokeWidth={2.25} aria-hidden="true" />
+										Log out
 									</button>
 								{/snippet}
 							</DropdownMenuPrimitive.Item>
@@ -97,57 +104,57 @@
 			{/if}
 		</div>
 	</header>
-</div>
+</NavStrip>
 
 <style>
-	.global-nav-strip {
-		background: var(--color-surface);
-		border-block-end: 1px solid var(--color-border);
-		position: sticky;
-		top: 0;
-		z-index: 50;
-	}
-
 	.global-nav {
 		align-items: center;
 		display: grid;
-		gap: 24px;
+		gap: var(--space-6);
 		grid-template-columns: auto 1fr auto;
-		padding-block: 12px;
+		inline-size: min(
+			var(--layout-content-max-inline-size, 72rem),
+			calc(100% - (var(--layout-page-gutter, 1.25rem) * 2))
+		);
+		margin-inline: auto;
+		padding-block: var(--space-3);
 	}
 
 	.brand {
 		align-items: center;
 		color: var(--color-text);
 		display: inline-flex;
-		font-size: 1.1rem;
+		font-family: var(--font-display);
+		font-size: 1.0625rem;
 		font-weight: 800;
-		gap: 8px;
+		gap: var(--space-2);
 		letter-spacing: -0.02em;
+		text-decoration: none;
+	}
+
+	.brand-mark {
+		align-items: center;
+		background: linear-gradient(
+			to bottom,
+			hsl(var(--color-accent-h) var(--color-accent-s) var(--color-accent-l)),
+			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 14%))
+		);
+		border: 1px solid hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 24%));
+		border-radius: var(--radius-sm);
+		box-shadow:
+			0 1px 0 inset hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) + 10%)),
+			0 2px 4px hsl(var(--color-accent-h) 20% 40% / 0.18);
+		color: var(--color-accent-contrast);
+		display: inline-flex;
+		height: 2rem;
+		justify-content: center;
+		width: 2rem;
 	}
 
 	.nav-links {
 		align-items: center;
 		display: flex;
-		gap: 8px;
-	}
-
-	.nav-link {
-		align-items: center;
-		border-radius: var(--radius-sm);
-		color: var(--color-text-muted);
-		display: inline-flex;
-		font-weight: 600;
-		gap: 4px;
-		padding: 8px 12px;
-		transition:
-			background 150ms ease,
-			color 150ms ease;
-	}
-
-	.nav-link:hover {
-		background: var(--color-surface-raised);
-		color: var(--color-text);
+		gap: var(--space-1);
 	}
 
 	.auth-controls {
@@ -156,27 +163,17 @@
 		justify-content: end;
 	}
 
-	.avatar {
-		align-items: center;
-		background: var(--color-surface-raised);
-		border-radius: 999px;
-		display: flex;
-		height: 36px;
-		justify-content: center;
-		width: 36px;
-	}
-
 	form {
 		margin: 0;
 	}
 
 	@media (max-width: 720px) {
 		.global-nav {
-			gap: 16px;
+			gap: var(--space-4);
 		}
 
 		.nav-links {
-			display: none; /* In a real app we'd add a mobile menu here */
+			display: none;
 		}
 	}
 </style>

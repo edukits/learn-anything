@@ -1,4 +1,19 @@
 export { default as Button } from './components/Button.svelte';
+export {
+	DropdownMenu,
+	GlobalNav,
+	LearningNav,
+	NavLink,
+	NavStrip,
+	TopicSelector
+} from './components/navigation';
+export type {
+	DropdownMenuHeader,
+	LearningNavItem,
+	NavSubject,
+	NavTopic,
+	NavUser
+} from './components/navigation';
 export { default as Exam } from './components/quiz/Exam.svelte';
 export { default as ImageChoice } from './components/quiz/ImageChoice.svelte';
 export { default as ImageChoiceOption } from './components/quiz/ImageChoiceOption.svelte';
