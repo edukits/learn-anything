@@ -1,14 +1,20 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import { MetricGrid, SkillAccuracyPanel } from '$lib/features/learning';
+	import { FocusedQuizLayout, MetricGrid, SkillAccuracyPanel } from '$lib/features/learning';
 	import type { MetricItem } from '$lib/features/learning';
 	import { Button } from '@learn-anything/ui';
 
 	let { data }: PageProps = $props();
 	let topicBaseHref = $derived(`/app/topics/${data.topic.slug}`);
-	let resultLabel = $derived(data.attempt?.attempt_kind === 'review' ? 'Review results' : 'Quiz results');
-	let retryHref = $derived(data.attempt?.attempt_kind === 'review' ? `${topicBaseHref}/review` : `${topicBaseHref}/quiz`);
-	let retryLabel = $derived(data.attempt?.attempt_kind === 'review' ? 'Review again' : 'Practice again');
+	let resultLabel = $derived(
+		data.attempt?.attempt_kind === 'review' ? 'Review results' : 'Quiz results'
+	);
+	let retryHref = $derived(
+		data.attempt?.attempt_kind === 'review' ? `${topicBaseHref}/review` : `${topicBaseHref}/quiz`
+	);
+	let retryLabel = $derived(
+		data.attempt?.attempt_kind === 'review' ? 'Review again' : 'Practice again'
+	);
 
 	let resultMetrics: MetricItem[] = $derived(
 		data.attempt
@@ -33,39 +39,45 @@
 	);
 </script>
 
-<main class="page stack">
-	<section class="results">
-		<p class="eyebrow">{resultLabel}</p>
-		{#if data.attempt}
-			<h1>{Math.round(data.attempt.score)}%</h1>
-			<p class="muted">
-				{data.attempt.correct_count} correct out of {data.attempt.question_count} · Completed
-				{data.attemptCompletedAtLabel}
-			</p>
+<FocusedQuizLayout exitHref={topicBaseHref} exitLabel="Exit results">
+	<main class="results-page stack">
+		<section class="results">
+			<p class="eyebrow">{resultLabel}</p>
+			{#if data.attempt}
+				<h1>{Math.round(data.attempt.score)}%</h1>
+				<p class="muted">
+					{data.attempt.correct_count} correct out of {data.attempt.question_count} · Completed
+					{data.attemptCompletedAtLabel}
+				</p>
 
-			<MetricGrid metrics={resultMetrics} variant="inset" columns="fixed" />
+				<MetricGrid metrics={resultMetrics} variant="inset" columns="fixed" />
 
-			<div class="button-row">
-				<Button href={retryHref} label={retryLabel} />
-				<Button href={topicBaseHref} variant="secondary" label="Return to map" />
-			</div>
-		{:else}
-			<h1>No attempts yet</h1>
-			<p class="muted">Finish a quiz or review session to see results here.</p>
-			<Button href={`${topicBaseHref}/quiz`} label="Start quiz" />
-		{/if}
-	</section>
+				<div class="button-row">
+					<Button href={retryHref} label={retryLabel} />
+					<Button href={topicBaseHref} variant="secondary" label="Return to map" />
+				</div>
+			{:else}
+				<h1>No attempts yet</h1>
+				<p class="muted">Finish a quiz or review session to see results here.</p>
+				<Button href={`${topicBaseHref}/quiz`} label="Start quiz" />
+			{/if}
+		</section>
 
-	<SkillAccuracyPanel
-		title="Skill breakdown"
-		stats={data.skillAccuracy}
-		emptyMessage="No skill-level answers have been recorded yet."
-		countStyle="correct-ratio"
-		density="roomy"
-	/>
-</main>
+		<SkillAccuracyPanel
+			title="Skill breakdown"
+			stats={data.skillAccuracy}
+			emptyMessage="No skill-level answers have been recorded yet."
+			countStyle="correct-ratio"
+			density="roomy"
+		/>
+	</main>
+</FocusedQuizLayout>
 
 <style>
+	.results-page {
+		inline-size: 100%;
+	}
+
 	h1,
 	p {
 		margin: 0;

@@ -3,6 +3,7 @@
 	import {
 		ActionSubmitter,
 		ContentIssueReportForm,
+		FocusedQuizLayout,
 		buildLearningQuizQuestions,
 		buildSubmittedAnswersPayload
 	} from '$lib/features/learning';
@@ -39,66 +40,69 @@
 	}
 </script>
 
-<main class="page quiz-page">
-	{#if data.locked || !data.quiz}
-		<section class="locked">
-			<Lock size={32} />
-			<h1>Quiz locked</h1>
-			<p>Complete the previous path item to unlock this quiz.</p>
-			<Button href={topicBaseHref} label="Back to map" />
-		</section>
-	{:else}
-		<section class="quiz-shell">
-			{#key quizQuestionSetKey}
-				<Quiz
-					questions={quizQuestions}
-					title={data.quiz.title}
-					bind:currentPageIndex={currentQuestionIndex}
-					oncomplete={completeQuiz}
+<FocusedQuizLayout exitHref={topicBaseHref}>
+	<main class="quiz-page">
+		{#if data.locked || !data.quiz}
+			<section class="locked">
+				<Lock size={32} />
+				<h1>Quiz locked</h1>
+				<p>Complete the previous path item to unlock this quiz.</p>
+				<Button href={topicBaseHref} label="Back to map" />
+			</section>
+		{:else}
+			<section class="quiz-shell">
+				{#key quizQuestionSetKey}
+					<Quiz
+						questions={quizQuestions}
+						title={data.quiz.title}
+						bind:currentPageIndex={currentQuestionIndex}
+						oncomplete={completeQuiz}
+					/>
+				{/key}
+
+				{#if form?.error}
+					<p class="message error">{form.error}</p>
+				{:else if form?.issueReported}
+					<p class="message">Issue report sent.</p>
+				{/if}
+
+				<ActionSubmitter
+					action="?/submit"
+					{submitKey}
+					fields={{
+						answers: answersPayload,
+						submissionKey: data.submissionKey
+					}}
 				/>
-			{/key}
 
-			{#if form?.error}
-				<p class="message error">{form.error}</p>
-			{:else if form?.issueReported}
-				<p class="message">Issue report sent.</p>
-			{/if}
-
-			<ActionSubmitter
-				action="?/submit"
-				submitKey={submitKey}
-				fields={{
-					answers: answersPayload,
-					submissionKey: data.submissionKey
-				}}
-			/>
-
-			<div class="quiz-actions">
-				<Popover.Root>
-					<Popover.Trigger class="report-trigger" aria-label="Report an issue">
-						<Flag size={16} strokeWidth={2.25} aria-hidden="true" />
-					</Popover.Trigger>
-					<Popover.Portal>
-						<Popover.Content class="report-popover" sideOffset={8} side="top" align="start">
-							<ContentIssueReportForm
-								contentType="quiz"
-								contentId={data.quiz.quiz_id}
-								contentVersion={data.quiz.version}
-								targets={currentIssueTarget}
-								compact
-							/>
-						</Popover.Content>
-					</Popover.Portal>
-				</Popover.Root>
-			</div>
-		</section>
-	{/if}
-</main>
+				<div class="quiz-actions">
+					<Popover.Root>
+						<Popover.Trigger class="report-trigger" aria-label="Report an issue">
+							<Flag size={16} strokeWidth={2.25} aria-hidden="true" />
+						</Popover.Trigger>
+						<Popover.Portal>
+							<Popover.Content class="report-popover" sideOffset={8} side="top" align="start">
+								<ContentIssueReportForm
+									contentType="quiz"
+									contentId={data.quiz.quiz_id}
+									contentVersion={data.quiz.version}
+									targets={currentIssueTarget}
+									compact
+								/>
+							</Popover.Content>
+						</Popover.Portal>
+					</Popover.Root>
+				</div>
+			</section>
+		{/if}
+	</main>
+</FocusedQuizLayout>
 
 <style>
 	.quiz-page {
 		display: grid;
 		gap: 20px;
+		inline-size: 100%;
 	}
 
 	.locked {
@@ -146,7 +150,9 @@
 		justify-content: center;
 		min-block-size: 2.5rem;
 		min-inline-size: 2.5rem;
-		transition: color 120ms ease-out, border-color 120ms ease-out;
+		transition:
+			color 120ms ease-out,
+			border-color 120ms ease-out;
 	}
 
 	:global(.report-trigger:hover) {

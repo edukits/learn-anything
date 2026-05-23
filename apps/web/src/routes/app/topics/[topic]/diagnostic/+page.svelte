@@ -2,6 +2,7 @@
 	import type { PageProps } from './$types';
 	import {
 		ActionSubmitter,
+		FocusedQuizLayout,
 		buildLearningQuizQuestions,
 		buildSubmittedAnswersPayload
 	} from '$lib/features/learning';
@@ -25,68 +26,70 @@
 	}
 </script>
 
-<main class="page diagnostic-page">
-	<section>
-		<ClipboardList size={32} />
-		<p class="eyebrow">{data.topic.name}</p>
-		<h1>Diagnostic</h1>
-		<p>Answer a short fixed assessment to seed mastery and spaced review for this topic.</p>
+<FocusedQuizLayout exitHref={topicBaseHref} exitLabel="Exit diagnostic">
+	<main class="diagnostic-page">
 		{#if summary}
-			<div class="summary" aria-live="polite">
-				<strong>{summary.score}%</strong>
-				<span>{summary.correctCount} of {summary.questionCount} correct</span>
-				<ul>
-					{#each summary.outcomes as outcome (outcome.skill_id)}
-						<li>
-							<span>{outcome.skill_label}</span>
-							<em>{outcome.outcome.replaceAll('_', ' ')}</em>
-						</li>
-					{/each}
-				</ul>
-			</div>
-			<Button href={topicBaseHref} label="Open learning path" />
+			<section aria-live="polite">
+				<ClipboardList size={32} />
+				<p class="eyebrow">{data.topic.name}</p>
+				<h1>Diagnostic complete</h1>
+				<div class="summary">
+					<strong>{summary.score}%</strong>
+					<span>{summary.correctCount} of {summary.questionCount} correct</span>
+					<ul>
+						{#each summary.outcomes as outcome (outcome.skill_id)}
+							<li>
+								<span>{outcome.skill_label}</span>
+								<em>{outcome.outcome.replaceAll('_', ' ')}</em>
+							</li>
+						{/each}
+					</ul>
+				</div>
+				<Button href={topicBaseHref} label="Open learning path" />
+			</section>
 		{/if}
+
 		{#if form?.error}
 			<p class="message error">{form.error}</p>
 		{/if}
-	</section>
 
-	{#if data.availability.canSubmit}
-		{#key diagnosticQuestionSetKey}
-			<Quiz
-				questions={diagnosticQuestions}
-				title={`${data.topic.name} diagnostic`}
-				oncomplete={completeDiagnostic}
+		{#if data.availability.canSubmit}
+			{#key diagnosticQuestionSetKey}
+				<Quiz
+					questions={diagnosticQuestions}
+					title={`${data.topic.name} diagnostic`}
+					oncomplete={completeDiagnostic}
+				/>
+			{/key}
+			<ActionSubmitter
+				action="?/submit"
+				{submitKey}
+				fields={{
+					answers: answersPayload,
+					submissionKey: data.submissionKey
+				}}
 			/>
-		{/key}
-		<ActionSubmitter
-			action="?/submit"
-			{submitKey}
-			fields={{
-				answers: answersPayload,
-				submissionKey: data.submissionKey
-			}}
-		/>
-	{:else if data.availability.reason === 'completed_for_release'}
-		<section>
-			<h2>Diagnostic complete</h2>
-			<p>You can retake this diagnostic when a new content release is published.</p>
-			<Button href={topicBaseHref} label="Open learning path" />
-		</section>
-	{:else}
-		<section>
-			<h2>No diagnostic questions available</h2>
-			<p>This topic can still be started from the beginning.</p>
-			<Button href={topicBaseHref} label="Open learning path" />
-		</section>
-	{/if}
-</main>
+		{:else if data.availability.reason === 'completed_for_release'}
+			<section>
+				<h2>Diagnostic complete</h2>
+				<p>You can retake this diagnostic when a new content release is published.</p>
+				<Button href={topicBaseHref} label="Open learning path" />
+			</section>
+		{:else}
+			<section>
+				<h2>No diagnostic questions available</h2>
+				<p>This topic can still be started from the beginning.</p>
+				<Button href={topicBaseHref} label="Open learning path" />
+			</section>
+		{/if}
+	</main>
+</FocusedQuizLayout>
 
 <style>
 	.diagnostic-page {
 		display: grid;
 		gap: 20px;
-		max-inline-size: 720px;
+		inline-size: 100%;
 	}
 
 	section {

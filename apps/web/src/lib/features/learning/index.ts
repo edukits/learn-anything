@@ -1,5 +1,6 @@
 export { default as ActionSubmitter } from './components/ActionSubmitter.svelte';
 export { default as ContentIssueReportForm } from './components/ContentIssueReportForm.svelte';
+export { default as FocusedQuizLayout } from './components/FocusedQuizLayout.svelte';
 export { default as MetricGrid } from './components/MetricGrid.svelte';
 export { default as PageHeader } from './components/PageHeader.svelte';
 export { default as SkillAccuracyPanel } from './components/SkillAccuracyPanel.svelte';

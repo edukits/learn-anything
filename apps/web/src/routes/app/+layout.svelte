@@ -4,6 +4,7 @@
 	import { LearningNav } from '@learn-anything/ui';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { isFocusedQuizRouteId } from '$lib/features/learning/focusedQuizRoute';
 
 	let { data, children }: LayoutProps = $props();
 
@@ -24,22 +25,26 @@
 			name: enrollment.topic_name
 		}))
 	);
+
+	let isFocusedQuizRoute = $derived(isFocusedQuizRouteId(page.route.id));
 </script>
 
 <div class="app-shell">
-	<LearningNav
-		topics={navTopics}
-		activeTopicSlug={activeEnrollment?.topic_slug ?? ''}
-		currentPathname={page.url.pathname}
-		showAdmin={Boolean(data.adminRole)}
-		onTopicChange={(topicSlug: string) => {
-			void goto(`/app/topics/${topicSlug}`);
-		}}
-	/>
+	{#if !isFocusedQuizRoute}
+		<LearningNav
+			topics={navTopics}
+			activeTopicSlug={activeEnrollment?.topic_slug ?? ''}
+			currentPathname={page.url.pathname}
+			showAdmin={Boolean(data.adminRole)}
+			onTopicChange={(topicSlug: string) => {
+				void goto(`/app/topics/${topicSlug}`);
+			}}
+		/>
 
-	<DailyProgressStrip engagement={data.engagement} />
+		<DailyProgressStrip engagement={data.engagement} />
+	{/if}
 
-	<div class="shell-body">
+	<div class="shell-body" data-focused={isFocusedQuizRoute}>
 		{@render children()}
 	</div>
 </div>
@@ -51,5 +56,9 @@
 
 	.shell-body {
 		padding-block: 28px 48px;
+	}
+
+	.shell-body[data-focused='true'] {
+		padding-block: 0;
 	}
 </style>
