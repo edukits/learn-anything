@@ -37,12 +37,28 @@ export function compactObject(value) {
 	return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined));
 }
 
+export class JsonReadError extends Error {
+	constructor(path, message, kind, options) {
+		super(`${path}: ${message}`, options);
+		this.name = 'JsonReadError';
+		this.path = path;
+		this.kind = kind;
+	}
+}
+
 export async function readJson(path) {
+	let content;
 	try {
-		return JSON.parse(await readFile(path, 'utf8'));
+		content = await readFile(path, 'utf8');
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
-		throw new Error(`${path}: ${message}`, { cause: error });
+		throw new JsonReadError(path, message, 'read', { cause: error });
+	}
+	try {
+		return JSON.parse(content);
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		throw new JsonReadError(path, message, 'parse', { cause: error });
 	}
 }
 

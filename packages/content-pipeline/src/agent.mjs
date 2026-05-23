@@ -12,7 +12,7 @@ import {
 	SettingsManager
 } from '@earendil-works/pi-coding-agent';
 import pc from 'picocolors';
-import { readJson } from './utils.mjs';
+import { JsonReadError, readJson } from './utils.mjs';
 
 const skillDir = join(dirname(fileURLToPath(import.meta.url)), 'skills');
 
@@ -45,6 +45,22 @@ function handleEvent(label, event) {
 	if (event.type === 'agent_end') {
 		status(`${pc.dim('agent finished')} ${label}`);
 	}
+}
+
+function jsonRepairPrompt(path, error, content) {
+	return [
+		`The JSON file at ${path} is invalid and could not be parsed.`,
+		'Rewrite that same file as valid JSON only.',
+		'Preserve the intended content and schema. Do not add Markdown fences or prose.',
+		'',
+		'Parser error:',
+		error.message,
+		'',
+		'Current file content:',
+		'```json',
+		content,
+		'```'
+	].join('\n');
 }
 
 export class AgentRunner {
@@ -84,14 +100,24 @@ export class AgentRunner {
 		session.subscribe((event) => handleEvent(label, event));
 		try {
 			await session.prompt(prompt);
+			if (!expectedJsonPath) {
+				return undefined;
+			}
+			const absoluteJsonPath = resolve(this.cwd, expectedJsonPath);
+			try {
+				return await readJson(absoluteJsonPath);
+			} catch (error) {
+				if (!(error instanceof JsonReadError) || error.kind !== 'parse') {
+					throw error;
+				}
+				process.stderr.write(`${pc.yellow('repair')} ${label} invalid JSON; asking agent to rewrite\n`);
+				const content = await readFile(absoluteJsonPath, 'utf8');
+				await session.prompt(jsonRepairPrompt(expectedJsonPath, error, content));
+				return await readJson(absoluteJsonPath);
+			}
 		} finally {
 			session.dispose();
 		}
-
-		if (!expectedJsonPath) {
-			return undefined;
-		}
-		return readJson(resolve(this.cwd, expectedJsonPath));
 	}
 }
 
