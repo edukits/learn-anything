@@ -9,6 +9,9 @@ node_modules/
 __pycache__/
 processed/
 
+.content-pipeline/
+curriculum-artifacts/runs/**/*.jsonl
+
 dist/
 build/
 .next/

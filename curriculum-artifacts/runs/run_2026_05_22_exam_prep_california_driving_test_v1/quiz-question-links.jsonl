@@ -1,8 +1,0 @@
-{"quiz_id":"quiz_ca_driving_control_rules","quiz_version":1,"question_id":"question_ca_signs_stop_1","question_version":1,"ordering":1,"weight":1}
-{"quiz_id":"quiz_ca_driving_control_rules","quiz_version":1,"question_id":"question_ca_right_of_way_1","question_version":1,"ordering":2,"weight":1}
-{"quiz_id":"quiz_ca_driving_control_rules","quiz_version":1,"question_id":"question_ca_right_of_way_sequence_1","question_version":1,"ordering":3,"weight":1}
-{"quiz_id":"quiz_ca_driving_control_rules","quiz_version":1,"question_id":"question_ca_crosswalk_short_1","question_version":1,"ordering":4,"weight":1}
-{"quiz_id":"quiz_ca_driving_safe_choices","quiz_version":1,"question_id":"question_ca_spacing_numeric_1","question_version":1,"ordering":1,"weight":1}
-{"quiz_id":"quiz_ca_driving_safe_choices","quiz_version":1,"question_id":"question_ca_emergency_select_1","question_version":1,"ordering":2,"weight":1}
-{"quiz_id":"quiz_ca_driving_safe_choices","quiz_version":1,"question_id":"question_ca_impairment_numeric_1","question_version":1,"ordering":3,"weight":1}
-{"quiz_id":"quiz_ca_driving_safe_choices","quiz_version":1,"question_id":"question_ca_impairment_short_1","question_version":1,"ordering":4,"weight":1}
