@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "learn-anything",
+  "compatibility_date": "2026-05-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "apps/web/.svelte-kit/cloudflare/_worker.js",
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "apps/web/.svelte-kit/cloudflare"
+  },
+  "observability": {
+    "enabled": true
+  }
+}
