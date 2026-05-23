@@ -5,11 +5,10 @@ import pc from 'picocolors';
 import { z } from 'zod';
 import { AgentRunner, buildSourceContext } from './agent.mjs';
 import { bundleRun } from './bundle.mjs';
+import { defaultGenerationConfig, thinkingLevelForStage } from './config.mjs';
 import { runLimited } from './concurrency.mjs';
 import { loadTopicInput } from './input.mjs';
 import { slugify, snakeId, writeJson } from './utils.mjs';
-
-const defaultModel = 'openai-codex:gpt-5.5';
 
 const syllabusItemSchema = z.object({
 	type: z.enum(['lesson', 'quiz']),
@@ -37,9 +36,10 @@ const syllabusSchema = z.object({
 });
 
 function usage() {
+	const { concurrency, model } = defaultGenerationConfig;
 	return [
 		'Usage:',
-		'  content-pipeline generate <topic-dir> [--concurrency 3] [--model openai-codex:gpt-5.5]',
+		`  content-pipeline generate <topic-dir> [--concurrency ${concurrency}] [--model ${model}]`,
 		'',
 		'Topic directory contract:',
 		'  topic.json',
@@ -53,7 +53,13 @@ function parseArgs(args) {
 	if (command !== 'generate' || !topicDir) {
 		throw new Error(usage());
 	}
-	const options = { command, topicDir, concurrency: 3, model: defaultModel };
+	const options = {
+		command,
+		topicDir,
+		concurrency: defaultGenerationConfig.concurrency,
+		model: defaultGenerationConfig.model,
+		thinkingLevels: defaultGenerationConfig.thinkingLevels
+	};
 	for (let index = 0; index < rest.length; index += 1) {
 		const arg = rest[index];
 		if (arg === '--concurrency') {
@@ -122,6 +128,7 @@ async function generate(options) {
 		label: 'syllabus',
 		systemPromptName: 'SYLLABUS.md',
 		expectedJsonPath: syllabusPath,
+		thinkingLevel: thinkingLevelForStage(options, 'syllabus'),
 		prompt: [
 			'Create the topic syllabus.',
 			`Write only valid JSON to ${syllabusPath}.`,
@@ -143,6 +150,7 @@ async function generate(options) {
 			label: `${item.type} ${index + 1}`,
 			systemPromptName,
 			expectedJsonPath: outputPath,
+			thinkingLevel: thinkingLevelForStage(options, item.type),
 			prompt: [
 				`Generate syllabus item ${index + 1}.`,
 				`Write only valid JSON to ${outputPath}.`,
@@ -165,6 +173,7 @@ async function generate(options) {
 			label: `review ${index + 1}`,
 			systemPromptName: 'REVIEW.md',
 			expectedJsonPath: outputPath,
+			thinkingLevel: thinkingLevelForStage(options, 'review'),
 			prompt: [
 				`Review and correct syllabus item ${index + 1}.`,
 				`Write only valid JSON to ${outputPath}.`,
@@ -189,6 +198,7 @@ async function generate(options) {
 		run_id: runId,
 		model: options.model,
 		concurrency: options.concurrency,
+		thinking_levels: options.thinkingLevels,
 		topic_dir: input.topicDir,
 		started_at: new Date().toISOString(),
 		syllabus_path: syllabusPath

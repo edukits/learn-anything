@@ -67,13 +67,13 @@ export class AgentRunner {
 	constructor({ cwd, modelName, thinkingLevel = 'minimal' }) {
 		this.cwd = cwd;
 		this.model = parseModel(modelName);
-		this.thinkingLevel = thinkingLevel;
+		this.defaultThinkingLevel = thinkingLevel;
 		this.authStorage = AuthStorage.create();
 		this.modelRegistry = ModelRegistry.create(this.authStorage);
 		this.settingsManager = SettingsManager.inMemory({ compaction: { enabled: true } });
 	}
 
-	async run({ label, systemPromptName, prompt, expectedJsonPath }) {
+	async run({ label, systemPromptName, prompt, expectedJsonPath, thinkingLevel = this.defaultThinkingLevel }) {
 		const systemPrompt = await readFile(join(skillDir, systemPromptName), 'utf8');
 		const loader = new DefaultResourceLoader({
 			cwd: this.cwd,
@@ -91,7 +91,7 @@ export class AgentRunner {
 			cwd: this.cwd,
 			resourceLoader: loader,
 			model: this.model,
-			thinkingLevel: this.thinkingLevel,
+			thinkingLevel,
 			sessionManager: SessionManager.inMemory(),
 			settingsManager: this.settingsManager,
 			authStorage: this.authStorage,
