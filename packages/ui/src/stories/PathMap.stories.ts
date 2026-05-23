@@ -126,7 +126,7 @@ const compactPath: PathMapItem[] = [
 ];
 
 const meta = {
-	title: 'Components/PathMap',
+	title: 'Components/Learning/PathMap',
 	component: PathMap,
 	tags: ['autodocs'],
 	args: {

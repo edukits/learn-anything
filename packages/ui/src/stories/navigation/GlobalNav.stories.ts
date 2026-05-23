@@ -30,7 +30,7 @@ const sampleSubjects: NavSubject[] = [
 ];
 
 const meta = {
-	title: 'Navigation/GlobalNav',
+	title: 'Components/Navigation/GlobalNav',
 	component: GlobalNav,
 	tags: ['autodocs'],
 	args: {

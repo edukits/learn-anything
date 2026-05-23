@@ -1,4 +1,4 @@
-import katex from 'katex';
+import katex from 'katex/dist/katex.mjs';
 import MarkdownIt from 'markdown-it';
 import sanitizeHtml from 'sanitize-html';
 import texmath from 'markdown-it-texmath';
@@ -43,6 +43,7 @@ const markdown = new MarkdownIt({
 	delimiters: ['dollars', 'brackets'],
 	engine: katex,
 	katexOptions: {
+		output: 'html',
 		throwOnError: false,
 		trust: false
 	}

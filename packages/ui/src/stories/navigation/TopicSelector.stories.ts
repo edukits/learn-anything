@@ -16,7 +16,7 @@ const sampleTopics: NavTopic[] = [
 ];
 
 const meta = {
-	title: 'Navigation/TopicSelector',
+	title: 'Components/Navigation/TopicSelector',
 	component: TopicSelector,
 	tags: ['autodocs'],
 	args: {

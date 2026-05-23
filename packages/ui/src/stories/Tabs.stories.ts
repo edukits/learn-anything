@@ -16,7 +16,7 @@ const sampleItems: TabItem[] = [
 ];
 
 const meta = {
-	title: 'Components/Tabs',
+	title: 'Components/Controls/Tabs',
 	component: Tabs,
 	tags: ['autodocs'],
 	args: {

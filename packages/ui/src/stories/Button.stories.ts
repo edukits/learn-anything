@@ -9,7 +9,7 @@ type ButtonStoryArgs = {
 };
 
 const meta = {
-	title: 'Components/Button',
+	title: 'Components/Controls/Button',
 	component: Button,
 	tags: ['autodocs'],
 	args: {

@@ -13,7 +13,7 @@ type ProgressBarStoryArgs = {
 };
 
 const meta = {
-	title: 'Components/ProgressBar',
+	title: 'Components/Feedback/ProgressBar',
 	component: ProgressBar,
 	tags: ['autodocs'],
 	args: {

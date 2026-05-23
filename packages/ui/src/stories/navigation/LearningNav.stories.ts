@@ -17,7 +17,7 @@ const sampleTopics: NavTopic[] = [
 ];
 
 const meta = {
-	title: 'Navigation/LearningNav',
+	title: 'Components/Navigation/LearningNav',
 	component: LearningNav,
 	tags: ['autodocs'],
 	args: {
