@@ -63,6 +63,86 @@ function jsonRepairPrompt(path, error, content) {
 	].join('\n');
 }
 
+function schemaRepairPrompt(path, error, content) {
+	return [
+		`The JSON file at ${path} is valid JSON but does not match the required schema.`,
+		'Fix the validation errors and rewrite that same file as JSON only.',
+		'Preserve the intended content. Do not add Markdown fences or prose.',
+		'',
+		'Validation errors:',
+		error,
+		'',
+		'Current file content:',
+		'```json',
+		content,
+		'```'
+	].join('\n');
+}
+
+function normalizeValidationResult(result) {
+	if (result && typeof result === 'object' && 'success' in result) {
+		return result;
+	}
+	return { success: true, data: result };
+}
+
+/* eslint-disable no-await-in-loop */
+export async function readValidatedJson({
+	absoluteJsonPath,
+	expectedJsonPath,
+	label,
+	session,
+	validate,
+	maxRepairAttempts = 3,
+	log = (line) => process.stderr.write(`${line}\n`)
+}) {
+	let repairAttempts = 0;
+
+	while (true) {
+		let value;
+		try {
+			value = await readJson(absoluteJsonPath);
+		} catch (error) {
+			if (!(error instanceof JsonReadError) || error.kind !== 'parse') {
+				throw error;
+			}
+			if (repairAttempts >= maxRepairAttempts) {
+				throw error;
+			}
+			repairAttempts += 1;
+			log(
+				`${pc.yellow('repair')} ${label} invalid JSON; asking agent to rewrite (${repairAttempts}/${maxRepairAttempts})`
+			);
+			const content = await readFile(absoluteJsonPath, 'utf8');
+			await session.prompt(jsonRepairPrompt(expectedJsonPath, error, content));
+			continue;
+		}
+
+		if (!validate) {
+			return value;
+		}
+
+		const validation = normalizeValidationResult(await validate(value));
+		if (validation.success) {
+			return validation.data;
+		}
+
+		if (repairAttempts >= maxRepairAttempts) {
+			throw new Error(
+				`${expectedJsonPath} did not match the required schema after ${maxRepairAttempts} repair attempts.\n${validation.error}`
+			);
+		}
+
+		repairAttempts += 1;
+		log(
+			`${pc.yellow('repair')} ${label} schema validation failed; asking agent to rewrite (${repairAttempts}/${maxRepairAttempts})`
+		);
+		const content = await readFile(absoluteJsonPath, 'utf8');
+		await session.prompt(schemaRepairPrompt(expectedJsonPath, validation.error, content));
+	}
+}
+/* eslint-enable no-await-in-loop */
+
 export class AgentRunner {
 	constructor({ cwd, modelName, thinkingLevel = 'minimal' }) {
 		this.cwd = cwd;
@@ -73,7 +153,15 @@ export class AgentRunner {
 		this.settingsManager = SettingsManager.inMemory({ compaction: { enabled: true } });
 	}
 
-	async run({ label, systemPromptName, prompt, expectedJsonPath, thinkingLevel = this.defaultThinkingLevel }) {
+	async run({
+		label,
+		systemPromptName,
+		prompt,
+		expectedJsonPath,
+		thinkingLevel = this.defaultThinkingLevel,
+		validate,
+		maxRepairAttempts = 3
+	}) {
 		const systemPrompt = await readFile(join(skillDir, systemPromptName), 'utf8');
 		const loader = new DefaultResourceLoader({
 			cwd: this.cwd,
@@ -104,17 +192,14 @@ export class AgentRunner {
 				return undefined;
 			}
 			const absoluteJsonPath = resolve(this.cwd, expectedJsonPath);
-			try {
-				return await readJson(absoluteJsonPath);
-			} catch (error) {
-				if (!(error instanceof JsonReadError) || error.kind !== 'parse') {
-					throw error;
-				}
-				process.stderr.write(`${pc.yellow('repair')} ${label} invalid JSON; asking agent to rewrite\n`);
-				const content = await readFile(absoluteJsonPath, 'utf8');
-				await session.prompt(jsonRepairPrompt(expectedJsonPath, error, content));
-				return await readJson(absoluteJsonPath);
-			}
+			return await readValidatedJson({
+				absoluteJsonPath,
+				expectedJsonPath,
+				label,
+				session,
+				validate,
+				maxRepairAttempts
+			});
 		} finally {
 			session.dispose();
 		}

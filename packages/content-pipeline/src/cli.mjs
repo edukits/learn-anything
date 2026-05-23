@@ -2,38 +2,13 @@
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import pc from 'picocolors';
-import { z } from 'zod';
 import { AgentRunner, buildSourceContext } from './agent.mjs';
 import { bundleRun } from './bundle.mjs';
 import { defaultGenerationConfig, thinkingLevelForStage } from './config.mjs';
 import { runLimited } from './concurrency.mjs';
 import { loadTopicInput } from './input.mjs';
+import { schemaForItemType, validateSyllabus, validateWithSchema } from './schemas.mjs';
 import { slugify, snakeId, writeJson } from './utils.mjs';
-
-const syllabusItemSchema = z.object({
-	type: z.enum(['lesson', 'quiz']),
-	slug: z.string().min(1).optional(),
-	focus: z.string().min(1),
-	goals: z.string().min(1),
-	nonGoals: z.string().min(1).optional(),
-	skills: z
-		.array(
-			z.object({
-				id: z.string().min(1).optional(),
-				slug: z.string().min(1).optional(),
-				name: z.string().min(1),
-				device: z.string().min(1).optional(),
-				summary: z.string().min(1).optional()
-			})
-		)
-		.optional(),
-	question_count: z.number().int().positive().optional()
-});
-
-const syllabusSchema = z.object({
-	summary: z.string().min(1).optional(),
-	syllabus: z.array(syllabusItemSchema).min(1)
-});
 
 function usage() {
 	const { concurrency, model } = defaultGenerationConfig;
@@ -124,11 +99,12 @@ async function generate(options) {
 	const topicContext = contextFor(input);
 	const syllabusPath = '.content-pipeline/TOPIC_SYLLABUS.json';
 	process.stderr.write(`${pc.cyan('stage')} syllabus\n`);
-	const rawSyllabus = await runner.run({
+	const syllabus = await runner.run({
 		label: 'syllabus',
 		systemPromptName: 'SYLLABUS.md',
 		expectedJsonPath: syllabusPath,
 		thinkingLevel: thinkingLevelForStage(options, 'syllabus'),
+		validate: validateSyllabus,
 		prompt: [
 			'Create the topic syllabus.',
 			`Write only valid JSON to ${syllabusPath}.`,
@@ -140,17 +116,18 @@ async function generate(options) {
 			sourceContext
 		].join('\n')
 	});
-	const syllabus = syllabusSchema.parse(rawSyllabus);
 
 	process.stderr.write(`${pc.cyan('stage')} generate ${syllabus.syllabus.length} items\n`);
 	const draftItems = await runLimited(syllabus.syllabus, options.concurrency, async (item, index) => {
 		const outputPath = itemPathFor(item, index, '.content-pipeline/items');
 		const systemPromptName = item.type === 'lesson' ? 'LESSON.md' : 'QUIZ.md';
+		const validateItem = validateWithSchema(schemaForItemType(item.type));
 		return runner.run({
 			label: `${item.type} ${index + 1}`,
 			systemPromptName,
 			expectedJsonPath: outputPath,
 			thinkingLevel: thinkingLevelForStage(options, item.type),
+			validate: validateItem,
 			prompt: [
 				`Generate syllabus item ${index + 1}.`,
 				`Write only valid JSON to ${outputPath}.`,
@@ -169,11 +146,13 @@ async function generate(options) {
 	process.stderr.write(`${pc.cyan('stage')} review ${draftItems.length} items\n`);
 	const reviewedItems = await runLimited(draftItems, options.concurrency, async (draft, index) => {
 		const outputPath = itemPathFor(syllabus.syllabus[index], index, '.content-pipeline/reviewed');
+		const validateItem = validateWithSchema(schemaForItemType(syllabus.syllabus[index].type));
 		return runner.run({
 			label: `review ${index + 1}`,
 			systemPromptName: 'REVIEW.md',
 			expectedJsonPath: outputPath,
 			thinkingLevel: thinkingLevelForStage(options, 'review'),
+			validate: validateItem,
 			prompt: [
 				`Review and correct syllabus item ${index + 1}.`,
 				`Write only valid JSON to ${outputPath}.`,
