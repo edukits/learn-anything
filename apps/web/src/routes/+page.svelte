@@ -8,6 +8,19 @@
 
 	let ctaHref = $derived(data.isSignedIn ? data.topic.app_path : '/sign-in');
 	let ctaLabel = $derived(data.isSignedIn ? 'Open path' : 'Start learning');
+
+	let steps = $derived([
+		{
+			icon: BookOpen,
+			label: pluralize(data.topic.lesson_count, 'lesson'),
+			detail: 'Concept-first, paced for mastery'
+		},
+		{
+			icon: Trophy,
+			label: pluralize(data.topic.quiz_count, 'quiz', 'quizzes'),
+			detail: 'Practice to lock it in'
+		}
+	]);
 </script>
 
 <main class="home page">
@@ -15,35 +28,62 @@
 		<div class="hero-copy">
 			<p class="eyebrow">{data.topic.level_label}</p>
 			<h1>{data.topic.name}</h1>
-			<p>{data.topic.public_summary}</p>
-			<div class="button-row">
-				<Button href={ctaHref} size="lg">{ctaLabel} <ArrowRight size={18} /></Button>
-				<Button href={`/topics/${data.topic.slug}/preview`} variant="secondary" size="lg" label="Preview" />
-			</div>
-		</div>
-		<div class="path-preview" aria-label={`${data.topic.name} path preview`}>
-			<div class="path-node done"><BookOpen size={24} /> {pluralize(data.topic.lesson_count, 'lesson')}</div>
-			<div class="path-line"></div>
-			<div class="path-node active"><Trophy size={24} /> {pluralize(data.topic.quiz_count, 'quiz', 'quizzes')}</div>
-			<div class="metrics">
+			<p class="lede">{data.topic.public_summary}</p>
+
+			<div class="fact-inline">
 				<span><Clock size={16} /> {data.topic.estimated_minutes} min</span>
 				<span><Layers size={16} /> {data.topic.covered_skill_labels.length} skills</span>
 			</div>
+
+			<div class="button-row">
+				<Button href={ctaHref} size="lg">{ctaLabel} <ArrowRight size={18} /></Button>
+				<Button
+					href={`/topics/${data.topic.slug}/preview`}
+					variant="ghost"
+					size="lg"
+					label="Preview"
+				/>
+			</div>
 		</div>
+
+		<ol class="journey" aria-label="{data.topic.name} path overview">
+			{#each steps as step, i (step.label)}
+				<li class="step">
+					<div class="step-icon" style:--step-delay="{i * 80}ms">
+						<step.icon size={20} strokeWidth={2.25} />
+					</div>
+					{#if i < steps.length - 1}
+						<div class="step-connector" aria-hidden="true"></div>
+					{/if}
+					<div class="step-body">
+						<strong>{step.label}</strong>
+						<span>{step.detail}</span>
+					</div>
+				</li>
+			{/each}
+		</ol>
 	</section>
 </main>
 
 <style>
 	.home {
-		padding-block: 56px;
+		padding-block: clamp(48px, 8vw, 96px) clamp(48px, 8vw, 80px);
 	}
 
 	.hero {
 		align-items: center;
+		animation: fade-up 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
 		display: grid;
-		gap: 40px;
-		grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
-		min-block-size: calc(100svh - 112px);
+		gap: clamp(36px, 6vw, 72px);
+		grid-template-columns: minmax(0, 1.15fr) minmax(240px, 0.85fr);
+		min-block-size: calc(100svh - 160px);
+	}
+
+	@keyframes fade-up {
+		from {
+			opacity: 0;
+			transform: translateY(10px);
+		}
 	}
 
 	.hero-copy {
@@ -52,81 +92,116 @@
 	}
 
 	h1 {
-		font-size: clamp(3rem, 7vw, 6.6rem);
-		letter-spacing: 0;
+		font-size: clamp(3rem, 7.5vw, 7rem);
+		letter-spacing: -0.02em;
 		line-height: 0.92;
 		margin: 0;
 	}
 
-	p {
-		font-size: 1.15rem;
-		max-inline-size: 660px;
+	.lede {
+		color: var(--color-text-muted);
+		font-size: clamp(1.05rem, 1.4vw, 1.2rem);
 		margin: 0;
+		max-inline-size: 52ch;
 	}
 
-	.path-preview {
-		align-content: center;
-		background: var(--color-surface-raised);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
+	.journey {
 		display: grid;
-		gap: 18px;
-		min-block-size: 420px;
-		padding: 28px;
+		gap: 0;
+		list-style: none;
+		margin: 0;
+		padding: 0;
 	}
 
-	.metrics {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 10px;
+	.step {
+		display: grid;
+		gap: 14px;
+		grid-template-columns: 48px 1fr;
+		grid-template-rows: auto auto;
+		position: relative;
 	}
 
-	.metrics span {
+	.step-icon {
 		align-items: center;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
+		animation: fade-up 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+		animation-delay: calc(200ms + var(--step-delay, 0ms));
+		background: linear-gradient(
+			to bottom,
+			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) + 4%)),
+			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 8%))
+		);
+		block-size: 48px;
+		border: 1px solid
+			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 16%));
+		border-radius: var(--radius-lg);
+		box-shadow:
+			0 1px 0 inset
+				hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) + 14%)),
+			0 2px 6px hsl(var(--color-accent-h) 30% 40% / 0.2);
+		color: var(--color-accent-contrast);
 		display: inline-flex;
-		gap: 6px;
-		padding: 8px 10px;
+		grid-row: 1;
+		inline-size: 48px;
+		justify-content: center;
+		overflow: hidden;
+		position: relative;
 	}
 
-	.path-node {
-		align-items: center;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		display: flex;
-		font-weight: 780;
-		gap: 12px;
-		min-block-size: 76px;
-		padding: 0 20px;
+	.step-icon::after {
+		background: linear-gradient(
+			135deg,
+			rgb(255 255 255 / 0.25) 0%,
+			rgb(255 255 255 / 0) 50%
+		);
+		content: '';
+		inset: 0;
+		pointer-events: none;
+		position: absolute;
 	}
 
-	.path-node.done {
-		border-color: var(--color-success);
+	.step-connector {
+		background: linear-gradient(
+			to bottom,
+			var(--color-accent),
+			color-mix(in srgb, var(--color-accent), var(--color-border) 60%)
+		);
+		block-size: 28px;
+		border-radius: 1px;
+		grid-column: 1;
+		grid-row: 2;
+		inline-size: 2px;
+		justify-self: center;
 	}
 
-	.path-node.active {
-		border-color: var(--color-star);
-		box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-star), transparent 50%);
+	.step-body {
+		align-self: center;
+		display: grid;
+		gap: 2px;
+		grid-row: 1;
 	}
 
-	.path-line {
-		background: var(--color-border);
-		block-size: 56px;
-		inline-size: 5px;
-		margin-inline: 38px;
+	.step-body strong {
+		font-family: var(--font-display);
+		font-size: 1.05rem;
+		font-weight: 600;
 	}
 
-	@media (max-width: 840px) {
+	.step-body span {
+		color: var(--color-text-muted);
+		font-size: 0.9rem;
+	}
+
+	@media (max-width: 880px) {
 		.hero {
 			grid-template-columns: 1fr;
 			min-block-size: auto;
 		}
+	}
 
-		.path-preview {
-			min-block-size: 320px;
+	@media (prefers-reduced-motion: reduce) {
+		.hero,
+		.step-icon {
+			animation: none;
 		}
 	}
 </style>

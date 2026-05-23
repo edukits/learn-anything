@@ -1,45 +1,57 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import { Button } from '@learn-anything/ui';
-	import { ArrowRight, Library } from '@lucide/svelte';
+	import { ArrowRight } from '@lucide/svelte';
 	import { pluralize } from '$lib/shared/utils/format';
 
 	let { data }: PageProps = $props();
+
+	const avatarHues = [200, 32, 280, 140, 350, 220, 95, 12];
 </script>
 
-<main class="page subjects-page stack">
+<main class="page subjects-page">
 	<header class="page-heading">
-		<p class="eyebrow">Subjects</p>
-		<h1>Browse the catalog</h1>
-		<p class="muted">Choose a subject, then pick a topic path to preview or start.</p>
+		<p class="eyebrow">Catalogue</p>
+		<h1>Browse subjects</h1>
+		<p class="muted">Pick a subject to see its topic paths, then preview or start.</p>
 	</header>
 
 	<section class="subject-list" aria-label="Available subjects">
 		{#if data.subjects.length === 0}
-			<div class="empty-state">
-				<p>No public subjects are available yet.</p>
-			</div>
+			<p class="empty muted">No public subjects are available yet.</p>
 		{/if}
 
-		{#each data.subjects as subject (subject.id)}
-			<article class="subject">
-				<Library size={28} />
-				<div>
-					<h2>{subject.name}</h2>
-					<p>{subject.summary}</p>
-					<span>{pluralize(subject.topicCount, 'topic')}</span>
+		{#each data.subjects as subject, i (subject.id)}
+			<a
+				class="catalogue-row subject"
+				href={`/subjects/${subject.slug}`}
+				style:--avatar-h={avatarHues[i % avatarHues.length]}
+			>
+				<span class="avatar" aria-hidden="true">{subject.name.charAt(0)}</span>
+				<div class="subject-body">
+					<div class="subject-head">
+						<h2>{subject.name}</h2>
+						<span class="count muted">{pluralize(subject.topicCount, 'topic')}</span>
+					</div>
+					<p class="muted">{subject.summary}</p>
 				</div>
-				<Button href={`/subjects/${subject.slug}`} variant="secondary">
-					View subject <ArrowRight size={16} />
-				</Button>
-			</article>
+				<span class="row-arrow" aria-hidden="true">
+					<ArrowRight size={16} strokeWidth={2.5} />
+				</span>
+			</a>
 		{/each}
 	</section>
 </main>
 
 <style>
 	.subjects-page {
+		display: grid;
+		gap: 32px;
 		padding-block: 48px 72px;
+	}
+
+	.page-heading {
+		display: grid;
+		gap: 8px;
 	}
 
 	h1,
@@ -49,47 +61,102 @@
 	}
 
 	h1 {
-		font-size: clamp(2.5rem, 5vw, 4.8rem);
-		letter-spacing: 0;
+		font-size: clamp(2.4rem, 5vw, 4.2rem);
+		letter-spacing: -0.02em;
 		line-height: 1;
 	}
 
 	.subject-list {
 		display: grid;
-		gap: 16px;
-	}
-
-	.subject,
-	.empty-state {
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		padding: clamp(18px, 4vw, 28px);
+		gap: 10px;
 	}
 
 	.subject {
 		align-items: center;
+		gap: 16px;
+		grid-template-columns: 44px 1fr auto;
+	}
+
+	.avatar {
+		align-items: center;
+		background: linear-gradient(
+			to bottom,
+			hsl(var(--avatar-h) 70% 95%),
+			hsl(var(--avatar-h) 65% 91%)
+		);
+		block-size: 44px;
+		border: 1px solid hsl(var(--avatar-h) 40% 84%);
+		border-radius: var(--radius-md);
+		box-shadow: 0 1px 0 inset hsl(var(--avatar-h) 80% 98%);
+		color: hsl(var(--avatar-h) 55% 38%);
+		display: inline-flex;
+		font-family: var(--font-display);
+		font-size: 1.15rem;
+		font-weight: 600;
+		inline-size: 44px;
+		justify-content: center;
+	}
+
+	.subject-body {
 		display: grid;
-		gap: 18px;
-		grid-template-columns: auto 1fr auto;
+		gap: 4px;
+		min-inline-size: 0;
 	}
 
-	.subject p,
-	.empty-state p {
+	.subject-head {
+		align-items: baseline;
+		display: flex;
+		gap: 10px;
+	}
+
+	h2 {
+		font-size: 1.1rem;
+		letter-spacing: -0.005em;
+	}
+
+	.count {
+		font-size: 0.82rem;
+	}
+
+	.subject-body p {
+		font-size: 0.95rem;
+		line-height: 1.45;
+	}
+
+	.row-arrow {
 		color: var(--color-text-muted);
+		opacity: 0;
+		transition:
+			opacity var(--transition-ease),
+			transform var(--transition-ease),
+			color var(--transition-ease);
+		transform: translateX(-3px);
 	}
 
-	.subject span {
-		color: var(--color-text-muted);
-		display: inline-block;
-		font-size: 0.92rem;
-		margin-block-start: 8px;
+	.subject:hover .row-arrow,
+	.subject:focus-visible .row-arrow {
+		color: var(--color-accent);
+		opacity: 1;
+		transform: none;
 	}
 
-	@media (max-width: 720px) {
+	.empty {
+		padding: 20px 0;
+	}
+
+	@media (max-width: 640px) {
 		.subject {
-			align-items: start;
-			grid-template-columns: 1fr;
+			grid-template-columns: 40px 1fr;
+		}
+
+		.avatar {
+			block-size: 40px;
+			font-size: 1rem;
+			inline-size: 40px;
+		}
+
+		.row-arrow {
+			display: none;
 		}
 	}
 </style>

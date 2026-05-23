@@ -1,62 +1,53 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import { Button } from '@learn-anything/ui';
 	import { ArrowRight, BookOpen, Clock, Layers } from '@lucide/svelte';
 	import { pluralize } from '$lib/shared/utils/format';
 
 	let { data }: PageProps = $props();
 </script>
 
-<main class="page topics-page stack">
+<main class="page topics-page">
 	<header class="page-heading">
-		<p class="eyebrow">Topics</p>
-		<h1>Explore learning paths</h1>
-		<p class="muted">Preview available topics before signing in to practice and track progress.</p>
+		<p class="eyebrow">Catalogue</p>
+		<h1>Learning paths</h1>
+		<p class="muted">Preview any path before signing in to practice and track progress.</p>
 	</header>
 
 	<section class="topic-list" aria-label="Available topics">
 		{#if data.topics.length === 0}
-			<div class="empty-state">
-				<p>No public topics are available yet.</p>
-			</div>
+			<p class="empty muted">No public topics are available yet.</p>
 		{/if}
 
 		{#each data.topics as topic (topic.topic_area_id)}
-			<article class="topic">
-				<div>
+			<a class="catalogue-row topic" href={`/topics/${topic.slug}`}>
+				<div class="topic-body">
 					<p class="eyebrow">{topic.level_label}</p>
 					<h2>{topic.name}</h2>
-					<p>{topic.public_summary}</p>
+					<p class="summary muted">{topic.public_summary}</p>
+					<div class="fact-inline">
+						<span><BookOpen size={14} /> {pluralize(topic.lesson_count, 'lesson')}</span>
+						<span><Layers size={14} /> {pluralize(topic.quiz_count, 'quiz', 'quizzes')}</span>
+						<span><Clock size={14} /> {topic.estimated_minutes} min</span>
+					</div>
 				</div>
-
-				<div class="facts" aria-label={`${topic.name} summary`}>
-					<span><BookOpen size={16} /> {pluralize(topic.lesson_count, 'lesson')}</span>
-					<span><Layers size={16} /> {pluralize(topic.quiz_count, 'quiz', 'quizzes')}</span>
-					<span><Clock size={16} /> {topic.estimated_minutes} min</span>
-				</div>
-
-				<div class="button-row">
-					<Button href={`/topics/${topic.slug}`} label="View topic" />
-					<Button
-						href={data.isSignedIn ? topic.app_path : '/sign-in'}
-						variant="secondary"
-					>
-						{data.isSignedIn ? 'Open path' : 'Sign in'} <ArrowRight size={16} />
-					</Button>
-				</div>
-			</article>
+				<span class="row-arrow" aria-hidden="true">
+					<ArrowRight size={16} strokeWidth={2.5} />
+				</span>
+			</a>
 		{/each}
 	</section>
 </main>
 
 <style>
 	.topics-page {
-		padding-block: 48px;
+		display: grid;
+		gap: 32px;
+		padding-block: 48px 72px;
 	}
 
 	.page-heading {
 		display: grid;
-		gap: 10px;
+		gap: 8px;
 	}
 
 	h1,
@@ -66,62 +57,63 @@
 	}
 
 	h1 {
-		font-size: clamp(2.4rem, 5vw, 4.8rem);
-		letter-spacing: 0;
+		font-size: clamp(2.4rem, 5vw, 4.2rem);
+		letter-spacing: -0.02em;
 		line-height: 1;
 	}
 
 	.topic-list {
 		display: grid;
-		gap: 18px;
-	}
-
-	.topic {
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		display: grid;
-		gap: 18px;
-		padding: clamp(18px, 4vw, 28px);
-	}
-
-	.empty-state {
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		padding: 20px;
-	}
-
-	.empty-state p {
-		color: var(--color-text-muted);
-		margin: 0;
-	}
-
-	h2 {
-		font-size: clamp(1.5rem, 3vw, 2.2rem);
-		letter-spacing: 0;
-		line-height: 1.1;
-	}
-
-	.topic p:not(.eyebrow) {
-		color: var(--color-text-muted);
-		margin-block-start: 8px;
-		max-inline-size: 720px;
-	}
-
-	.facts {
-		display: flex;
-		flex-wrap: wrap;
 		gap: 10px;
 	}
 
-	.facts span {
+	.topic {
 		align-items: center;
-		background: var(--color-surface-raised);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-sm);
-		display: inline-flex;
+		gap: 16px;
+		grid-template-columns: 1fr auto;
+	}
+
+	.topic-body {
+		display: grid;
 		gap: 6px;
-		padding: 8px 10px;
+		min-inline-size: 0;
+	}
+
+	h2 {
+		font-size: 1.2rem;
+		letter-spacing: -0.005em;
+	}
+
+	.summary {
+		font-size: 0.95rem;
+		line-height: 1.45;
+		max-inline-size: 65ch;
+	}
+
+	.row-arrow {
+		color: var(--color-text-muted);
+		opacity: 0;
+		transition:
+			opacity var(--transition-ease),
+			transform var(--transition-ease),
+			color var(--transition-ease);
+		transform: translateX(-3px);
+	}
+
+	.topic:hover .row-arrow,
+	.topic:focus-visible .row-arrow {
+		color: var(--color-accent);
+		opacity: 1;
+		transform: none;
+	}
+
+	.empty {
+		padding: 20px 0;
+	}
+
+	@media (max-width: 640px) {
+		.row-arrow {
+			display: none;
+		}
 	}
 </style>
