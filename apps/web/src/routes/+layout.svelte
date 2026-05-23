@@ -13,13 +13,14 @@
 	let { data, children }: LayoutProps = $props();
 
 	let isFocusedQuizRoute = $derived(isFocusedQuizRouteId(page.route.id));
+	let isSignInRoute = $derived(page.url.pathname === '/sign-in');
 
 	afterNavigate(({ to }) => {
 		rememberNonFocusedHref(to?.url ?? page.url, to?.route.id ?? page.route.id);
 	});
 </script>
 
-{#if !isFocusedQuizRoute}
+{#if !isFocusedQuizRoute && !isSignInRoute}
 	<GlobalNav subjects={data.subjects} user={data.user} currentPathname={page.url.pathname} />
 {/if}
 {@render children()}

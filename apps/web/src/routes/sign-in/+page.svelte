@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Button } from '@learn-anything/ui';
-	import { BookOpenCheck, Sparkles, Mail } from '@lucide/svelte';
+	import { ArrowLeft, BookOpenCheck, Sparkles, Mail } from '@lucide/svelte';
 
 	let { form } = $props();
 
@@ -38,6 +38,10 @@
 	<section class="form-panel">
 		<div class="form-container">
 			<header class="form-header">
+				<a href="/" class="back-link">
+					<ArrowLeft size={14} strokeWidth={2.25} />
+					Home
+				</a>
 				<h1>Sign in</h1>
 				<p class="subtitle">Enter your email and we'll send a magic link — no password needed.</p>
 			</header>
@@ -202,6 +206,21 @@
 		padding: var(--space-10);
 	}
 
+	.back-link {
+		align-items: center;
+		color: var(--color-text-muted);
+		display: inline-flex;
+		font-size: 0.8125rem;
+		font-weight: 500;
+		gap: var(--space-1);
+		text-decoration: none;
+		transition: color 120ms ease;
+	}
+
+	.back-link:hover {
+		color: var(--color-text);
+	}
+
 	.form-container {
 		display: grid;
 		gap: var(--space-8);
@@ -211,6 +230,10 @@
 	.form-header {
 		display: grid;
 		gap: var(--space-2);
+	}
+
+	.form-header .back-link {
+		margin-block-end: var(--space-4);
 	}
 
 	.form-header h1 {
