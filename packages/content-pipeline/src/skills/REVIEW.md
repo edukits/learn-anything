@@ -40,4 +40,21 @@ For quizzes, return:
 }
 ```
 
+Supported quiz question fields:
+
+- `question_purpose`: only `recognition` or `application`
+- `response_type`: only `multiple_choice`, `multiple_select`, `numeric`, `sequencing`, or `short_answer`
+
+Do not put a response type such as `sequencing`, `numeric`, or `short_answer` in `question_purpose`.
+
+Required response payloads:
+
+- `multiple_choice`: `choices` and `correct_choice_id`
+- `multiple_select`: `choices` and `correct_choice_ids`
+- `numeric`: `correct_numeric_answer`
+- `sequencing`: `sequence_items` in correct order
+- `short_answer`: `accepted_answers`
+
+Rendered quiz text fields support Markdown and LaTeX math: `prompt`, `choices[].label`, `sequence_items[].label`, and `explanation`. Preserve or improve Markdown in answer explanations when it clarifies the reasoning, but do not add raw HTML or Markdown to ids, slugs, answer-key fields, accepted answers, or skill metadata.
+
 Do not invent subject ids, topic ids, release ids, or app paths.

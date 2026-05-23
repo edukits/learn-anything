@@ -42,6 +42,7 @@ Published media should not be overwritten. New versions get new paths.
 ## Git's role
 
 Git should store:
+
 - generation code
 - prompt templates
 - schemas
@@ -90,6 +91,7 @@ content_release_items
 ```
 
 User data stays separate:
+
 ```
 user_progress
 quiz_attempts
@@ -101,6 +103,7 @@ spaced_repetition_state
 ```
 
 V2 should extend user data without coupling it to curriculum rows:
+
 ```
 daily_goal_settings
 streak_events
@@ -112,6 +115,7 @@ activity_events
 ## Content model
 
 Suggested content types (for now):
+
 ```
 subject_area
   e.g. mathematics, english, computer science
@@ -149,6 +153,7 @@ Important: quiz questions should be independent from quizzes.
 For the first Literary Devices release, quiz questions should be multiple choice only. The UI library can support additional question types later, but the first content/import path should not need to handle them.
 
 Use a join table:
+
 ```
 quiz_question_to_quiz
   quiz_id
@@ -164,6 +169,7 @@ quiz_question_to_quiz
 Generated content should be append-versioned instead of overwritten in place.
 
 Versioned content types:
+
 - subject_area
 - topic_area
 - skill
@@ -195,6 +201,7 @@ Use scoped release bundles so the platform can publish or roll back Literary Dev
 For the current product, users always follow the latest published content. Do not pin active users to older releases. Historical attempts should still store the exact content ids and versions the user saw so past quiz history remains understandable after content changes.
 
 This gives the app flexibility to:
+
 - publish the first English Literary Devices slice independently
 - revise individual questions without disturbing unrelated topics
 - keep user progress history tied to the version the user actually saw
@@ -267,6 +274,7 @@ Review sessions should select from published question versions only. Retired or 
 ## Main rule
 
 Use this split:
+
 ```
 Supabase Object Storage:
   bulk generated content artifacts

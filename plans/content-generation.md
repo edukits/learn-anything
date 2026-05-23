@@ -182,6 +182,7 @@ Production content bodies are imported into Postgres. Object Storage keeps the i
 User progress should be durable even when curriculum content changes.
 
 Keep:
+
 - earned XP
 - streak history
 - quiz attempts
@@ -189,6 +190,7 @@ Keep:
 - question responses where they are useful for history, analytics, or future restoration
 
 Allow current curriculum to change:
+
 - add new questions
 - retire old questions
 - replace a question with a new id
@@ -224,7 +226,7 @@ Use lightweight review before publishing:
 
 - sample generated lessons
 - sample quiz questions
-- check answer keys and explanations
+- check answer keys and rendered explanation Markdown
 - check difficulty labels
 - check topic/skill coverage
 - inspect diffs for revised content
