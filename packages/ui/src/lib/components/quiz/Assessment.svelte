@@ -283,6 +283,13 @@
 		return mode === 'exam' ? examSubmitted : questionSubmitted[question.id];
 	}
 
+	function getQuestionFeedbackState(question: QuizQuestionData) {
+		const correct = results[question.id]?.correct;
+		if (correct === true) return 'correct';
+		if (correct === false) return 'incorrect';
+		return 'neutral';
+	}
+
 	function submitExam() {
 		if (!allAnswered || examSubmitted) {
 			return;
@@ -519,8 +526,12 @@
 					{/if}
 
 					{#if isQuestionFeedbackVisible(question)}
-						<div class="question-feedback">
-							<CheckCircle size={20} strokeWidth={2.4} />
+						<div class={['question-feedback', `feedback-${getQuestionFeedbackState(question)}`]}>
+							{#if getQuestionFeedbackState(question) === 'correct'}
+								<CheckCircle size={20} strokeWidth={2.4} />
+							{:else}
+								<span class="feedback-marker" aria-hidden="true"></span>
+							{/if}
 							<p>{question.feedback}</p>
 						</div>
 					{/if}
@@ -664,8 +675,8 @@
 
 	.question-feedback {
 		align-items: start;
-		background: color-mix(in srgb, var(--color-success), transparent 90%);
-		border: 1px solid color-mix(in srgb, var(--color-success), transparent 55%);
+		background: color-mix(in srgb, var(--feedback-accent), transparent 92%);
+		border: 1px solid color-mix(in srgb, var(--feedback-accent), transparent 62%);
 		border-radius: var(--radius-md);
 		color: var(--color-text);
 		display: grid;
@@ -676,11 +687,29 @@
 	}
 
 	.question-feedback :global(svg) {
-		color: var(--color-success);
+		color: var(--feedback-accent);
 	}
 
 	.question-feedback p {
 		margin: 0;
+	}
+
+	.feedback-correct {
+		--feedback-accent: var(--color-success);
+	}
+
+	.feedback-incorrect,
+	.feedback-neutral {
+		--feedback-accent: var(--color-accent);
+	}
+
+	.feedback-marker {
+		background: var(--feedback-accent);
+		border-radius: 999px;
+		block-size: 0.5rem;
+		display: inline-block;
+		inline-size: 0.5rem;
+		margin-block-start: 0.45rem;
 	}
 
 	.assessment-actions {

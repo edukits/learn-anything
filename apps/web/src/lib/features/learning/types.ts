@@ -155,7 +155,7 @@ export type ReviewSelectionReason =
 	| 'not_seen_recently'
 	| 'due_spaced_repetition';
 
-export type ReviewPracticeQuestion = PracticeQuizQuestion & {
+export type ReviewPracticeQuestion = QuizQuestionVersion & {
 	reason_code: ReviewSelectionReason;
 	reason_label: string;
 };

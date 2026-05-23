@@ -15,7 +15,7 @@
 	let answersPayload = $state('[]');
 	let submitKey = $state(0);
 	let questions = $derived(data.reviewSession?.questions ?? []);
-	let reviewQuestions = $derived(buildLearningQuizQuestions(questions));
+	let reviewQuestions = $derived(buildLearningQuizQuestions(questions, { instantFeedback: true }));
 	let reviewQuestionSetKey = $derived(
 		questions.map((question) => `${question.question_id}@${question.version}`).join('|')
 	);

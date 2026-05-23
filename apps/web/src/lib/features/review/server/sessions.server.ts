@@ -2,7 +2,6 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { getActiveReleaseQuestions } from '$lib/features/learning/server/index.server';
 import type { TopicContent } from '$lib/features/learning/types';
 import type {
-	PracticeQuizQuestion,
 	QuizQuestionVersion,
 	ReviewPracticeQuestion,
 	ReviewSelectionReason,
@@ -49,23 +48,7 @@ function questionKey(question: Pick<QuizQuestionVersion, 'question_id' | 'versio
 }
 
 function toPracticeQuestion(question: ReviewSelection): ReviewPracticeQuestion {
-	const {
-		correct_choice_id: _correctChoiceId,
-		correct_choice_ids: _correctChoiceIds,
-		correct_numeric_value: _correctNumericValue,
-		correct_numeric_tolerance: _correctNumericTolerance,
-		accepted_answers: _acceptedAnswers,
-		explanation: _explanation,
-		reason_code,
-		reason_label,
-		...practiceQuestion
-	} = question;
-
-	return {
-		...(practiceQuestion as PracticeQuizQuestion),
-		reason_code,
-		reason_label
-	};
+	return question;
 }
 
 async function getAttemptAnswerHistory(

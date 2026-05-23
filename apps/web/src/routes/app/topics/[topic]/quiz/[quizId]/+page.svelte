@@ -17,7 +17,9 @@
 	let answersPayload = $state('[]');
 	let submitKey = $state(0);
 	let currentQuestionIndex = $state(0);
-	let quizQuestions = $derived(buildLearningQuizQuestions(data.questions));
+	let quizQuestions = $derived(
+		buildLearningQuizQuestions(data.questions, { instantFeedback: true })
+	);
 	let issueTargets = $derived(
 		data.questions.map((question, index) => ({
 			value: `quiz_question|${question.question_id}|${question.version}`,

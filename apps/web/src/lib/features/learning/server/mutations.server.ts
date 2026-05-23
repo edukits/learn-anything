@@ -1,5 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { ContentRelease, LessonVersion, PracticeQuizQuestion, QuizVersion } from '../types';
+import type {
+	ContentRelease,
+	LessonVersion,
+	PracticeQuizQuestion,
+	QuizQuestionVersion,
+	QuizVersion
+} from '../types';
 import { AnswerValidationError, buildValidatedRpcAnswers } from './answer-validation.server';
 import type { RpcAnswer } from './answer-validation.server';
 import type { SubmittedAnswer } from './submissions.server';
@@ -14,7 +20,7 @@ type SubmitQuizParams = {
 	topicId: string;
 	release: ContentRelease;
 	quiz: QuizVersion;
-	questions: PracticeQuizQuestion[];
+	questions: AnswerableQuestion[];
 	answers: SubmittedAnswer[];
 	submissionKey: string;
 };
@@ -29,10 +35,12 @@ type CompleteReviewSessionParams = {
 	topicId: string;
 	release: ContentRelease;
 	reviewSessionId: string;
-	questions: PracticeQuizQuestion[];
+	questions: AnswerableQuestion[];
 	answers: SubmittedAnswer[];
 	submissionKey: string;
 };
+
+type AnswerableQuestion = PracticeQuizQuestion | QuizQuestionVersion;
 
 export class LearnerMutationError extends Error {
 	constructor(

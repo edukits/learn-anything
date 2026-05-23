@@ -1,6 +1,10 @@
 import type { QuizQuestionData, QuizQuestionResult } from '@learn-anything/ui';
 import type { QuestionPurpose, ResponseType } from './types';
 
+type BuildLearningQuizQuestionsOptions = {
+	instantFeedback?: boolean;
+};
+
 export type LearningQuizQuestion = {
 	question_id: string;
 	skill_label: string;
@@ -11,18 +15,28 @@ export type LearningQuizQuestion = {
 		id: string;
 		label: string;
 	}[];
+	correct_choice_id?: string;
+	correct_choice_ids?: string[];
+	correct_numeric_value?: number | null;
+	correct_numeric_tolerance?: number;
 	sequence_items?: {
 		id: string;
 		label: string;
 	}[];
+	accepted_answers?: string[];
+	explanation?: string;
 };
 
-export function buildLearningQuizQuestions(questions: LearningQuizQuestion[]): QuizQuestionData[] {
+export function buildLearningQuizQuestions(
+	questions: LearningQuizQuestion[],
+	options: BuildLearningQuizQuestionsOptions = {}
+): QuizQuestionData[] {
 	return questions.map((question) => ({
 		id: question.question_id,
 		eyebrow: `${question.skill_label} · ${question.question_purpose}`,
 		question: question.prompt,
-		response: buildQuestionResponse(question)
+		feedback: getQuestionFeedback(question, options),
+		response: buildQuestionResponse(question, options)
 	}));
 }
 
@@ -45,7 +59,10 @@ export function buildSubmittedAnswersPayload(
 	);
 }
 
-function buildQuestionResponse(question: LearningQuizQuestion): QuizQuestionData['response'] {
+function buildQuestionResponse(
+	question: LearningQuizQuestion,
+	options: BuildLearningQuizQuestionsOptions
+): QuizQuestionData['response'] {
 	switch (question.response_type) {
 		case 'multiple_choice':
 			return {
@@ -53,7 +70,8 @@ function buildQuestionResponse(question: LearningQuizQuestion): QuizQuestionData
 				options: question.choices.map((choice) => ({
 					value: choice.id,
 					label: choice.label
-				}))
+				})),
+				...(options.instantFeedback ? { correctValue: question.correct_choice_id ?? null } : {})
 			};
 		case 'multiple_select':
 			return {
@@ -61,12 +79,26 @@ function buildQuestionResponse(question: LearningQuizQuestion): QuizQuestionData
 				options: question.choices.map((choice) => ({
 					value: choice.id,
 					label: choice.label
-				}))
+				})),
+				...(options.instantFeedback ? { correctValues: question.correct_choice_ids ?? [] } : {})
 			};
 		case 'numeric':
 			return {
 				type: 'numeric',
-				placeholder: 'Type a number'
+				placeholder: 'Type a number',
+				...(options.instantFeedback && typeof question.correct_numeric_value === 'number'
+					? {
+							acceptedValues: [
+								{
+									value: question.correct_numeric_value,
+									tolerance: {
+										type: 'absolute' as const,
+										value: question.correct_numeric_tolerance ?? 0
+									}
+								}
+							]
+						}
+					: {})
 			};
 		case 'sequencing':
 			return {
@@ -75,16 +107,36 @@ function buildQuestionResponse(question: LearningQuizQuestion): QuizQuestionData
 					value: item.id,
 					label: item.label
 				})),
-				correctOrder: null
+				...(options.instantFeedback
+					? { correctOrder: (question.sequence_items ?? []).map((item) => item.id) }
+					: {})
 			};
 		case 'short_answer':
 			return {
 				type: 'short-answer',
-				placeholder: 'Type your answer'
+				placeholder: 'Type your answer',
+				...(options.instantFeedback
+					? {
+							acceptedAnswers: question.accepted_answers ?? [],
+							matchMode: 'normalized' as const
+						}
+					: {})
 			};
 		default: {
 			const exhaustive: never = question.response_type;
 			throw new Error(`Unsupported response type: ${exhaustive}`);
 		}
 	}
+}
+
+function getQuestionFeedback(
+	question: LearningQuizQuestion,
+	options: BuildLearningQuizQuestionsOptions
+) {
+	if (!options.instantFeedback) {
+		return undefined;
+	}
+
+	const explanation = question.explanation?.trim();
+	return explanation ? explanation : undefined;
 }

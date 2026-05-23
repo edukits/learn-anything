@@ -2,8 +2,8 @@ import { error as kitError, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import {
 	LearnerMutationError,
+	getActiveQuizQuestions,
 	getPathItemProgress,
-	getPracticeQuizQuestions,
 	getQuiz,
 	parseIssueReportForm,
 	parseIssueTarget,
@@ -30,7 +30,7 @@ export const load: PageServerLoad = async ({ locals, parent, params }) => {
 
 	const locked = itemProgress.state === 'locked';
 	const quiz = locked ? null : await getQuiz(locals.supabase, content, params.quizId);
-	const questions = quiz ? await getPracticeQuizQuestions(locals.supabase, quiz) : [];
+	const questions = quiz ? await getActiveQuizQuestions(locals.supabase, quiz) : [];
 
 	return {
 		...content,
@@ -62,7 +62,7 @@ export const actions: Actions = {
 		}
 
 		const quiz = await getQuiz(locals.supabase, content, params.quizId);
-		const questions = await getPracticeQuizQuestions(locals.supabase, quiz);
+		const questions = await getActiveQuizQuestions(locals.supabase, quiz);
 		const formData = await request.formData();
 		const submission = parseSubmittedAnswers(formData);
 		if (!submission.success) {
@@ -97,7 +97,7 @@ export const actions: Actions = {
 
 		try {
 			const quiz = await getQuiz(locals.supabase, content, params.quizId);
-			const questions = await getPracticeQuizQuestions(locals.supabase, quiz);
+			const questions = await getActiveQuizQuestions(locals.supabase, quiz);
 			const issue = parseIssueReportForm(formData);
 			const target = parseIssueTarget(String(formData.get('target') ?? ''));
 			if (

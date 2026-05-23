@@ -60,8 +60,8 @@
 	}
 
 	$effect(() => {
-		currentPathname;
-		user;
+		void currentPathname;
+		void user;
 		updateIndicator();
 	});
 </script>
