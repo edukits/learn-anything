@@ -1,4 +1,5 @@
 export { default as Button } from './components/Button.svelte';
+export { default as Select } from './components/Select.svelte';
 export {
 	DropdownMenu,
 	GlobalNav,
@@ -28,6 +29,7 @@ export { default as Quiz } from './components/quiz/Quiz.svelte';
 export { default as RichText } from './components/quiz/RichText.svelte';
 export { default as SequencingAnswer } from './components/quiz/SequencingAnswer.svelte';
 export { default as ShortAnswer } from './components/quiz/ShortAnswer.svelte';
+export type { SelectOption } from './components/Select.svelte';
 export type {
 	ImageChoiceOptionData,
 	ImageChoiceSubmitResult,

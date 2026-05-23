@@ -55,6 +55,7 @@
 		title?: string;
 		pages?: QuizPageLayout;
 		questionsPerPage?: QuestionsPerPage;
+		currentPageIndex?: number;
 		celebrations?: boolean;
 		class?: string;
 		onquestionresult?: (result: QuizQuestionResult) => void;
@@ -67,13 +68,13 @@
 		title,
 		pages: configuredPages,
 		questionsPerPage,
+		currentPageIndex = $bindable(0),
 		celebrations = true,
 		class: className = '',
 		onquestionresult,
 		oncomplete
 	}: AssessmentProps = $props();
 
-	let currentPageIndex = $state(0);
 	let quizComplete = $state(false);
 	let examSubmitted = $state(false);
 	// svelte-ignore state_referenced_locally

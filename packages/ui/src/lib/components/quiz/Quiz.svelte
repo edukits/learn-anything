@@ -7,6 +7,7 @@
 		title?: string;
 		pages?: QuizPageLayout;
 		questionsPerPage?: number;
+		currentPageIndex?: number;
 		celebrations?: boolean;
 		class?: string;
 		onquestionresult?: (result: QuizQuestionResult) => void;
@@ -18,6 +19,7 @@
 		title,
 		pages,
 		questionsPerPage = 1,
+		currentPageIndex = $bindable(0),
 		celebrations = true,
 		class: className = '',
 		onquestionresult,
@@ -31,6 +33,7 @@
 	{title}
 	{pages}
 	{questionsPerPage}
+	bind:currentPageIndex
 	{celebrations}
 	class={className}
 	{onquestionresult}

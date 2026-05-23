@@ -8,19 +8,24 @@
 	} from '$lib/features/learning';
 	import { Button, Quiz } from '@learn-anything/ui';
 	import type { QuizQuestionResult } from '@learn-anything/ui';
-	import { Lock } from '@lucide/svelte';
+	import { Popover } from 'bits-ui';
+	import { Flag, Lock } from '@lucide/svelte';
 
 	let { data, form }: PageProps = $props();
 	let topicBaseHref = $derived(`/app/topics/${data.topic.slug}`);
 
 	let answersPayload = $state('[]');
 	let submitKey = $state(0);
+	let currentQuestionIndex = $state(0);
 	let quizQuestions = $derived(buildLearningQuizQuestions(data.questions));
 	let issueTargets = $derived(
 		data.questions.map((question, index) => ({
 			value: `quiz_question|${question.question_id}|${question.version}`,
 			label: `Question ${index + 1}: ${question.prompt}`
 		}))
+	);
+	let currentIssueTarget = $derived(
+		issueTargets[currentQuestionIndex] ? [issueTargets[currentQuestionIndex]] : []
 	);
 	let quizQuestionSetKey = $derived(
 		data.questions.map((question) => `${question.question_id}@${question.version}`).join('|')
@@ -43,7 +48,12 @@
 	{:else}
 		<section class="quiz-shell">
 			{#key quizQuestionSetKey}
-				<Quiz questions={quizQuestions} title={data.quiz.title} oncomplete={completeQuiz} />
+				<Quiz
+					questions={quizQuestions}
+					title={data.quiz.title}
+					bind:currentPageIndex={currentQuestionIndex}
+					oncomplete={completeQuiz}
+				/>
 			{/key}
 
 			{#if form?.error}
@@ -61,13 +71,24 @@
 				}}
 			/>
 
-			<ContentIssueReportForm
-				contentType="quiz"
-				contentId={data.quiz.quiz_id}
-				contentVersion={data.quiz.version}
-				targets={issueTargets}
-				compact
-			/>
+			<div class="quiz-actions">
+				<Popover.Root>
+					<Popover.Trigger class="report-trigger" aria-label="Report an issue">
+						<Flag size={16} strokeWidth={2.25} aria-hidden="true" />
+					</Popover.Trigger>
+					<Popover.Portal>
+						<Popover.Content class="report-popover" sideOffset={8} side="top" align="start">
+							<ContentIssueReportForm
+								contentType="quiz"
+								contentId={data.quiz.quiz_id}
+								contentVersion={data.quiz.version}
+								targets={currentIssueTarget}
+								compact
+							/>
+						</Popover.Content>
+					</Popover.Portal>
+				</Popover.Root>
+			</div>
 		</section>
 	{/if}
 </main>
@@ -106,4 +127,43 @@
 		line-height: 1;
 	}
 
+	.quiz-actions {
+		display: flex;
+		justify-content: flex-start;
+	}
+
+	:global(.report-trigger) {
+		align-items: center;
+		appearance: none;
+		background: transparent;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		color: var(--color-text-muted);
+		cursor: pointer;
+		display: inline-flex;
+		justify-content: center;
+		min-block-size: 2.5rem;
+		min-inline-size: 2.5rem;
+		transition: color 120ms ease-out, border-color 120ms ease-out;
+	}
+
+	:global(.report-trigger:hover) {
+		border-color: var(--color-text-muted);
+		color: var(--color-text);
+	}
+
+	:global(.report-trigger:focus-visible) {
+		outline: 3px solid color-mix(in srgb, var(--color-focus), transparent 40%);
+		outline-offset: 2px;
+	}
+
+	:global(.report-popover) {
+		background: var(--color-surface-raised);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		box-shadow: 0 8px 24px hsl(0 0% 0% / 0.12);
+		padding: 4px;
+		width: min(360px, 90vw);
+		z-index: 50;
+	}
 </style>
