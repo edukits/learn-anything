@@ -10,8 +10,8 @@ export const load: PageServerLoad = async ({ locals, parent, params }) => {
 		pathProgress.find((item) => item.item_type === 'quiz');
 
 	if (!firstUnlockedQuiz) {
-		redirect(303, `/app/topics/${params.topic}`);
+		throw redirect(303, `/app/topics/${params.topic}`);
 	}
 
-	redirect(303, `/app/topics/${params.topic}/quiz/${firstUnlockedQuiz.item_id}`);
+	throw redirect(303, `/app/topics/${params.topic}/quiz/${firstUnlockedQuiz.item_id}`);
 };

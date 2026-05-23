@@ -68,7 +68,8 @@ test('bundles reviewed items into valid v1 artifacts', async () => {
 				questions: [
 					{
 						skill,
-						question_type: 'application',
+						question_purpose: 'application',
+						response_type: 'multiple_choice',
 						difficulty: 'easy',
 						prompt: 'Solve `x + 3 = 7`.',
 						choices: [
@@ -92,7 +93,9 @@ test('bundles reviewed items into valid v1 artifacts', async () => {
 	assert.equal(manifest.subject_area_id, 'subject_math');
 	assert.equal(manifest.topic_area_id, 'topic_linear_equations');
 
-	const path = JSON.parse((await readFile(join(dir, 'dist', 'learning-paths.jsonl'), 'utf8')).trim());
+	const path = JSON.parse(
+		(await readFile(join(dir, 'dist', 'learning-paths.jsonl'), 'utf8')).trim()
+	);
 	assert.deepEqual(
 		path.items.map((item) => item.item_type),
 		['lesson', 'quiz']

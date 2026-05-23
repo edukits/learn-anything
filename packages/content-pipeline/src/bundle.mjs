@@ -10,11 +10,19 @@ function one(value, fallback) {
 }
 
 function versionedBase(id, runId, sourceRefs) {
-	return { id, version: 1, content_run_id: runId, schema_version: schemaVersion, source_refs: sourceRefs };
+	return {
+		id,
+		version: 1,
+		content_run_id: runId,
+		schema_version: schemaVersion,
+		source_refs: sourceRefs
+	};
 }
 
 function skillId(topicSlug, skill) {
-	return skill.id ?? `skill_${snakeId(topicSlug)}_${snakeId(skill.slug ?? skill.name ?? skill.device)}`;
+	return (
+		skill.id ?? `skill_${snakeId(topicSlug)}_${snakeId(skill.slug ?? skill.name ?? skill.device)}`
+	);
 }
 
 function normalizeSkills(topicSlug, reviewedItems) {
@@ -50,7 +58,9 @@ function lessonRecord({ item, index, topic, runId, sourceRefs, skillLookup }) {
 	const slug = itemSlug(item, index);
 	const id = item.id ?? `lesson_${snakeId(topic.topic.slug)}_${snakeId(slug)}`;
 	const skill_ids =
-		item.skill_ids?.map((skill) => (typeof skill === 'string' ? skill : skillId(topic.topic.slug, skill))) ??
+		item.skill_ids?.map((skill) =>
+			typeof skill === 'string' ? skill : skillId(topic.topic.slug, skill)
+		) ??
 		item.skills?.map((skill) => skillId(topic.topic.slug, skill)) ??
 		[skillLookup[0]?.id].filter(Boolean);
 
@@ -67,7 +77,15 @@ function lessonRecord({ item, index, topic, runId, sourceRefs, skillLookup }) {
 	};
 }
 
-function normalizeQuestion({ question, quiz, questionIndex, topic, runId, sourceRefs, skillLookup }) {
+function normalizeQuestion({
+	question,
+	quiz,
+	questionIndex,
+	topic,
+	runId,
+	sourceRefs,
+	skillLookup
+}) {
 	const quizSlug = slugify(quiz.slug ?? quiz.title ?? 'quiz');
 	const fallbackSkill = skillLookup[0];
 	const skill = question.skill;
@@ -76,7 +94,8 @@ function normalizeQuestion({ question, quiz, questionIndex, topic, runId, source
 	const id =
 		question.id ??
 		`question_${snakeId(topic.topic.slug)}_${snakeId(quizSlug)}_${String(questionIndex + 1).padStart(2, '0')}`;
-	const questionType = question.question_type ?? 'application';
+	const questionPurpose = question.question_purpose ?? 'application';
+	const responseType = question.response_type ?? 'multiple_choice';
 
 	return compactObject({
 		...versionedBase(id, runId, sourceRefs),
@@ -88,7 +107,8 @@ function normalizeQuestion({ question, quiz, questionIndex, topic, runId, source
 			skill?.name ??
 			skillLookup.find((candidate) => candidate.id === resolvedSkillId)?.name ??
 			'General',
-		question_type: questionType,
+		question_purpose: questionPurpose,
+		response_type: responseType,
 		difficulty: question.difficulty ?? 'medium',
 		prompt: question.prompt,
 		choices: question.choices,
@@ -111,7 +131,10 @@ function quizRecord({ item, index, topic, runId, sourceRefs }) {
 		topic_area_id: topic.topic.id,
 		slug,
 		title: one(item.title, item.focus ?? 'Quiz'),
-		description: one(item.description, item.summary ?? item.goals ?? item.focus ?? 'Quiz description'),
+		description: one(
+			item.description,
+			item.summary ?? item.goals ?? item.focus ?? 'Quiz description'
+		),
 		kind: item.kind ?? 'practice',
 		question_count: questions.length
 	};
@@ -134,7 +157,14 @@ function validateReviewedItems(items) {
 	}
 }
 
-export async function bundleRun({ input, syllabus, reviewedItems, outDir, runId, now = new Date() }) {
+export async function bundleRun({
+	input,
+	syllabus,
+	reviewedItems,
+	outDir,
+	runId,
+	now = new Date()
+}) {
 	validateReviewedItems(reviewedItems);
 	await mkdir(outDir, { recursive: true });
 
@@ -195,13 +225,20 @@ export async function bundleRun({ input, syllabus, reviewedItems, outDir, runId,
 	}
 
 	const learningPathId =
-		topic.learning_path.id ?? `path_${snakeId(topic.topic.slug)}_${snakeId(runId.replace(/^run_/, ''))}`;
-	const releaseId = topic.release.id ?? `release_${snakeId(topic.topic.slug)}_${snakeId(runId.replace(/^run_/, ''))}`;
+		topic.learning_path.id ??
+		`path_${snakeId(topic.topic.slug)}_${snakeId(runId.replace(/^run_/, ''))}`;
+	const releaseId =
+		topic.release.id ??
+		`release_${snakeId(topic.topic.slug)}_${snakeId(runId.replace(/^run_/, ''))}`;
 	const releaseItems = [
 		{ content_type: 'subject_area', content_id: topic.subject.id, content_version: 1 },
 		{ content_type: 'topic_area', content_id: topic.topic.id, content_version: 1 },
 		...skills.map((skill) => ({ content_type: 'skill', content_id: skill.id, content_version: 1 })),
-		...lessons.map((lesson) => ({ content_type: 'lesson', content_id: lesson.id, content_version: 1 })),
+		...lessons.map((lesson) => ({
+			content_type: 'lesson',
+			content_id: lesson.id,
+			content_version: 1
+		})),
 		...quizzes.map((quiz) => ({ content_type: 'quiz', content_id: quiz.id, content_version: 1 })),
 		...questions.map((question) => ({
 			content_type: 'quiz_question',

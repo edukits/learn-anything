@@ -88,11 +88,12 @@ export type LearningPathItemProgress = LearningPathItem & {
 	total_attempts: number;
 };
 
-export type QuestionType =
-	| 'recognition'
-	| 'application'
+export type QuestionPurpose = 'recognition' | 'application';
+
+export type ResponseType =
+	| 'multiple_choice'
 	| 'multiple_select'
-	| 'numeric_answer'
+	| 'numeric'
 	| 'sequencing'
 	| 'short_answer';
 
@@ -101,7 +102,8 @@ export type QuizQuestionVersion = {
 	version: number;
 	skill_id: string;
 	skill_label: string;
-	question_type: QuestionType;
+	question_purpose: QuestionPurpose;
+	response_type: ResponseType;
 	difficulty: 'easy' | 'medium' | 'hard';
 	prompt: string;
 	choices: Choice[];

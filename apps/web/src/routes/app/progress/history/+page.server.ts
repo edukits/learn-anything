@@ -12,11 +12,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const user = await requireUser(locals);
 	const topicSlug = await getDefaultTopicSlug(locals.supabase, user.id);
 	if (!topicSlug) {
-		redirect(303, '/subjects');
+		throw redirect(303, '/subjects');
 	}
 	const content = await getTopicContentBySlug(locals.supabase, topicSlug);
 	if (!content) {
-		redirect(303, '/subjects');
+		throw redirect(303, '/subjects');
 	}
 	const [activityHistory, attempts] = await Promise.all([
 		getActivityHistory(locals.supabase, user.id, content.topic.topic_area_id),

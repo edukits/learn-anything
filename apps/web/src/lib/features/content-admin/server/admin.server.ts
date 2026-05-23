@@ -12,7 +12,10 @@ type AdminRow = {
 	role: ContentAdminRole;
 };
 
-type QualityMetricRow = Omit<ContentQualityMetric, 'question_count' | 'answer_count' | 'correct_rate' | 'open_issue_count'> & {
+type QualityMetricRow = Omit<
+	ContentQualityMetric,
+	'question_count' | 'answer_count' | 'correct_rate' | 'open_issue_count'
+> & {
 	question_count: number | string;
 	answer_count: number | string;
 	correct_rate: number | string | null;
@@ -40,7 +43,10 @@ export async function getContentAdminRole(
 	return data as AdminRow | null;
 }
 
-export async function requireContentAdmin(client: SupabaseClient, userId: string): Promise<AdminRow> {
+export async function requireContentAdmin(
+	client: SupabaseClient,
+	userId: string
+): Promise<AdminRow> {
 	const admin = await getContentAdminRole(client, userId);
 	if (!admin) {
 		kitError(403, 'Content admin access required.');
@@ -65,7 +71,8 @@ export async function getContentQualityDashboard(
 		topic_name: row.topic_name,
 		release_id: row.release_id,
 		release_title: row.release_title,
-		question_type: row.question_type,
+		question_purpose: row.question_purpose,
+		response_type: row.response_type,
 		question_count: Number(row.question_count),
 		answer_count: Number(row.answer_count),
 		correct_rate: row.correct_rate === null ? null : Number(row.correct_rate),

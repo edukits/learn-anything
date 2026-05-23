@@ -8,9 +8,9 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		const { error } = await locals.supabase.auth.exchangeCodeForSession(code);
 
 		if (!error) {
-			redirect(303, next);
+			throw redirect(303, next);
 		}
 	}
 
-	redirect(303, '/sign-in');
+	throw redirect(303, '/sign-in');
 };

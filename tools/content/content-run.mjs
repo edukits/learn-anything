@@ -78,19 +78,18 @@ const choiceSchema = z.object({
 	label: z.string().min(1)
 });
 
-const questionTypeSchema = z.enum([
-	'recognition',
-	'application',
+const questionPurposeSchema = z.enum(['recognition', 'application']);
+const responseTypeSchema = z.enum([
+	'multiple_choice',
 	'multiple_select',
-	'numeric_answer',
+	'numeric',
 	'sequencing',
 	'short_answer'
 ]);
-const importableQuestionTypes = new Set([
-	'recognition',
-	'application',
+const importableResponseTypes = new Set([
+	'multiple_choice',
 	'multiple_select',
-	'numeric_answer',
+	'numeric',
 	'sequencing',
 	'short_answer'
 ]);
@@ -111,7 +110,8 @@ const questionSchema = z
 		topic_area_id: z.string().min(1),
 		skill_id: z.string().min(1),
 		device: z.string().min(1),
-		question_type: questionTypeSchema,
+		question_purpose: questionPurposeSchema,
+		response_type: responseTypeSchema,
 		difficulty: z.enum(['easy', 'medium', 'hard']),
 		prompt: z.string().min(1),
 		choices: z.array(choiceSchema).optional(),
@@ -127,25 +127,25 @@ const questionSchema = z
 		const choices = question.choices ?? [];
 		const choiceIds = new Set(choices.map((choice) => choice.id));
 
-		if (question.question_type === 'recognition' || question.question_type === 'application') {
+		if (question.response_type === 'multiple_choice') {
 			if (choices.length < 2) {
 				context.addIssue({
 					code: 'custom',
-					message: `${question.question_type} questions require at least 2 choices`,
+					message: 'multiple_choice responses require at least 2 choices',
 					path: ['choices']
 				});
 			}
 			if (!question.correct_choice_id) {
 				context.addIssue({
 					code: 'custom',
-					message: `${question.question_type} questions require correct_choice_id`,
+					message: 'multiple_choice responses require correct_choice_id',
 					path: ['correct_choice_id']
 				});
 			}
 			return;
 		}
 
-		if (question.question_type === 'multiple_select') {
+		if (question.response_type === 'multiple_select') {
 			if (choices.length < 2) {
 				context.addIssue({
 					code: 'custom',
@@ -172,15 +172,15 @@ const questionSchema = z
 			return;
 		}
 
-		if (question.question_type === 'numeric_answer' && !question.correct_numeric_answer) {
+		if (question.response_type === 'numeric' && !question.correct_numeric_answer) {
 			context.addIssue({
 				code: 'custom',
-				message: 'numeric_answer questions require correct_numeric_answer',
+				message: 'numeric responses require correct_numeric_answer',
 				path: ['correct_numeric_answer']
 			});
 		}
 
-		if (question.question_type === 'sequencing' && (question.sequence_items ?? []).length < 2) {
+		if (question.response_type === 'sequencing' && (question.sequence_items ?? []).length < 2) {
 			context.addIssue({
 				code: 'custom',
 				message: 'sequencing questions require at least 2 sequence_items',
@@ -188,10 +188,7 @@ const questionSchema = z
 			});
 		}
 
-		if (
-			question.question_type === 'short_answer' &&
-			!(question.accepted_answers?.length)
-		) {
+		if (question.response_type === 'short_answer' && !question.accepted_answers?.length) {
 			context.addIssue({
 				code: 'custom',
 				message: 'short_answer questions require accepted_answers for deterministic grading',
@@ -349,9 +346,9 @@ function has(map, id, version) {
 export function getImportBlockers(run) {
 	const blockers = [];
 	for (const question of run.artifacts.questions ?? []) {
-		if (!importableQuestionTypes.has(question.question_type)) {
+		if (!importableResponseTypes.has(question.response_type)) {
 			blockers.push(
-				`Question ${question.id}@${question.version} uses ${question.question_type}, which validates for review but is not importable until the app/database support that interaction.`
+				`Question ${question.id}@${question.version} uses ${question.response_type}, which validates for review but is not importable until the app/database support that interaction.`
 			);
 		}
 	}
@@ -667,7 +664,7 @@ export async function loadAndValidateRun(manifestPath) {
 	checks.push('Stable ids and versions are unique');
 	checks.push('Question answer keys point to declared choices');
 	checks.push('Quiz-to-question references are complete and ordered');
-	checks.push('Question interaction payloads match their declared question_type');
+	checks.push('Question interaction payloads match their declared response_type');
 	checks.push(
 		'Media assets, when present, have valid storage paths, MIME types, and accessibility metadata'
 	);

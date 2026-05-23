@@ -12,7 +12,7 @@ export async function requireProtectedTopic(locals: RequestEvent['locals'], topi
 
 	const enrollment = await getEnrollmentForTopic(locals.supabase, user.id, topicSlug);
 	if (!enrollment || enrollment.status !== 'active') {
-		redirect(303, `/topics/${topicSlug}?enrollment=required`);
+		throw redirect(303, `/topics/${topicSlug}?enrollment=required`);
 	}
 
 	return {

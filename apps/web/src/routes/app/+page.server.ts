@@ -8,8 +8,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const topicSlug = await getDefaultTopicSlug(locals.supabase, user.id);
 
 	if (!topicSlug) {
-		redirect(303, '/subjects');
+		throw redirect(303, '/subjects');
 	}
 
-	redirect(303, `/app/topics/${topicSlug}`);
+	throw redirect(303, `/app/topics/${topicSlug}`);
 };

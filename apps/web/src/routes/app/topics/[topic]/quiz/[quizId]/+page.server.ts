@@ -89,7 +89,7 @@ export const actions: Actions = {
 			return fail(500, { error: 'Unable to submit quiz.' });
 		}
 
-		redirect(303, `/app/topics/${params.topic}/quiz/results?attempt=${attemptId}`);
+		throw redirect(303, `/app/topics/${params.topic}/quiz/results?attempt=${attemptId}`);
 	},
 	reportIssue: async ({ request, locals, params }) => {
 		const { user, content } = await requireProtectedTopic(locals, params.topic);

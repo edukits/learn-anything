@@ -349,7 +349,7 @@ function choice([id, label]) {
 function question([
 	id,
 	skill_id,
-	question_type,
+	question_purpose,
 	difficulty,
 	prompt,
 	choices,
@@ -362,7 +362,8 @@ function question([
 		topic_area_id: topicId,
 		skill_id,
 		device: skill.name,
-		question_type,
+		question_purpose,
+		response_type: 'multiple_choice',
 		difficulty,
 		prompt,
 		choices: choices.map(choice),

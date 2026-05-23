@@ -360,7 +360,8 @@ await upsert(
 			topic_area_id,
 			skill_id,
 			device,
-			question_type,
+			question_purpose,
+			response_type,
 			difficulty,
 			prompt,
 			choices,
@@ -380,7 +381,8 @@ await upsert(
 			topic_area_id,
 			skill_id,
 			device,
-			question_type,
+			question_purpose,
+			response_type,
 			difficulty,
 			prompt,
 			choices: choices ?? [],
@@ -578,7 +580,10 @@ await upsert(
 await upsert(
 	'content_releases',
 	releases
-		.filter((release) => target !== 'production' && targetReleaseStatusById.get(release.id) === 'published')
+		.filter(
+			(release) =>
+				target !== 'production' && targetReleaseStatusById.get(release.id) === 'published'
+		)
 		.map(({ id, slug, title, scope_type, scope_id, content_run_id, manifest, published_at }) => ({
 			id,
 			slug,

@@ -6,7 +6,7 @@ import { getSupabasePublicEnv, getSupabaseServiceEnv } from '$lib/env';
 export const handle: Handle = async ({ event, resolve }) => {
 	if (event.url.pathname.startsWith('/app/literary-devices')) {
 		const suffix = event.url.pathname.replace(/^\/app\/literary-devices/, '');
-		redirect(308, `/app/topics/literary-devices${suffix}${event.url.search}`);
+		throw redirect(308, `/app/topics/literary-devices${suffix}${event.url.search}`);
 	}
 
 	const { url, key } = getSupabasePublicEnv();

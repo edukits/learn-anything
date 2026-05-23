@@ -9,12 +9,28 @@ const sourceRefs = [{ source_id: 'source_english_literary_devices_notes_v2' }];
 const devices = [
 	['metaphor', 'Metaphor', 'Identify and explain direct comparisons that do not use like or as.'],
 	['simile', 'Simile', 'Identify comparisons that use like or as to connect two unlike things.'],
-	['personification', 'Personification', 'Recognize moments when human actions or traits are given to nonhuman things.'],
-	['imagery', 'Imagery', 'Notice sensory details that help readers picture, hear, smell, taste, or feel a scene.'],
+	[
+		'personification',
+		'Personification',
+		'Recognize moments when human actions or traits are given to nonhuman things.'
+	],
+	[
+		'imagery',
+		'Imagery',
+		'Notice sensory details that help readers picture, hear, smell, taste, or feel a scene.'
+	],
 	['alliteration', 'Alliteration', 'Recognize repeated initial consonant sounds close together.'],
 	['hyperbole', 'Hyperbole', 'Identify deliberate exaggeration used for emphasis.'],
-	['irony', 'Irony', 'Recognize contrast between expectation and reality or between literal words and intended meaning.'],
-	['symbolism', 'Symbolism', 'Explain how an object, image, color, or action represents a larger idea.'],
+	[
+		'irony',
+		'Irony',
+		'Recognize contrast between expectation and reality or between literal words and intended meaning.'
+	],
+	[
+		'symbolism',
+		'Symbolism',
+		'Explain how an object, image, color, or action represents a larger idea.'
+	],
 	['foreshadowing', 'Foreshadowing', 'Identify hints that suggest what may happen later.'],
 	['onomatopoeia', 'Onomatopoeia', 'Recognize words that imitate sounds.']
 ];
@@ -44,14 +60,24 @@ function choice(id, label) {
 	return { id, label };
 }
 
-function question(id, device, question_type, difficulty, prompt, choices, correct_choice_id, explanation) {
+function question(
+	id,
+	device,
+	question_purpose,
+	difficulty,
+	prompt,
+	choices,
+	correct_choice_id,
+	explanation
+) {
 	return {
 		id,
 		version: 1,
 		topic_area_id: 'topic_literary_devices',
 		skill_id: skillId(device),
 		device,
-		question_type,
+		question_purpose,
+		response_type: 'multiple_choice',
 		difficulty,
 		prompt,
 		choices,
@@ -237,7 +263,10 @@ const extraMixed = [
 		'hard',
 		'Which explanation best distinguishes metaphor from simile?',
 		[
-			choice('a', 'A metaphor states the comparison directly; a simile signals it with like or as.'),
+			choice(
+				'a',
+				'A metaphor states the comparison directly; a simile signals it with like or as.'
+			),
 			choice('b', 'A metaphor must rhyme; a simile never compares.'),
 			choice('c', 'A metaphor is always literal; a simile is always ironic.'),
 			choice('d', 'A metaphor uses sound words; a simile uses symbols.')
@@ -307,7 +336,12 @@ const extraMixed = [
 	)
 ];
 
-const questions = [...recognitionPrompts.slice(0, 15), ...applicationPrompts.slice(0, 15), ...mixedPrompts, ...extraMixed];
+const questions = [
+	...recognitionPrompts.slice(0, 15),
+	...applicationPrompts.slice(0, 15),
+	...mixedPrompts,
+	...extraMixed
+];
 
 const quizIds = [
 	'quiz_lit_devices_recognition_practice',
@@ -322,8 +356,10 @@ const lessons = [
 		topic_area_id: 'topic_literary_devices',
 		slug: 'literary-devices-intro',
 		title: 'Intro to Literary Devices',
-		summary: 'Learn the core purpose of literary devices and recognize the first ten devices in context.',
-		body_markdown: '# Intro to Literary Devices\n\nWriters use literary devices to make meaning stick. A device can sharpen an image, create a sound pattern, hint at what is coming, or make a simple sentence carry a bigger idea.\n\n## How to read for devices\n\nStart with what the words are doing. Are they comparing, exaggerating, hinting, making a sound, or pointing to a larger idea? Then name the device and explain the effect.\n\n## Devices in this path\n\nMetaphor, simile, personification, imagery, alliteration, hyperbole, irony, symbolism, foreshadowing, and onomatopoeia.',
+		summary:
+			'Learn the core purpose of literary devices and recognize the first ten devices in context.',
+		body_markdown:
+			'# Intro to Literary Devices\n\nWriters use literary devices to make meaning stick. A device can sharpen an image, create a sound pattern, hint at what is coming, or make a simple sentence carry a bigger idea.\n\n## How to read for devices\n\nStart with what the words are doing. Are they comparing, exaggerating, hinting, making a sound, or pointing to a larger idea? Then name the device and explain the effect.\n\n## Devices in this path\n\nMetaphor, simile, personification, imagery, alliteration, hyperbole, irony, symbolism, foreshadowing, and onomatopoeia.',
 		skill_ids: devices.map(([device]) => skillId(device)),
 		estimated_minutes: 4,
 		sort_order: 1
@@ -335,7 +371,8 @@ const lessons = [
 		slug: 'literary-devices-application',
 		title: 'Applying Devices in Context',
 		summary: 'Practice choosing devices that match a writer’s purpose and improve plain sentences.',
-		body_markdown: '# Applying Devices in Context\n\nRecognizing a device is only the first step. Strong readers also explain why a writer chose it.\n\n## Match device to purpose\n\nUse metaphor or simile to build comparison. Use imagery to make a moment sensory. Use symbolism when an object needs to carry an idea. Use foreshadowing when a detail should prepare readers for what comes next.\n\n## A useful sentence frame\n\n_The writer uses [device] in “[words]” to [effect]._ This keeps your answer tied to the text.',
+		body_markdown:
+			'# Applying Devices in Context\n\nRecognizing a device is only the first step. Strong readers also explain why a writer chose it.\n\n## Match device to purpose\n\nUse metaphor or simile to build comparison. Use imagery to make a moment sensory. Use symbolism when an object needs to carry an idea. Use foreshadowing when a detail should prepare readers for what comes next.\n\n## A useful sentence frame\n\n_The writer uses [device] in “[words]” to [effect]._ This keeps your answer tied to the text.',
 		skill_ids: devices.map(([device]) => skillId(device)),
 		estimated_minutes: 5,
 		sort_order: 2
@@ -347,7 +384,8 @@ const lessons = [
 		slug: 'literary-devices-synthesis',
 		title: 'Combining Evidence and Effect',
 		summary: 'Learn how to compare similar devices and explain their effect in a short analysis.',
-		body_markdown: '# Combining Evidence and Effect\n\nSome devices overlap. Metaphor and simile both compare. Alliteration and onomatopoeia both involve sound. Symbolism and foreshadowing can both make a detail feel important.\n\n## Explain the difference\n\nLook for the signal. Like or as usually points to simile. Sound imitation points to onomatopoeia. A future hint points to foreshadowing. A concrete object carrying a larger idea points to symbolism.\n\n## Build a complete response\n\nName the device, quote the key words, and explain how those words shape meaning or mood.',
+		body_markdown:
+			'# Combining Evidence and Effect\n\nSome devices overlap. Metaphor and simile both compare. Alliteration and onomatopoeia both involve sound. Symbolism and foreshadowing can both make a detail feel important.\n\n## Explain the difference\n\nLook for the signal. Like or as usually points to simile. Sound imitation points to onomatopoeia. A future hint points to foreshadowing. A concrete object carrying a larger idea points to symbolism.\n\n## Build a complete response\n\nName the device, quote the key words, and explain how those words shape meaning or mood.',
 		skill_ids: devices.map(([device]) => skillId(device)),
 		estimated_minutes: 5,
 		sort_order: 3
@@ -426,10 +464,26 @@ const pathItems = [
 const releaseItems = [
 	{ content_type: 'subject_area', content_id: 'subject_english', content_version: 1 },
 	{ content_type: 'topic_area', content_id: 'topic_literary_devices', content_version: 1 },
-	...devices.map(([device]) => ({ content_type: 'skill', content_id: skillId(device), content_version: 1 })),
-	...lessons.map((lesson) => ({ content_type: 'lesson', content_id: lesson.id, content_version: lesson.version })),
-	...quizzes.map((quiz) => ({ content_type: 'quiz', content_id: quiz.id, content_version: quiz.version })),
-	...questions.map((item) => ({ content_type: 'quiz_question', content_id: item.id, content_version: item.version })),
+	...devices.map(([device]) => ({
+		content_type: 'skill',
+		content_id: skillId(device),
+		content_version: 1
+	})),
+	...lessons.map((lesson) => ({
+		content_type: 'lesson',
+		content_id: lesson.id,
+		content_version: lesson.version
+	})),
+	...quizzes.map((quiz) => ({
+		content_type: 'quiz',
+		content_id: quiz.id,
+		content_version: quiz.version
+	})),
+	...questions.map((item) => ({
+		content_type: 'quiz_question',
+		content_id: item.id,
+		content_version: item.version
+	})),
 	{ content_type: 'learning_path', content_id: 'path_literary_devices_v2', content_version: 1 }
 ];
 
@@ -442,7 +496,9 @@ const files = {
 			authoring_mode: 'hand-authored',
 			subject_area_id: 'subject_english',
 			topic_area_id: 'topic_literary_devices',
-			source_refs: [{ ...sourceRefs[0], path: 'content-sources/english/literary-devices/source.md' }],
+			source_refs: [
+				{ ...sourceRefs[0], path: 'content-sources/english/literary-devices/source.md' }
+			],
 			artifacts: {
 				subject_areas: 'subject-areas.jsonl',
 				topic_areas: 'topic-areas.jsonl',
@@ -465,7 +521,8 @@ const files = {
 				quiz_question_links: '../../../../content-schemas/v1/quiz-question-link.schema.json',
 				learning_paths: '../../../../content-schemas/v1/learning-path.schema.json',
 				releases: '../../../../content-schemas/v1/release.schema.json',
-				topic_discovery_metadata: '../../../../content-schemas/v1/topic-discovery-metadata.schema.json'
+				topic_discovery_metadata:
+					'../../../../content-schemas/v1/topic-discovery-metadata.schema.json'
 			}
 		},
 		null,
@@ -542,7 +599,14 @@ const files = {
 			items: releaseItems,
 			manifest: {
 				release_notes: {
-					added: ['Application lesson', 'Synthesis lesson', 'Recognition quiz', 'Application quiz', 'Mixed review quiz', '30 additional reusable questions'],
+					added: [
+						'Application lesson',
+						'Synthesis lesson',
+						'Recognition quiz',
+						'Application quiz',
+						'Mixed review quiz',
+						'30 additional reusable questions'
+					],
 					revised: ['Intro lesson expanded for v2 path sequencing'],
 					retired: ['v1 single mixed-practice quiz from current practice selection']
 				}
@@ -555,8 +619,10 @@ const files = {
 			release_id: 'release_english_literary_devices_v2',
 			slug: 'literary-devices',
 			name: 'Literary Devices',
-			public_summary: 'Learn ten common literary devices through a high-school English path with three lessons, three quizzes, and adaptive progress.',
-			preview_markdown: 'Writers use literary devices to make meaning stick. This path moves from recognizing devices to applying them in context and explaining how language shapes readers.',
+			public_summary:
+				'Learn ten common literary devices through a high-school English path with three lessons, three quizzes, and adaptive progress.',
+			preview_markdown:
+				'Writers use literary devices to make meaning stick. This path moves from recognizing devices to applying them in context and explaining how language shapes readers.',
 			app_path: '/app/literary-devices',
 			level_label: 'High school English',
 			estimated_minutes: 32,

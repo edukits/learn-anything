@@ -52,21 +52,20 @@ export function buildValidatedRpcAnswers(
 }
 
 function validateSubmittedAnswer(question: AnswerableQuestion, answer: SubmittedAnswer): RpcAnswer {
-	switch (question.question_type) {
-		case 'recognition':
-		case 'application':
+	switch (question.response_type) {
+		case 'multiple_choice':
 			return validateSingleChoice(question, answer);
 		case 'multiple_select':
 			return validateMultipleSelect(question, answer);
-		case 'numeric_answer':
+		case 'numeric':
 			return validateNumeric(question, answer);
 		case 'sequencing':
 			return validateSequencing(question, answer);
 		case 'short_answer':
 			return validateShortAnswer(question, answer);
 		default: {
-			const exhaustive: never = question.question_type;
-			throw new AnswerValidationError(`Unsupported question type: ${exhaustive}`);
+			const exhaustive: never = question.response_type;
+			throw new AnswerValidationError(`Unsupported response type: ${exhaustive}`);
 		}
 	}
 }
@@ -92,7 +91,9 @@ function validateMultipleSelect(question: AnswerableQuestion, answer: SubmittedA
 	}
 
 	const choiceIds = new Set(question.choices.map((choice) => choice.id));
-	const selectedIds = answer.answerValue.filter((value): value is string => typeof value === 'string');
+	const selectedIds = answer.answerValue.filter(
+		(value): value is string => typeof value === 'string'
+	);
 	const uniqueIds = new Set(selectedIds);
 	if (
 		selectedIds.length !== answer.answerValue.length ||
@@ -127,7 +128,9 @@ function validateSequencing(question: AnswerableQuestion, answer: SubmittedAnswe
 		throw new AnswerValidationError(`Invalid answer for ${question.question_id}.`);
 	}
 
-	const submittedIds = answer.answerValue.filter((value): value is string => typeof value === 'string');
+	const submittedIds = answer.answerValue.filter(
+		(value): value is string => typeof value === 'string'
+	);
 	const expectedIds = (question.sequence_items ?? []).map((item: SequenceItem) => item.id);
 	const submittedSet = new Set(submittedIds);
 	const expectedSet = new Set(expectedIds);

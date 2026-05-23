@@ -70,7 +70,7 @@ export const actions: Actions = {
 			});
 		}
 
-		redirect(303, `/app/topics/${params.topic}`);
+		throw redirect(303, `/app/topics/${params.topic}`);
 	},
 	reportIssue: async ({ request, locals, params }) => {
 		const { user, content } = await requireProtectedTopic(locals, params.topic);

@@ -54,21 +54,27 @@
 				<span>Subject</span>
 				<span>Topic</span>
 				<span>Release</span>
-				<span>Type</span>
+				<span>Purpose</span>
+				<span>Response</span>
 				<span>Questions</span>
 				<span>Answers</span>
 				<span>Correct</span>
 				<span>Issues</span>
 			</div>
-			{#each data.qualityMetrics as metric (`${metric.release_id}:${metric.question_type}`)}
+			{#each data.qualityMetrics as metric (`${metric.release_id}:${metric.question_purpose}:${metric.response_type}`)}
 				<div class="row">
 					<span>{metric.subject_name}</span>
 					<span>{metric.topic_name}</span>
 					<span>{metric.release_title}</span>
-					<span>{metric.question_type}</span>
+					<span>{metric.question_purpose}</span>
+					<span>{metric.response_type}</span>
 					<span>{metric.question_count}</span>
 					<span>{metric.answer_count}</span>
-					<span>{metric.correct_rate === null ? 'n/a' : `${Math.round(metric.correct_rate * 100)}%`}</span>
+					<span
+						>{metric.correct_rate === null
+							? 'n/a'
+							: `${Math.round(metric.correct_rate * 100)}%`}</span
+					>
 					<span>{metric.open_issue_count}</span>
 				</div>
 			{/each}
@@ -99,15 +105,38 @@
 					</div>
 					<form method="POST" action="?/reviewRelease">
 						<input type="hidden" name="releaseId" value={review.release_id} />
-						<textarea name="notes" placeholder="Reviewer notes">{review.reviewer_notes ?? ''}</textarea>
+						<textarea name="notes" placeholder="Reviewer notes"
+							>{review.reviewer_notes ?? ''}</textarea
+						>
 						<div>
 							<Button type="submit" name="decision" value="approved" size="sm" label="Approve" />
-							<Button type="submit" name="decision" value="rejected" size="sm" variant="secondary" label="Reject" />
+							<Button
+								type="submit"
+								name="decision"
+								value="rejected"
+								size="sm"
+								variant="secondary"
+								label="Reject"
+							/>
 							{#if canPublishRelease(data.admin.role, review)}
-								<Button type="submit" name="decision" value="published" size="sm" variant="secondary" label="Publish" />
+								<Button
+									type="submit"
+									name="decision"
+									value="published"
+									size="sm"
+									variant="secondary"
+									label="Publish"
+								/>
 							{/if}
 							{#if canRollbackRelease(data.admin.role, review)}
-								<Button type="submit" name="decision" value="rolled_back" size="sm" variant="ghost" label="Rollback" />
+								<Button
+									type="submit"
+									name="decision"
+									value="rolled_back"
+									size="sm"
+									variant="ghost"
+									label="Rollback"
+								/>
 							{/if}
 						</div>
 					</form>
@@ -139,7 +168,9 @@
 								<option value="open" selected={issue.status === 'open'}>Open</option>
 							</select>
 						</label>
-						<textarea name="notes" placeholder="Resolution notes">{issue.resolution_notes ?? ''}</textarea>
+						<textarea name="notes" placeholder="Resolution notes"
+							>{issue.resolution_notes ?? ''}</textarea
+						>
 						<Button type="submit" size="sm" variant="secondary" label="Update issue" />
 					</form>
 				</article>
@@ -222,7 +253,7 @@
 		border-radius: var(--radius-sm);
 		display: grid;
 		gap: 10px;
-		grid-template-columns: repeat(3, minmax(130px, 1.2fr)) repeat(5, minmax(74px, 1fr));
+		grid-template-columns: repeat(3, minmax(130px, 1.2fr)) repeat(6, minmax(74px, 1fr));
 		padding: 10px 12px;
 	}
 

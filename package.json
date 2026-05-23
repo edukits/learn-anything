@@ -11,7 +11,8 @@
 	"scripts": {
 		"dev": "turbo dev",
 		"build": "turbo build",
-		"check": "turbo check",
+		"check": "pnpm run check:sveltekit && turbo check",
+		"check:sveltekit": "node tools/check-sveltekit-install.mjs",
 		"lint": "turbo lint",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",

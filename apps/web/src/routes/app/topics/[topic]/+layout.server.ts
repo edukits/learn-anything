@@ -6,7 +6,7 @@ import { getTopicContentBySlug } from '$lib/features/learning/server/index.serve
 export const load: LayoutServerLoad = async ({ locals, parent, params }) => {
 	const { user } = await parent();
 	if (!user) {
-		redirect(303, '/sign-in');
+		throw redirect(303, '/sign-in');
 	}
 
 	const content = await getTopicContentBySlug(locals.supabase, params.topic);
@@ -16,7 +16,7 @@ export const load: LayoutServerLoad = async ({ locals, parent, params }) => {
 
 	const enrollment = await getEnrollmentForTopic(locals.supabase, user.id, params.topic);
 	if (!enrollment || enrollment.status !== 'active') {
-		redirect(303, `/topics/${params.topic}?enrollment=required`);
+		throw redirect(303, `/topics/${params.topic}?enrollment=required`);
 	}
 
 	return {

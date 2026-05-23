@@ -32,7 +32,8 @@ Use this format:
 				"summary": "What this skill measures"
 			},
 			"device": "Short display name",
-			"question_type": "recognition",
+			"question_purpose": "recognition",
+			"response_type": "multiple_choice",
 			"difficulty": "easy",
 			"prompt": "Question prompt",
 			"choices": [
@@ -48,12 +49,16 @@ Use this format:
 }
 ```
 
-Supported `question_type` values:
+Supported `question_purpose` values:
 
-- `recognition`: multiple choice recognition
-- `application`: multiple choice application
+- `recognition`: identify, recall, or classify a concept
+- `application`: use a concept to solve, explain, order, calculate, or decide
+
+Supported `response_type` values:
+
+- `multiple_choice`
 - `multiple_select`
-- `numeric_answer`
+- `numeric`
 - `sequencing`
 - `short_answer`
 
@@ -61,9 +66,9 @@ Rules:
 
 - Match the requested `question_count` when present.
 - Every question needs `difficulty`, `prompt`, and `explanation`.
-- Multiple-choice questions need `choices` and `correct_choice_id`.
-- Multiple-select questions need `choices` and `correct_choice_ids`.
-- Numeric questions need `correct_numeric_answer`.
-- Sequencing questions need `sequence_items` in correct order.
-- Short-answer questions need `accepted_answers` for deterministic grading.
+- Multiple-choice responses need `choices` and `correct_choice_id`.
+- Multiple-select responses need `choices` and `correct_choice_ids`.
+- Numeric responses need `correct_numeric_answer`.
+- Sequencing responses need `sequence_items` in correct order.
+- Short-answer responses need `accepted_answers` for deterministic grading.
 - Do not invent subject ids, topic ids, release ids, or app paths.

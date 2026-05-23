@@ -5,7 +5,8 @@ export type ContentQualityMetric = {
 	topic_name: string;
 	release_id: string;
 	release_title: string;
-	question_type: string;
+	question_purpose: string;
+	response_type: string;
 	question_count: number;
 	answer_count: number;
 	correct_rate: number | null;

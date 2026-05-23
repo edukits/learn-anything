@@ -9,7 +9,8 @@
 		"topic_area_id",
 		"skill_id",
 		"device",
-		"question_type",
+		"question_purpose",
+		"response_type",
 		"difficulty",
 		"prompt",
 		"explanation",
@@ -23,15 +24,11 @@
 		"topic_area_id": { "type": "string", "minLength": 1 },
 		"skill_id": { "type": "string", "minLength": 1 },
 		"device": { "type": "string", "minLength": 1 },
-		"question_type": {
-			"enum": [
-				"recognition",
-				"application",
-				"multiple_select",
-				"numeric_answer",
-				"sequencing",
-				"short_answer"
-			]
+		"question_purpose": {
+			"enum": ["recognition", "application"]
+		},
+		"response_type": {
+			"enum": ["multiple_choice", "multiple_select", "numeric", "sequencing", "short_answer"]
 		},
 		"difficulty": { "enum": ["easy", "medium", "hard"] },
 		"prompt": { "type": "string", "minLength": 1 },
@@ -96,7 +93,7 @@
 	},
 	"allOf": [
 		{
-			"if": { "properties": { "question_type": { "const": "short_answer" } } },
+			"if": { "properties": { "response_type": { "const": "short_answer" } } },
 			"then": { "required": ["accepted_answers"] }
 		}
 	],

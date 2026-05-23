@@ -18,10 +18,30 @@ const sourceRefs = [
 ];
 
 const skills = [
-	['skill_ca_signs_signals', 'signs-and-signals', 'Signs and Signals', 'Recognize what traffic signs and signals require.'],
-	['skill_ca_right_of_way', 'right-of-way', 'Right-of-Way', 'Decide who goes first at intersections and crosswalks.'],
-	['skill_ca_safe_spacing', 'safe-spacing', 'Safe Spacing', 'Choose following distance and emergency-vehicle spacing.'],
-	['skill_ca_impairment', 'impairment-rules', 'Impairment Rules', 'Apply BAC and impairment rules for safe driving.']
+	[
+		'skill_ca_signs_signals',
+		'signs-and-signals',
+		'Signs and Signals',
+		'Recognize what traffic signs and signals require.'
+	],
+	[
+		'skill_ca_right_of_way',
+		'right-of-way',
+		'Right-of-Way',
+		'Decide who goes first at intersections and crosswalks.'
+	],
+	[
+		'skill_ca_safe_spacing',
+		'safe-spacing',
+		'Safe Spacing',
+		'Choose following distance and emergency-vehicle spacing.'
+	],
+	[
+		'skill_ca_impairment',
+		'impairment-rules',
+		'Impairment Rules',
+		'Apply BAC and impairment rules for safe driving.'
+	]
 ];
 
 const lessons = [
@@ -89,7 +109,8 @@ const questions = [
 		id: 'question_ca_signs_stop_1',
 		skill_id: 'skill_ca_signs_signals',
 		device: 'Signs and Signals',
-		question_type: 'recognition',
+		question_purpose: 'recognition',
+		response_type: 'multiple_choice',
 		difficulty: 'easy',
 		prompt: 'What must you do at a stop sign?',
 		choices: [
@@ -105,7 +126,8 @@ const questions = [
 		id: 'question_ca_right_of_way_1',
 		skill_id: 'skill_ca_right_of_way',
 		device: 'Right-of-Way',
-		question_type: 'multiple_select',
+		question_purpose: 'application',
+		response_type: 'multiple_select',
 		difficulty: 'medium',
 		prompt: 'Which drivers or road users should you yield to? Select all that apply.',
 		choices: [
@@ -115,13 +137,15 @@ const questions = [
 			['through_traffic', 'Traffic already in the intersection.']
 		],
 		correct_choice_ids: ['pedestrian', 'first_stop', 'through_traffic'],
-		explanation: 'Yield to pedestrians in crosswalks, traffic already in the intersection, and the driver who arrived first at a four-way stop.'
+		explanation:
+			'Yield to pedestrians in crosswalks, traffic already in the intersection, and the driver who arrived first at a four-way stop.'
 	},
 	{
 		id: 'question_ca_right_of_way_sequence_1',
 		skill_id: 'skill_ca_right_of_way',
 		device: 'Right-of-Way',
-		question_type: 'sequencing',
+		question_purpose: 'application',
+		response_type: 'sequencing',
 		difficulty: 'medium',
 		prompt: 'Put the four-way stop decision steps in order.',
 		sequence_items: [
@@ -130,13 +154,15 @@ const questions = [
 			['right', 'If tied, yield to the driver on your right.'],
 			['proceed', 'Proceed only when it is your turn and safe.']
 		],
-		explanation: 'A full stop comes first, then arrival order, then the right-side tie rule, then proceeding safely.'
+		explanation:
+			'A full stop comes first, then arrival order, then the right-side tie rule, then proceeding safely.'
 	},
 	{
 		id: 'question_ca_crosswalk_short_1',
 		skill_id: 'skill_ca_right_of_way',
 		device: 'Right-of-Way',
-		question_type: 'short_answer',
+		question_purpose: 'recognition',
+		response_type: 'short_answer',
 		difficulty: 'easy',
 		prompt: 'In one word, what should you do for a pedestrian in a crosswalk?',
 		accepted_answers: ['yield', 'stop'],
@@ -146,19 +172,24 @@ const questions = [
 		id: 'question_ca_spacing_numeric_1',
 		skill_id: 'skill_ca_safe_spacing',
 		device: 'Safe Spacing',
-		question_type: 'numeric_answer',
+		question_purpose: 'recognition',
+		response_type: 'numeric',
 		difficulty: 'easy',
-		prompt: 'What minimum following distance in seconds is commonly recommended in good conditions?',
+		prompt:
+			'What minimum following distance in seconds is commonly recommended in good conditions?',
 		correct_numeric_answer: { value: 3, tolerance: 0 },
-		explanation: 'Three seconds is a common minimum in good conditions; use more when conditions are poor.'
+		explanation:
+			'Three seconds is a common minimum in good conditions; use more when conditions are poor.'
 	},
 	{
 		id: 'question_ca_emergency_select_1',
 		skill_id: 'skill_ca_safe_spacing',
 		device: 'Safe Spacing',
-		question_type: 'multiple_select',
+		question_purpose: 'application',
+		response_type: 'multiple_select',
 		difficulty: 'medium',
-		prompt: 'When an emergency vehicle is stopped with flashing lights, what should you do when safe?',
+		prompt:
+			'When an emergency vehicle is stopped with flashing lights, what should you do when safe?',
 		choices: [
 			['slow', 'Slow down.'],
 			['move_over', 'Move over.'],
@@ -172,9 +203,11 @@ const questions = [
 		id: 'question_ca_impairment_numeric_1',
 		skill_id: 'skill_ca_impairment',
 		device: 'Impairment Rules',
-		question_type: 'numeric_answer',
+		question_purpose: 'recognition',
+		response_type: 'numeric',
 		difficulty: 'medium',
-		prompt: 'For most adult drivers, what BAC percentage is illegal at or above? Enter the percentage number.',
+		prompt:
+			'For most adult drivers, what BAC percentage is illegal at or above? Enter the percentage number.',
 		correct_numeric_answer: { value: 0.08, tolerance: 0 },
 		explanation: 'For most adult drivers, 0.08 percent BAC or higher is illegal.'
 	},
@@ -182,7 +215,8 @@ const questions = [
 		id: 'question_ca_impairment_short_1',
 		skill_id: 'skill_ca_impairment',
 		device: 'Impairment Rules',
-		question_type: 'short_answer',
+		question_purpose: 'recognition',
+		response_type: 'short_answer',
 		difficulty: 'easy',
 		prompt: 'What single word describes a driver whose alcohol or drugs make safe driving worse?',
 		accepted_answers: ['impaired'],
@@ -204,7 +238,13 @@ const learningPath = {
 };
 
 function sourceVersionBase(id) {
-	return { id, version: 1, content_run_id: runId, schema_version: schemaVersion, source_refs: sourceRefs };
+	return {
+		id,
+		version: 1,
+		content_run_id: runId,
+		schema_version: schemaVersion,
+		source_refs: sourceRefs
+	};
 }
 
 function questionRecord(question) {
@@ -213,7 +253,8 @@ function questionRecord(question) {
 		topic_area_id: topicId,
 		skill_id: question.skill_id,
 		device: question.device,
-		question_type: question.question_type,
+		question_purpose: question.question_purpose,
+		response_type: question.response_type,
 		difficulty: question.difficulty,
 		prompt: question.prompt,
 		choices: question.choices?.map(([id, label]) => ({ id, label })),
@@ -348,9 +389,17 @@ const releaseItems = [
 	{ content_type: 'subject_area', content_id: subjectId, content_version: 1 },
 	{ content_type: 'topic_area', content_id: topicId, content_version: 1 },
 	...skills.map(([id]) => ({ content_type: 'skill', content_id: id, content_version: 1 })),
-	...lessons.map((lesson) => ({ content_type: 'lesson', content_id: lesson.id, content_version: 1 })),
+	...lessons.map((lesson) => ({
+		content_type: 'lesson',
+		content_id: lesson.id,
+		content_version: 1
+	})),
 	...quizzes.map((quiz) => ({ content_type: 'quiz', content_id: quiz.id, content_version: 1 })),
-	...questions.map((question) => ({ content_type: 'quiz_question', content_id: question.id, content_version: 1 })),
+	...questions.map((question) => ({
+		content_type: 'quiz_question',
+		content_id: question.id,
+		content_version: 1
+	})),
 	{ content_type: 'learning_path', content_id: learningPath.id, content_version: 1 }
 ];
 await writeJsonl('releases.jsonl', [
@@ -378,7 +427,8 @@ await writeJsonl('topic-discovery-metadata.jsonl', [
 		release_id: releaseId,
 		slug: 'california-driving-test',
 		name: 'California Driving Test',
-		public_summary: 'Practice signs, right-of-way, spacing, and impairment decisions for the written test.',
+		public_summary:
+			'Practice signs, right-of-way, spacing, and impairment decisions for the written test.',
 		preview_markdown:
 			'This topic uses realistic written-test prompts, including multi-select, sequencing, numeric, and short-answer practice.',
 		app_path: '/app/topics/california-driving-test',

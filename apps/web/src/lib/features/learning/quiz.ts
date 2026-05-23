@@ -1,10 +1,11 @@
 import type { QuizQuestionData, QuizQuestionResult } from '@learn-anything/ui';
-import type { QuestionType } from './types';
+import type { QuestionPurpose, ResponseType } from './types';
 
 export type LearningQuizQuestion = {
 	question_id: string;
 	skill_label: string;
-	question_type: QuestionType;
+	question_purpose: QuestionPurpose;
+	response_type: ResponseType;
 	prompt: string;
 	choices: {
 		id: string;
@@ -19,13 +20,16 @@ export type LearningQuizQuestion = {
 export function buildLearningQuizQuestions(questions: LearningQuizQuestion[]): QuizQuestionData[] {
 	return questions.map((question) => ({
 		id: question.question_id,
-		eyebrow: `${question.skill_label} · ${question.question_type}`,
+		eyebrow: `${question.skill_label} · ${question.question_purpose}`,
 		question: question.prompt,
 		response: buildQuestionResponse(question)
 	}));
 }
 
-export function buildSubmittedAnswersPayload(questions: LearningQuizQuestion[], results: QuizQuestionResult[]) {
+export function buildSubmittedAnswersPayload(
+	questions: LearningQuizQuestion[],
+	results: QuizQuestionResult[]
+) {
 	const resultByQuestionId = new Map(results.map((result) => [result.questionId, result]));
 
 	return JSON.stringify(
@@ -42,9 +46,8 @@ export function buildSubmittedAnswersPayload(questions: LearningQuizQuestion[], 
 }
 
 function buildQuestionResponse(question: LearningQuizQuestion): QuizQuestionData['response'] {
-	switch (question.question_type) {
-		case 'recognition':
-		case 'application':
+	switch (question.response_type) {
+		case 'multiple_choice':
 			return {
 				type: 'multiple-choice',
 				options: question.choices.map((choice) => ({
@@ -60,7 +63,7 @@ function buildQuestionResponse(question: LearningQuizQuestion): QuizQuestionData
 					label: choice.label
 				}))
 			};
-		case 'numeric_answer':
+		case 'numeric':
 			return {
 				type: 'numeric',
 				placeholder: 'Type a number'
@@ -80,8 +83,8 @@ function buildQuestionResponse(question: LearningQuizQuestion): QuizQuestionData
 				placeholder: 'Type your answer'
 			};
 		default: {
-			const exhaustive: never = question.question_type;
-			throw new Error(`Unsupported question type: ${exhaustive}`);
+			const exhaustive: never = question.response_type;
+			throw new Error(`Unsupported response type: ${exhaustive}`);
 		}
 	}
 }

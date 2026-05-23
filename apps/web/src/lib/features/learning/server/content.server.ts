@@ -303,7 +303,7 @@ async function getQuizQuestionsByLifecycle(
 	let query = client
 		.from('quiz_question_versions')
 		.select(
-			'question_id,version,skill_id,device,question_type,difficulty,prompt,choices,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
+			'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
 		)
 		.in(
 			'question_id',
@@ -331,7 +331,8 @@ async function getQuizQuestionsByLifecycle(
 			version: question.version,
 			skill_id: question.skill_id,
 			skill_label: question.device,
-			question_type: question.question_type,
+			question_purpose: question.question_purpose,
+			response_type: question.response_type,
 			difficulty: question.difficulty,
 			prompt: question.prompt,
 			choices: question.choices,
@@ -366,7 +367,8 @@ async function getQuizQuestionsByLifecycle(
 			version: question.version,
 			skill_id: question.skill_id,
 			skill_label: question.skill_label,
-			question_type: question.question_type,
+			question_purpose: question.question_purpose,
+			response_type: question.response_type,
 			difficulty: question.difficulty,
 			prompt: question.prompt,
 			choices: question.choices,
@@ -408,7 +410,7 @@ export async function getActiveReleaseQuestions(
 	const { data, error } = await client
 		.from('quiz_question_versions')
 		.select(
-			'question_id,version,skill_id,device,question_type,difficulty,prompt,choices,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
+			'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
 		)
 		.in(
 			'question_id',
@@ -424,7 +426,8 @@ export async function getActiveReleaseQuestions(
 			version: question.version,
 			skill_id: question.skill_id,
 			skill_label: question.device,
-			question_type: question.question_type,
+			question_purpose: question.question_purpose,
+			response_type: question.response_type,
 			difficulty: question.difficulty,
 			prompt: question.prompt,
 			choices: question.choices,

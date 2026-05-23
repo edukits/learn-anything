@@ -39,6 +39,6 @@ export const actions: Actions = {
 			return fail(404, { error: 'Topic not found.' });
 		}
 
-		redirect(303, `/app/topics/${enrollment.topic_slug}`);
+		throw redirect(303, `/app/topics/${enrollment.topic_slug}`);
 	}
 };

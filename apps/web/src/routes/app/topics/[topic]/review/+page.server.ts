@@ -37,7 +37,7 @@ export const actions: Actions = {
 			});
 		}
 
-		redirect(303, `/app/topics/${params.topic}/review`);
+		throw redirect(303, `/app/topics/${params.topic}/review`);
 	},
 	submit: async ({ request, locals, params }) => {
 		const { user, content } = await requireProtectedTopic(locals, params.topic);
@@ -76,6 +76,6 @@ export const actions: Actions = {
 			return fail(500, { error: 'Unable to complete review.' });
 		}
 
-		redirect(303, `/app/topics/${params.topic}/quiz/results?attempt=${attemptId}`);
+		throw redirect(303, `/app/topics/${params.topic}/quiz/results?attempt=${attemptId}`);
 	}
 };

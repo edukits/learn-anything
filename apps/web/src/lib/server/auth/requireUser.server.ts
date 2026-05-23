@@ -5,7 +5,7 @@ export async function requireUser(locals: RequestEvent['locals'], redirectTo = '
 	const { user } = await locals.safeGetSession();
 
 	if (!user) {
-		redirect(303, redirectTo);
+		throw redirect(303, redirectTo);
 	}
 
 	return user;
