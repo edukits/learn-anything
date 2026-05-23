@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import { PageHeader } from '$lib/features/learning';
+	import mountainImage from '$lib/assets/topic-map/mountain-image.jpeg';
 	import { PathMap } from '@learn-anything/ui';
 	import type { PathMapItem } from '@learn-anything/ui';
 
@@ -57,17 +58,26 @@
 </script>
 
 <main class="page stack">
-	<section class="map-row">
-		<div class="map-heading">
-			<PageHeader eyebrow={data.topic.level_label} title={data.path.title} description={data.path.summary} />
-			<div class="progress">
-				<strong>{progressPercent}%</strong>
-				<span>path progress</span>
-				<div aria-hidden="true"><span style:width={`${progressPercent}%`}></span></div>
-			</div>
-		</div>
+	<section class="map-section" style:--topic-map-background={`url(${mountainImage})`}>
+		<div class="topic-map-background" aria-hidden="true"></div>
+		<div class="heading-backdrop" aria-hidden="true"></div>
 
-		<PathMap items={pathItems} ariaLabel={`${data.topic.name} learning path`} />
+		<div class="map-row">
+			<div class="map-heading">
+				<PageHeader
+					eyebrow={data.topic.level_label}
+					title={data.path.title}
+					description={data.path.summary}
+				/>
+				<div class="progress">
+					<strong>{progressPercent}%</strong>
+					<span>path progress</span>
+					<div aria-hidden="true"><span style:width={`${progressPercent}%`}></span></div>
+				</div>
+			</div>
+
+			<PathMap class="map-path" items={pathItems} ariaLabel={`${data.topic.name} learning path`} />
+		</div>
 	</section>
 
 	<section class="skills">
@@ -93,12 +103,91 @@
 </main>
 
 <style>
+	.map-section {
+		display: grid;
+		isolation: isolate;
+		position: relative;
+	}
+
+	.topic-map-background {
+		--mountain-height: clamp(9.984rem, 32.166vw, 26.622rem);
+		--mountain-width: clamp(18rem, 58vw, 48rem);
+		aspect-ratio: 1684 / 934;
+		background-image: var(--topic-map-background);
+		background-position: left bottom;
+		background-repeat: no-repeat;
+		background-size: contain;
+		block-size: var(--mountain-height);
+		filter: saturate(0.92) contrast(1.02);
+		grid-area: 1 / 1;
+		inline-size: var(--mountain-width);
+		justify-self: start;
+		margin-inline-start: calc(
+			-1 * max(var(--layout-page-gutter), calc((100vw - var(--layout-content-max-inline-size)) / 2))
+		);
+		-webkit-mask-image: radial-gradient(
+			ellipse 110% 95% at 0% 100%,
+			#000 0%,
+			rgb(0 0 0 / 0.94) 44%,
+			rgb(0 0 0 / 0.34) 70%,
+			transparent 91%
+		);
+		mask-image: radial-gradient(
+			ellipse 110% 95% at 0% 100%,
+			#000 0%,
+			rgb(0 0 0 / 0.94) 44%,
+			rgb(0 0 0 / 0.34) 70%,
+			transparent 91%
+		);
+		pointer-events: none;
+		position: sticky;
+		top: calc(100svh - var(--mountain-height) - max(0px, env(safe-area-inset-bottom)));
+		z-index: 0;
+	}
+
+	.heading-backdrop {
+		--backdrop-block-size: min(30rem, calc(100svh - 6rem));
+		--backdrop-inline-size: min(52rem, calc(100vw - var(--layout-page-gutter)));
+		background: var(--color-canvas);
+		block-size: var(--backdrop-block-size);
+		grid-area: 1 / 1;
+		inline-size: var(--backdrop-inline-size);
+		justify-self: start;
+		margin-block-start: -5rem;
+		margin-inline-start: -12rem;
+		-webkit-mask-image: radial-gradient(
+			ellipse 54% 54% at 48% 46%,
+			#000 0%,
+			#000 48%,
+			rgb(0 0 0 / 0.85) 58%,
+			rgb(0 0 0 / 0.45) 72%,
+			rgb(0 0 0 / 0.12) 88%,
+			transparent 100%
+		);
+		mask-image: radial-gradient(
+			ellipse 54% 54% at 48% 46%,
+			#000 0%,
+			#000 48%,
+			rgb(0 0 0 / 0.85) 58%,
+			rgb(0 0 0 / 0.45) 72%,
+			rgb(0 0 0 / 0.12) 88%,
+			transparent 100%
+		);
+		pointer-events: none;
+		position: sticky;
+		top: 4rem;
+		z-index: 1;
+	}
+
 	.map-row {
 		align-items: start;
 		display: grid;
 		gap: clamp(20px, 10vw, 75px);
+		grid-area: 1 / 1;
 		grid-template-columns: minmax(220px, 380px) minmax(0, 1fr);
 		margin: 2rem 0;
+		position: relative;
+		z-index: 1;
 	}
 
 	.map-heading {
