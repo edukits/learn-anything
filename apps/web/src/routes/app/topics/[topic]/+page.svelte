@@ -2,7 +2,7 @@
 	import type { PageProps } from './$types';
 	import { PageHeader } from '$lib/features/learning';
 	import mountainImage from '$lib/assets/topic-map/mountain-image.jpeg';
-	import { PathMap } from '@learn-anything/ui';
+	import { PathMap, ProgressBar } from '@learn-anything/ui';
 	import type { PathMapItem } from '@learn-anything/ui';
 
 	let { data }: PageProps = $props();
@@ -72,7 +72,12 @@
 				<div class="progress">
 					<strong>{progressPercent}%</strong>
 					<span>path progress</span>
-					<div aria-hidden="true"><span style:width={`${progressPercent}%`}></span></div>
+					<ProgressBar
+						value={progressPercent}
+						size="sm"
+						aria-label={`${data.topic.name} path progress`}
+						disableSparks
+					/>
 				</div>
 			</div>
 
@@ -89,12 +94,13 @@
 				{#if mastery}
 					<div class="mastery">
 						<span>{Math.round(mastery.mastery_score * 100)}% mastery</span>
-						<meter
-							min="0"
-							max="1"
+						<ProgressBar
 							value={mastery.mastery_score}
+							max={1}
+							size="sm"
 							aria-label={`${skill.name} mastery`}
-						></meter>
+							disableSparks
+						/>
 					</div>
 				{/if}
 			</article>
@@ -212,19 +218,6 @@
 		color: var(--color-text-muted);
 	}
 
-	.progress div {
-		background: var(--color-border);
-		border-radius: 999px;
-		block-size: 10px;
-		overflow: hidden;
-	}
-
-	.progress div span {
-		background: var(--color-accent);
-		block-size: 100%;
-		display: block;
-	}
-
 	.skills {
 		border-block-start: 1px solid var(--color-border);
 		display: grid;
@@ -254,10 +247,6 @@
 		color: var(--color-text-muted);
 		font-size: 0.82rem;
 		font-weight: 700;
-	}
-
-	meter {
-		inline-size: 100%;
 	}
 
 	@media (max-width: 760px) {

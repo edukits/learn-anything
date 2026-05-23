@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { SkillAccuracyItem } from '../types';
+	import { ProgressBar } from '@learn-anything/ui';
 
 	type SkillAccuracyPanelProps = {
 		title: string;
@@ -33,12 +34,13 @@
 				<div class="stat-row">
 					<strong>{stat.skill_label}</strong>
 					<span>{statCount(stat)}</span>
-					<meter
+					<ProgressBar
 						aria-label={`${stat.skill_label} accuracy`}
-						min="0"
-						max={stat.attempted}
-						value={stat.correct}
-					></meter>
+						value={stat.attempted > 0 ? stat.correct : 0}
+						max={stat.attempted > 0 ? stat.attempted : 1}
+						size="sm"
+						disableSparks
+					/>
 				</div>
 			{/each}
 		</div>
@@ -82,10 +84,6 @@
 
 	span {
 		color: var(--color-text-muted);
-	}
-
-	meter {
-		inline-size: 100%;
 	}
 
 	@media (max-width: 680px) {
