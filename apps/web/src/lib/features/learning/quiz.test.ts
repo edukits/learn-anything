@@ -22,7 +22,7 @@ function buildQuestion(overrides: Partial<LearningQuizQuestion> = {}): LearningQ
 			{ id: 'second', label: 'Second' }
 		],
 		accepted_answers: ['accepted answer'],
-		explanation: '  This is why the answer works.  ',
+		explanation: '  Use **retrieval practice**: answer from memory before checking notes.  ',
 		...overrides
 	};
 }
@@ -44,7 +44,9 @@ describe('buildLearningQuizQuestions', () => {
 	test('includes multiple choice keys and explanations for instant feedback', () => {
 		const [question] = buildLearningQuizQuestions([buildQuestion()], { instantFeedback: true });
 
-		expect(question.feedback).toBe('This is why the answer works.');
+		expect(question.feedback).toBe(
+			'Use **retrieval practice**: answer from memory before checking notes.'
+		);
 		expect(question.response).toMatchObject({
 			type: 'multiple-choice',
 			correctValue: 'b'

@@ -37,6 +37,7 @@
 	import MathAnswer from './MathAnswer.svelte';
 	import NumericAnswer from './NumericAnswer.svelte';
 	import Question from './Question.svelte';
+	import RichText from './RichText.svelte';
 	import SequencingAnswer from './SequencingAnswer.svelte';
 	import ShortAnswer from './ShortAnswer.svelte';
 	import type {
@@ -261,7 +262,11 @@
 		const result = getQuestionResult(question);
 		questionSubmitted[question.id] = true;
 		results[question.id] = result;
-		if (mode === 'quiz' && result.correct === true && (question.response.celebrations ?? celebrations)) {
+		if (
+			mode === 'quiz' &&
+			result.correct === true &&
+			(question.response.celebrations ?? celebrations)
+		) {
 			progressSparkTrigger += 1;
 		}
 		onquestionresult?.(result);
@@ -525,14 +530,14 @@
 						/>
 					{/if}
 
-					{#if isQuestionFeedbackVisible(question)}
+					{#if question.feedback && isQuestionFeedbackVisible(question)}
 						<div class={['question-feedback', `feedback-${getQuestionFeedbackState(question)}`]}>
 							{#if getQuestionFeedbackState(question) === 'correct'}
 								<CheckCircle size={20} strokeWidth={2.4} />
 							{:else}
 								<span class="feedback-marker" aria-hidden="true"></span>
 							{/if}
-							<p>{question.feedback}</p>
+							<RichText content={question.feedback} class="feedback-content" />
 						</div>
 					{/if}
 				</Question>
@@ -690,8 +695,8 @@
 		color: var(--feedback-accent);
 	}
 
-	.question-feedback p {
-		margin: 0;
+	.question-feedback :global(.feedback-content) {
+		min-inline-size: 0;
 	}
 
 	.feedback-correct {

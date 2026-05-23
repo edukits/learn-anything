@@ -14,7 +14,10 @@ const storageArtifactRefSchema = z
 		kind: z.literal('supabase_storage'),
 		bucket: z.string().min(1),
 		path: z.string().min(1),
-		sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+		sha256: z
+			.string()
+			.regex(/^[a-f0-9]{64}$/)
+			.optional(),
 		bytes: z.number().int().nonnegative().optional(),
 		content_type: z.string().min(1).optional()
 	})
@@ -87,9 +90,18 @@ const quizSchema = z.object({
 	question_count: z.number().int().positive()
 });
 
+const renderedMarkdownSchema = z
+	.string()
+	.min(1)
+	.describe('Learner-facing Markdown text. Supports LaTeX math.');
+const answerExplanationMarkdownSchema = z
+	.string()
+	.min(1)
+	.describe('Answer explanation Markdown rendered after submission. Supports LaTeX math.');
+
 const choiceSchema = z.object({
 	id: z.string().min(1),
-	label: z.string().min(1)
+	label: renderedMarkdownSchema
 });
 
 const questionPurposeSchema = z.enum(['recognition', 'application']);
@@ -115,7 +127,7 @@ const numericAnswerSchema = z.object({
 
 const sequenceItemSchema = z.object({
 	id: z.string().min(1),
-	label: z.string().min(1)
+	label: renderedMarkdownSchema
 });
 
 const questionSchema = z
@@ -127,7 +139,7 @@ const questionSchema = z
 		question_purpose: questionPurposeSchema,
 		response_type: responseTypeSchema,
 		difficulty: z.enum(['easy', 'medium', 'hard']),
-		prompt: z.string().min(1),
+		prompt: renderedMarkdownSchema,
 		choices: z.array(choiceSchema).optional(),
 		correct_choice_id: z.string().min(1).optional(),
 		correct_choice_ids: z.array(z.string().min(1)).optional(),
@@ -135,7 +147,7 @@ const questionSchema = z
 		sequence_items: z.array(sequenceItemSchema).optional(),
 		accepted_answers: z.array(z.string().min(1)).optional(),
 		grading_rubric: z.string().min(1).optional(),
-		explanation: z.string().min(1)
+		explanation: answerExplanationMarkdownSchema
 	})
 	.superRefine((question, context) => {
 		const choices = question.choices ?? [];

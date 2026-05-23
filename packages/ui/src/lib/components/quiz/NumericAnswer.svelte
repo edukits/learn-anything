@@ -14,6 +14,7 @@
 		isPartialNumericInput,
 		parseNumericInput
 	} from './numeric';
+	import RichText from './RichText.svelte';
 	import type {
 		NumericAnswerAcceptedValue,
 		NumericAnswerEvaluation,
@@ -312,7 +313,9 @@
 	</label>
 
 	{#if displayResult?.feedback}
-		<p class="feedback">{displayResult.feedback}</p>
+		<div class="feedback">
+			<RichText content={displayResult.feedback} />
+		</div>
 	{/if}
 
 	{#if showSubmitButton}

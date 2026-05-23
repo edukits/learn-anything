@@ -6,6 +6,8 @@ export const assessmentQuestions: QuizQuestionData[] = [
 		eyebrow: 'Learning science',
 		question: 'Which strategy best strengthens long-term recall?',
 		description: 'Choose the option most closely tied to retrieval practice.',
+		feedback:
+			'**Retrieval practice** works because the learner has to reconstruct the idea before reviewing it. That effort makes later recall stronger.',
 		response: {
 			type: 'multiple-choice',
 			correctValue: 'retrieval',
@@ -101,7 +103,8 @@ export const assessmentQuestions: QuizQuestionData[] = [
 				{
 					value: 5,
 					unit: 'm/s',
-					tolerance: { type: 'relative', value: 0.01 }
+					tolerance: { type: 'relative', value: 0.01 },
+					feedback: String.raw`Convert first: $1.2\text{ km} = 1200\text{ m}$, then divide by $240\text{ s}$.`
 				}
 			]
 		}

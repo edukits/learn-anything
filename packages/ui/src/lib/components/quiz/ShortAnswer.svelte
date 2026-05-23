@@ -4,6 +4,7 @@
 	import Button from '../Button.svelte';
 	import { celebrateCorrectAnswer } from './celebration';
 	import GradingIndicator from './GradingIndicator.svelte';
+	import RichText from './RichText.svelte';
 	import type {
 		ShortAnswerEvaluation,
 		ShortAnswerMatchMode,
@@ -231,7 +232,9 @@
 	</label>
 
 	{#if displayResult?.feedback}
-		<p class="feedback">{displayResult.feedback}</p>
+		<div class="feedback">
+			<RichText content={displayResult.feedback} />
+		</div>
 	{/if}
 
 	{#if showSubmitButton}

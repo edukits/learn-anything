@@ -42,10 +42,19 @@ const lessonItemSchema = z
 	})
 	.passthrough();
 
+const renderedMarkdownSchema = z
+	.string()
+	.min(1)
+	.describe('Learner-facing Markdown text. Supports LaTeX math.');
+const answerExplanationMarkdownSchema = z
+	.string()
+	.min(1)
+	.describe('Answer explanation Markdown rendered after submission. Supports LaTeX math.');
+
 const choiceSchema = z
 	.object({
 		id: z.string().min(1),
-		label: z.string().min(1)
+		label: renderedMarkdownSchema
 	})
 	.passthrough();
 
@@ -59,7 +68,7 @@ const numericAnswerSchema = z
 const sequenceItemSchema = z
 	.object({
 		id: z.string().min(1),
-		label: z.string().min(1)
+		label: renderedMarkdownSchema
 	})
 	.passthrough();
 
@@ -77,7 +86,7 @@ const questionSchema = z
 			'short_answer'
 		]),
 		difficulty: z.enum(['easy', 'medium', 'hard']),
-		prompt: z.string().min(1),
+		prompt: renderedMarkdownSchema,
 		choices: z.array(choiceSchema).optional(),
 		correct_choice_id: z.string().min(1).optional(),
 		correct_choice_ids: z.array(z.string().min(1)).optional(),
@@ -85,7 +94,7 @@ const questionSchema = z
 		sequence_items: z.array(sequenceItemSchema).optional(),
 		accepted_answers: z.array(z.string().min(1)).optional(),
 		grading_rubric: z.string().min(1).optional(),
-		explanation: z.string().min(1)
+		explanation: answerExplanationMarkdownSchema
 	})
 	.passthrough()
 	.superRefine((question, context) => {
