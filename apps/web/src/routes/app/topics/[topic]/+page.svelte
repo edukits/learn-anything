@@ -2,10 +2,21 @@
 	import type { PageProps } from './$types';
 	import { PageHeader } from '$lib/features/learning';
 	import mountainImage from '$lib/assets/topic-map/mountain-image.jpeg';
-	import { PathMap, ProgressBar } from '@learn-anything/ui';
+	import {
+		AchievementCelebrationDialog,
+		Button,
+		NextAchievementStatus,
+		PathMap,
+		ProgressBar,
+		type AchievementCelebrationItem
+	} from '@learn-anything/ui';
 	import type { PathMapItem } from '@learn-anything/ui';
+	import {
+		toAchievementCardData,
+		toAchievementCelebrationItem
+	} from '$lib/features/engagement/achievement-ui';
 
-	let { data }: PageProps = $props();
+	let { data, form }: PageProps = $props();
 	let topicBaseHref = $derived(`/app/topics/${data.topic.slug}`);
 
 	let completedCount = $derived(
@@ -55,9 +66,32 @@
 				: [])
 		]
 	);
+	let nextAchievement = $derived(data.achievements.find((achievement) => !achievement.earned_at) ?? null);
+	let celebrationAchievements = $derived(
+		data.pendingAchievementCelebrations.map(toAchievementCelebrationItem)
+	);
 </script>
 
 <main class="page stack">
+	{#snippet dismissCelebrationAction(achievements: AchievementCelebrationItem[])}
+		<form method="POST" action="?/dismissAchievementCelebrations" class="celebration-action-form">
+			{#each achievements as achievement (achievement.eventId)}
+				<input type="hidden" name="eventId" value={achievement.eventId} />
+			{/each}
+			<Button type="submit" size="sm" label="Continue learning" />
+		</form>
+	{/snippet}
+
+	<AchievementCelebrationDialog
+		open={celebrationAchievements.length > 0}
+		achievements={celebrationAchievements}
+		dismissAction={dismissCelebrationAction}
+	/>
+
+	{#if form?.celebrationError}
+		<p class="celebration-error" role="alert">{form.celebrationError}</p>
+	{/if}
+
 	<section class="map-section" style:--topic-map-background={`url(${mountainImage})`}>
 		<div class="topic-map-background" aria-hidden="true"></div>
 		<div class="heading-backdrop" aria-hidden="true"></div>
@@ -79,6 +113,10 @@
 						disableSparks
 					/>
 				</div>
+				<NextAchievementStatus
+					achievement={nextAchievement ? toAchievementCardData(nextAchievement) : null}
+					href="/app/achievements"
+				/>
 			</div>
 
 			<PathMap class="map-path" items={pathItems} ariaLabel={`${data.topic.name} learning path`} />
@@ -109,6 +147,20 @@
 </main>
 
 <style>
+	.celebration-action-form {
+		margin: 0;
+	}
+
+	.celebration-error {
+		background: color-mix(in srgb, var(--color-danger), transparent 88%);
+		border-radius: var(--radius-sm);
+		color: var(--color-danger);
+		font-size: 0.86rem;
+		font-weight: 650;
+		margin: 0;
+		padding: 10px 12px;
+	}
+
 	.map-section {
 		display: grid;
 		isolation: isolate;

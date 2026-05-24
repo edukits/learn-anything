@@ -80,6 +80,39 @@ export async function upsertPublicProfile(
 	return data as PublicProfile;
 }
 
+export async function equipPublicProfileTitleReward(
+	client: SupabaseClient,
+	userId: string,
+	rewardKey: string | null
+): Promise<void> {
+	if (rewardKey) {
+		const { data: reward, error: rewardError } = await client
+			.from('reward_inventory')
+			.select('reward_key,reward_kind')
+			.eq('user_id', userId)
+			.eq('reward_key', rewardKey)
+			.eq('reward_kind', 'title')
+			.maybeSingle();
+
+		if (rewardError) throw new Error(rewardError.message);
+		if (!reward) throw new Error('Choose an earned title reward.');
+	}
+
+	const { error } = await client
+		.from('public_profiles')
+		.upsert(
+			{
+				user_id: userId,
+				equipped_title_reward_key: rewardKey
+			},
+			{ onConflict: 'user_id' }
+		)
+		.select('user_id')
+		.single();
+
+	if (error) throw new Error(error.message);
+}
+
 function isSafePublicImageUrl(value: string) {
 	try {
 		const url = new URL(value);

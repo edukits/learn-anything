@@ -1,18 +1,21 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import { Tabs, type TabItem } from '@learn-anything/ui';
 	import {
-		Award,
-		BadgeCheck,
-		Crown,
-		Lock,
-		Medal,
-		Sparkles,
-		Star,
-		Trophy
-	} from '@lucide/svelte';
+		AchievementCard,
+		Button,
+		formatAchievementCategoryLabel,
+		RewardInventoryCard,
+		Tabs,
+		type RewardInventoryCardData,
+		type TabItem
+	} from '@learn-anything/ui';
+	import { Medal, Trophy } from '@lucide/svelte';
+	import {
+		toAchievementCardData,
+		toRewardInventoryCardData
+	} from '$lib/features/engagement/achievement-ui';
 
-	let { data }: PageProps = $props();
+	let { data, form }: PageProps = $props();
 
 	let earnedAchievements = $derived(
 		data.achievements.filter((achievement) => achievement.earned_at)
@@ -25,38 +28,32 @@
 			? 0
 			: Math.round((earnedAchievements.length / data.achievements.length) * 100)
 	);
-
-	let categories = $derived([...new Set(data.achievements.map((a) => a.category))]);
+	let categories = $derived([...new Set(data.achievements.map((achievement) => achievement.category))]);
 	let activeCategory = $state<string | null>(null);
 	let categoryTabs = $derived.by((): TabItem[] => [
 		{ value: null, label: 'All' },
-		...categories.map((category) => ({ value: category, label: category }))
+		...categories.map((category) => ({ value: category, label: formatAchievementCategoryLabel(category) }))
 	]);
 	let filteredAchievements = $derived(
 		activeCategory
-			? data.achievements.filter((a) => a.category === activeCategory)
+			? data.achievements.filter((achievement) => achievement.category === activeCategory)
 			: data.achievements
 	);
-
-	let badges = $derived(data.rewards.filter((r) => r.reward_kind === 'badge'));
-	let titles = $derived(data.rewards.filter((r) => r.reward_kind === 'title'));
-
-	function formatDate(iso: string): string {
-		return new Date(iso).toLocaleDateString(undefined, {
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric'
-		});
-	}
-
-	const categoryIcons: Record<string, typeof Trophy> = {
-		streak: Star,
-		xp: Sparkles,
-		milestone: Trophy
-	};
 </script>
 
 <main class="page achievements-page">
+	{#snippet titleRewardAction(reward: RewardInventoryCardData, nextRewardKey: string | null)}
+		<form method="POST" action="?/equipTitle" class="reward-action-form">
+			<input type="hidden" name="rewardKey" value={nextRewardKey ?? ''} />
+			<Button
+				type="submit"
+				size="sm"
+				variant={reward.equipped ? 'ghost' : 'secondary'}
+				label={reward.equipped ? 'Unequip' : 'Equip'}
+			/>
+		</form>
+	{/snippet}
+
 	<section class="hero">
 		<div class="hero-visual">
 			<div class="hero-icon">
@@ -129,27 +126,12 @@
 			</div>
 			<div class="inventory-grid">
 				{#each data.rewards as reward (reward.id)}
-					<article class="reward-card" class:equipped={reward.equipped}>
-						<div class="reward-icon" class:is-badge={reward.reward_kind === 'badge'} class:is-title={reward.reward_kind === 'title'}>
-							{#if reward.reward_kind === 'badge'}
-								<BadgeCheck size={22} />
-							{:else}
-								<Crown size={22} />
-							{/if}
-						</div>
-						<div class="reward-details">
-							<strong>{reward.reward_label}</strong>
-							<span class="reward-meta">
-								{reward.reward_kind === 'badge' ? 'Badge' : 'Title'}
-								{#if reward.equipped}
-									<span class="equipped-pill">Equipped</span>
-								{/if}
-							</span>
-						</div>
-						<time class="reward-date">{formatDate(reward.earned_at)}</time>
-					</article>
+					<RewardInventoryCard reward={toRewardInventoryCardData(reward)} action={titleRewardAction} />
 				{/each}
 			</div>
+			{#if form?.equipError}
+				<p class="message error">{form.equipError}</p>
+			{/if}
 		</section>
 	{/if}
 
@@ -164,46 +146,8 @@
 		{/if}
 
 		<div class="achievement-grid">
-		{#each filteredAchievements as achievement (achievement.key)}
-			{@const earned = Boolean(achievement.earned_at)}
-			{@const Icon = categoryIcons[achievement.category] ?? Award}
-			<article class="achievement-card" class:earned class:locked={!earned}>
-				<div class="card-top">
-					<div class="achievement-icon" class:earned>
-						<Icon size={24} />
-					</div>
-						{#if earned}
-							<span class="earned-badge">
-								<BadgeCheck size={14} />
-								Earned
-							</span>
-						{:else}
-							<span class="locked-badge">
-								<Lock size={12} />
-							</span>
-						{/if}
-					</div>
-					<div class="card-body">
-						<p class="eyebrow">{achievement.category}</p>
-						<h3>{achievement.name}</h3>
-						<p class="achievement-desc">{achievement.description}</p>
-					</div>
-					<div class="card-footer">
-						{#if achievement.reward_label}
-							<span class="reward-pill" class:earned>
-								{#if achievement.reward_kind === 'badge'}
-									<BadgeCheck size={12} />
-								{:else}
-									<Crown size={12} />
-								{/if}
-								{achievement.reward_label}
-							</span>
-						{/if}
-						{#if achievement.earned_at}
-							<time>{formatDate(achievement.earned_at)}</time>
-						{/if}
-					</div>
-				</article>
+			{#each filteredAchievements as achievement (achievement.key)}
+				<AchievementCard achievement={toAchievementCardData(achievement)} />
 			{/each}
 		</div>
 	</section>
@@ -223,36 +167,37 @@
 		gap: 28px;
 	}
 
-	/* ---- Hero ---- */
+	.reward-action-form {
+		margin: 0;
+	}
 
 	.hero {
+		align-items: center;
+		border-bottom: 1px dashed var(--color-border);
 		display: grid;
 		gap: 50px;
 		grid-template-columns: auto 1fr auto;
-		align-items: center;
 		padding: clamp(24px, 4vw, 40px) 0;
-		border-bottom: 1px dashed var(--color-border);
 	}
 
 	.hero-visual {
-		position: relative;
-		inline-size: 96px;
 		block-size: 96px;
+		inline-size: 96px;
+		position: relative;
 	}
 
 	.hero-visual::before {
-		content: '';
-		position: absolute;
-		inset: -10px;
-		border-radius: 50%;
 		background: radial-gradient(
 			circle,
 			hsl(var(--color-star-h) var(--color-star-s) var(--color-star-l) / 0.1) 40%,
 			hsl(var(--color-star-h) var(--color-star-s) var(--color-star-l) / 0.04) 70%,
 			transparent 100%
 		);
-		box-shadow:
-			inset 0 0 12px hsl(var(--color-star-h) var(--color-star-s) var(--color-star-l) / 0.08);
+		border-radius: 50%;
+		box-shadow: inset 0 0 12px hsl(var(--color-star-h) var(--color-star-s) var(--color-star-l) / 0.08);
+		content: '';
+		inset: -10px;
+		position: absolute;
 	}
 
 	.hero-icon {
@@ -280,10 +225,6 @@
 	}
 
 	.hero-icon-sheen {
-		border-radius: inherit;
-		inset: 0;
-		pointer-events: none;
-		position: absolute;
 		background: linear-gradient(
 			to bottom,
 			hsl(0 0% 100% / 0.32) 0%,
@@ -291,6 +232,10 @@
 			transparent 50%,
 			hsl(0 0% 0% / 0.1) 100%
 		);
+		border-radius: inherit;
+		inset: 0;
+		pointer-events: none;
+		position: absolute;
 		z-index: 2;
 	}
 
@@ -305,32 +250,32 @@
 		transform: rotate(-90deg);
 	}
 
-	.ring-track {
+	.ring-track,
+	.ring-inset,
+	.progress-arc,
+	.ring-sheen {
 		fill: none;
-		stroke: url(#track-grad);
 		stroke-width: 10;
+	}
+
+	.ring-track {
 		filter: drop-shadow(0 1px 1px hsl(0 0% 0% / 0.12));
+		stroke: url(#track-grad);
 	}
 
 	.ring-inset {
-		fill: none;
 		stroke: hsl(0 0% 0% / 0.08);
-		stroke-width: 10;
 	}
 
 	.progress-arc {
-		fill: none;
 		stroke: url(#fill-grad);
 		stroke-linecap: round;
-		stroke-width: 10;
 		transition: stroke-dasharray 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 	}
 
 	.ring-sheen {
-		fill: none;
-		stroke: url(#sheen-grad);
-		stroke-width: 10;
 		pointer-events: none;
+		stroke: url(#sheen-grad);
 	}
 
 	.hero-text {
@@ -384,8 +329,6 @@
 		inline-size: 1px;
 	}
 
-	/* ---- Section headers ---- */
-
 	.section-header {
 		display: grid;
 		gap: 2px;
@@ -402,9 +345,8 @@
 		margin: 0;
 	}
 
-	/* ---- Inventory ---- */
-
-	.inventory-section {
+	.inventory-section,
+	.achievements-section {
 		display: grid;
 		gap: 16px;
 	}
@@ -415,281 +357,24 @@
 		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 	}
 
-	.reward-card {
-		align-items: center;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		display: grid;
-		gap: 12px;
-		grid-template-columns: auto 1fr auto;
-		padding: 14px 16px;
-		transition: border-color 0.15s;
-	}
-
-	.reward-card.equipped {
-		border-color: var(--color-star);
-		box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-star), transparent 70%);
-	}
-
-	.reward-icon {
-		align-items: center;
-		border-radius: var(--radius-md);
-		display: grid;
-		block-size: 40px;
-		inline-size: 40px;
-		justify-items: center;
-		position: relative;
-		color: #fff;
-	}
-
-	.reward-icon::after {
-		border-radius: inherit;
-		content: '';
-		inset: 0;
-		pointer-events: none;
-		position: absolute;
-		background: linear-gradient(
-			to bottom,
-			hsl(0 0% 100% / 0.28) 0%,
-			hsl(0 0% 100% / 0.06) 44%,
-			transparent 50%,
-			hsl(0 0% 0% / 0.1) 100%
-		);
-	}
-
-	.reward-icon.is-badge {
-		background: linear-gradient(
-			to bottom,
-			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) + 10%)),
-			hsl(var(--color-accent-h) var(--color-accent-s) var(--color-accent-l)),
-			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 14%))
-		);
-		border: 1px solid hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 22%));
-		box-shadow:
-			inset 0 1px 2px hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) + 24%) / 0.5),
-			0 1px 4px hsl(var(--color-accent-h) var(--color-accent-s) var(--color-accent-l) / 0.3);
-	}
-
-	.reward-icon.is-title {
-		background: linear-gradient(
-			to bottom,
-			hsl(280 80% 62%),
-			hsl(280 80% 50%),
-			hsl(280 80% 38%)
-		);
-		border: 1px solid hsl(280 80% 30%);
-		box-shadow:
-			inset 0 1px 2px hsl(280 80% 72% / 0.5),
-			0 1px 4px hsl(280 80% 50% / 0.3);
-	}
-
-	.reward-details {
-		display: grid;
-		gap: 2px;
-		min-inline-size: 0;
-	}
-
-	.reward-details strong {
-		font-size: 0.94rem;
-	}
-
-	.reward-meta {
-		align-items: center;
-		color: var(--color-text-muted);
-		display: flex;
-		font-size: 0.8rem;
-		font-weight: 600;
-		gap: 6px;
-	}
-
-	.equipped-pill {
-		background: color-mix(in srgb, var(--color-star), transparent 85%);
-		border-radius: 999px;
-		color: hsl(var(--color-star-h) var(--color-star-s) 38%);
-		font-size: 0.7rem;
-		font-weight: 750;
-		padding: 2px 8px;
-		text-transform: uppercase;
-	}
-
-	.reward-date {
-		color: var(--color-text-muted);
-		font-size: 0.78rem;
-		white-space: nowrap;
-	}
-
-	/* ---- Achievements ---- */
-
-	.achievements-section {
-		display: grid;
-		gap: 16px;
-	}
-
-	/* ---- Achievement grid ---- */
-
 	.achievement-grid {
 		display: grid;
 		gap: 12px;
 		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 	}
 
-	.achievement-card {
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		display: grid;
-		gap: 12px;
-		padding: 18px;
-		transition:
-			border-color 0.2s,
-			box-shadow 0.2s,
-			opacity 0.2s;
-	}
-
-	.achievement-card.earned {
-		border-color: color-mix(in srgb, var(--color-success), transparent 40%);
-	}
-
-	.achievement-card.earned:hover {
-		box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-success), transparent 60%);
-	}
-
-	.achievement-card.locked {
-		opacity: 0.55;
-	}
-
-	.achievement-card.locked:hover {
-		opacity: 0.75;
-	}
-
-	.card-top {
-		align-items: center;
-		display: flex;
-		justify-content: space-between;
-	}
-
-	.achievement-icon {
-		align-items: center;
-		border-radius: var(--radius-md);
-		display: grid;
-		block-size: 44px;
-		inline-size: 44px;
-		justify-items: center;
-		position: relative;
-		background: linear-gradient(
-			to bottom,
-			hsl(0 0% 92%),
-			hsl(0 0% 84%),
-			hsl(0 0% 78%)
-		);
-		border: 1px solid hsl(0 0% 68%);
-		box-shadow:
-			inset 0 1px 2px hsl(0 0% 100% / 0.45),
-			inset 0 -1px 1px hsl(0 0% 0% / 0.08),
-			0 1px 3px hsl(0 0% 0% / 0.1);
-		color: hsl(0 0% 48%);
-	}
-
-	.achievement-icon::after {
-		border-radius: inherit;
-		content: '';
-		inset: 0;
-		pointer-events: none;
-		position: absolute;
-		background: linear-gradient(
-			to bottom,
-			hsl(0 0% 100% / 0.3) 0%,
-			hsl(0 0% 100% / 0.06) 44%,
-			transparent 50%,
-			hsl(0 0% 0% / 0.08) 100%
-		);
-	}
-
-	.achievement-icon.earned {
-		background: linear-gradient(
-			to bottom,
-			hsl(var(--color-success-h) var(--color-success-s) calc(var(--color-success-l) + 12%)),
-			hsl(var(--color-success-h) var(--color-success-s) var(--color-success-l)),
-			hsl(var(--color-success-h) var(--color-success-s) calc(var(--color-success-l) - 10%))
-		);
-		border-color: hsl(var(--color-success-h) var(--color-success-s) calc(var(--color-success-l) - 18%));
-		box-shadow:
-			inset 0 1px 2px hsl(var(--color-success-h) var(--color-success-s) calc(var(--color-success-l) + 26%) / 0.5),
-			inset 0 -1px 1px hsl(var(--color-success-h) var(--color-success-s) calc(var(--color-success-l) - 16%) / 0.2),
-			0 1px 4px hsl(var(--color-success-h) var(--color-success-s) var(--color-success-l) / 0.3),
-			0 0 10px hsl(var(--color-success-h) var(--color-success-s) var(--color-success-l) / 0.12);
-		color: #fff;
-	}
-
-	.earned-badge {
-		align-items: center;
-		color: var(--color-success);
-		display: flex;
-		font-size: 0.78rem;
-		font-weight: 750;
-		gap: 4px;
-	}
-
-	.locked-badge {
-		color: var(--color-text-muted);
-	}
-
-	.card-body {
-		display: grid;
-		gap: 4px;
-	}
-
-	.card-body h3 {
-		font-size: 1rem;
-		letter-spacing: 0;
+	.message {
+		border-radius: var(--radius-sm);
+		font-size: 0.88rem;
+		font-weight: 650;
 		margin: 0;
+		padding: 10px 12px;
 	}
 
-	.card-body p {
-		margin: 0;
+	.message.error {
+		background: color-mix(in srgb, var(--color-danger), transparent 88%);
+		color: var(--color-danger);
 	}
-
-	.achievement-desc {
-		color: var(--color-text-muted);
-		font-size: 0.9rem;
-		line-height: 1.45;
-	}
-
-	.card-footer {
-		align-items: center;
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-		min-block-size: 24px;
-	}
-
-	.reward-pill {
-		align-items: center;
-		background: var(--color-surface-raised);
-		border: 1px solid var(--color-border);
-		border-radius: 999px;
-		color: var(--color-text-muted);
-		display: inline-flex;
-		font-size: 0.75rem;
-		font-weight: 700;
-		gap: 4px;
-		padding: 3px 10px 3px 7px;
-	}
-
-	.reward-pill.earned {
-		background: color-mix(in srgb, var(--color-accent), transparent 90%);
-		border-color: color-mix(in srgb, var(--color-accent), transparent 60%);
-		color: var(--color-accent);
-	}
-
-	.card-footer time {
-		color: var(--color-text-muted);
-		font-size: 0.78rem;
-		margin-inline-start: auto;
-	}
-
-	/* ---- Empty state ---- */
 
 	.empty-state {
 		align-items: center;
@@ -714,8 +399,6 @@
 		max-inline-size: 36ch;
 	}
 
-	/* ---- Responsive ---- */
-
 	@media (max-width: 840px) {
 		.hero {
 			grid-template-columns: 1fr;
@@ -723,19 +406,16 @@
 		}
 
 		.hero-stats {
-			justify-self: stretch;
-			justify-content: center;
 			background: var(--color-surface-raised);
 			border-radius: var(--radius-sm);
+			justify-content: center;
+			justify-self: stretch;
 			padding: 14px;
 		}
 	}
 
 	@media (max-width: 480px) {
-		.achievement-grid {
-			grid-template-columns: 1fr;
-		}
-
+		.achievement-grid,
 		.inventory-grid {
 			grid-template-columns: 1fr;
 		}

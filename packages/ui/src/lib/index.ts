@@ -4,6 +4,27 @@ export type { TabItem } from './components/Tabs.svelte';
 export { default as ProgressBar } from './components/ProgressBar.svelte';
 export { default as Select } from './components/Select.svelte';
 export {
+	AchievementCard,
+	AchievementCelebrationDialog,
+	NextAchievementStatus,
+	RewardInventoryCard
+} from './components/achievements';
+export type {
+	AchievementCategory,
+	AchievementCardData,
+	AchievementCelebrationItem,
+	NextAchievementData,
+	RewardKind,
+	RewardInventoryCardData
+} from './components/achievements';
+export {
+	formatAchievementCategoryLabel,
+	normalizeAchievementCategory,
+	getAchievementCategoryIcon,
+	getRewardKindIcon,
+	getRewardKindLabel
+} from './components/achievements';
+export {
 	DropdownMenu,
 	GlobalNav,
 	LearningNav,
