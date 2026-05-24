@@ -7,7 +7,7 @@ const require = createRequire(import.meta.url);
 export default defineSvelteKitConfig(
 	{
 		resolve: {
-			alias: [{ find: /^katex$/, replacement: require.resolve('katex') }]
+			alias: [{ find: /^katex$/, replacement: require.resolve('katex/dist/katex.mjs') }]
 		}
 	},
 	sveltekit()
