@@ -6,6 +6,7 @@ type GlobalNavStoryArgs = {
 	subjects: NavSubject[];
 	user: NavUser | null;
 	currentPathname: string;
+	showAdmin: boolean;
 };
 
 const sampleSubjects: NavSubject[] = [
@@ -36,7 +37,8 @@ const meta = {
 	args: {
 		subjects: sampleSubjects,
 		user: { email: 'learner@example.com' },
-		currentPathname: '/app/daily-plan'
+		currentPathname: '/app/daily-plan',
+		showAdmin: false
 	},
 	parameters: {
 		layout: 'fullscreen'
@@ -65,5 +67,12 @@ export const OnSubjectPage: Story = {
 	args: {
 		user: null,
 		currentPathname: '/subjects/mathematics'
+	}
+};
+
+export const AdminUser: Story = {
+	args: {
+		showAdmin: true,
+		currentPathname: '/admin/content'
 	}
 };

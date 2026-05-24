@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { Spring, prefersReducedMotion } from 'svelte/motion';
-	import { BookOpenCheck, ChevronDown, LogOut, User } from '@lucide/svelte';
+	import { BookOpenCheck, ChevronDown, ClipboardCheck, LogOut, User } from '@lucide/svelte';
 	import Button from '../Button.svelte';
 	import DropdownMenu from './DropdownMenu.svelte';
 	import NavLink from './NavLink.svelte';
@@ -13,11 +13,13 @@
 		subjects = [],
 		user = null,
 		currentPathname = '',
+		showAdmin = false,
 		class: className = ''
 	}: {
 		subjects?: NavSubject[];
 		user?: NavUser | null;
 		currentPathname?: string;
+		showAdmin?: boolean;
 		class?: string;
 	} = $props();
 
@@ -61,6 +63,7 @@
 
 	$effect(() => {
 		void currentPathname;
+		void showAdmin;
 		void user;
 		updateIndicator();
 	});
@@ -118,6 +121,19 @@
 			{#if user}
 				<NavLink href="/app" variant="global" current={myLearningCurrent}>
 					My Learning
+				</NavLink>
+			{/if}
+
+			{#if user && showAdmin}
+				<NavLink
+					href="/admin/content"
+					variant="global"
+					current={currentPathname.startsWith('/admin/content')}
+				>
+					<span class="nav-item-icon" aria-hidden="true">
+						<ClipboardCheck size={16} strokeWidth={2.25} />
+					</span>
+					Content Admin
 				</NavLink>
 			{/if}
 
@@ -227,6 +243,10 @@
 		align-items: center;
 		display: flex;
 		justify-content: end;
+	}
+
+	.nav-item-icon {
+		display: inline-flex;
 	}
 
 	form {

@@ -21,6 +21,11 @@
 </script>
 
 {#if !isFocusedQuizRoute && !isSignInRoute}
-	<GlobalNav subjects={data.subjects} user={data.user} currentPathname={page.url.pathname} />
+	<GlobalNav
+		subjects={data.subjects}
+		user={data.user}
+		currentPathname={page.url.pathname}
+		showAdmin={Boolean(data.adminRole)}
+	/>
 {/if}
 {@render children()}

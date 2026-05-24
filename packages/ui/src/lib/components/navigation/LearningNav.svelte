@@ -1,6 +1,5 @@
 <script lang="ts">
 	import {
-		ClipboardCheck,
 		Map,
 		Medal,
 		RotateCcw,
@@ -18,14 +17,12 @@
 		topics = [],
 		activeTopicSlug = '',
 		currentPathname = '',
-		showAdmin = false,
 		onTopicChange,
 		class: className = ''
 	}: {
 		topics?: NavTopic[];
 		activeTopicSlug?: string;
 		currentPathname?: string;
-		showAdmin?: boolean;
 		onTopicChange?: (slug: string) => void;
 		class?: string;
 	} = $props();
@@ -75,31 +72,20 @@
 				icon: Medal,
 				isActive: (pathname) => pathname.startsWith('/app/achievements')
 			},
-		{
-			id: 'leaderboard',
-			label: 'Leaderboard',
-			href: '/app/leaderboard',
-			icon: Trophy,
-			isActive: (pathname) => pathname.startsWith('/app/leaderboard')
-		},
-		{
-			id: 'profile',
-			label: 'Profile',
-			href: '/app/profile',
-			icon: UserRound,
-			isActive: (pathname) => pathname.startsWith('/app/profile')
-		},
-			...(showAdmin
-				? [
-						{
-							id: 'admin',
-							label: 'Admin',
-							href: '/app/content-admin',
-							icon: ClipboardCheck,
-							isActive: (pathname: string) => pathname.startsWith('/app/content-admin')
-						} satisfies LearningNavItem
-					]
-				: [])
+			{
+				id: 'leaderboard',
+				label: 'Leaderboard',
+				href: '/app/leaderboard',
+				icon: Trophy,
+				isActive: (pathname) => pathname.startsWith('/app/leaderboard')
+			},
+			{
+				id: 'profile',
+				label: 'Profile',
+				href: '/app/profile',
+				icon: UserRound,
+				isActive: (pathname) => pathname.startsWith('/app/profile')
+			}
 		];
 	});
 </script>

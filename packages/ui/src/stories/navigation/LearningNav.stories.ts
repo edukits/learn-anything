@@ -6,7 +6,6 @@ type LearningNavStoryArgs = {
 	topics: NavTopic[];
 	activeTopicSlug: string;
 	currentPathname: string;
-	showAdmin: boolean;
 	onTopicChange?: (slug: string) => void;
 };
 
@@ -24,7 +23,6 @@ const meta = {
 		topics: sampleTopics,
 		activeTopicSlug: 'algebra-basics',
 		currentPathname: '/app/topics/algebra-basics',
-		showAdmin: false,
 		onTopicChange: (slug: string) => console.log('Topic changed:', slug)
 	},
 	parameters: {
@@ -46,13 +44,6 @@ export const ReviewActive: Story = {
 export const DailyPlanActive: Story = {
 	args: {
 		currentPathname: '/app/daily-plan'
-	}
-};
-
-export const WithAdmin: Story = {
-	args: {
-		showAdmin: true,
-		currentPathname: '/app/content-admin'
 	}
 };
 

@@ -12,11 +12,12 @@ import { requireUser } from '$lib/server/auth/requireUser.server';
 
 export const load: PageServerLoad = async ({ locals, parent }) => {
 	const { user } = await parent();
-	const admin = await requireContentAdmin(locals.supabaseService, user.id);
+	const signedInUser = user ?? (await requireUser(locals));
+	const admin = await requireContentAdmin(locals.supabaseService, signedInUser.id);
 	const [qualityMetrics, releaseReviews, openIssues] = await Promise.all([
-		getContentQualityDashboard(locals.supabaseService, user.id),
-		getContentReleaseReviews(locals.supabaseService, user.id),
-		getOpenContentIssues(locals.supabaseService, user.id)
+		getContentQualityDashboard(locals.supabaseService, signedInUser.id),
+		getContentReleaseReviews(locals.supabaseService, signedInUser.id),
+		getOpenContentIssues(locals.supabaseService, signedInUser.id)
 	]);
 
 	return {

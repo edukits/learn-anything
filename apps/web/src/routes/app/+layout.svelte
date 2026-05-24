@@ -35,7 +35,6 @@
 			topics={navTopics}
 			activeTopicSlug={activeEnrollment?.topic_slug ?? ''}
 			currentPathname={page.url.pathname}
-			showAdmin={Boolean(data.adminRole)}
 			onTopicChange={(topicSlug: string) => {
 				void goto(`/app/topics/${topicSlug}`);
 			}}

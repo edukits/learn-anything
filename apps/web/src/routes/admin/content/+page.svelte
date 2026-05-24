@@ -185,6 +185,7 @@
 	.content-admin-page {
 		display: grid;
 		gap: 20px;
+		padding-block: 28px 48px;
 	}
 
 	.hero,
