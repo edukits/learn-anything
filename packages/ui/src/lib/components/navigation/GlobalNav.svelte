@@ -130,9 +130,6 @@
 					variant="global"
 					current={currentPathname.startsWith('/admin/content')}
 				>
-					<span class="nav-item-icon" aria-hidden="true">
-						<ClipboardCheck size={16} strokeWidth={2.25} />
-					</span>
 					Content Admin
 				</NavLink>
 			{/if}
@@ -243,10 +240,6 @@
 		align-items: center;
 		display: flex;
 		justify-content: end;
-	}
-
-	.nav-item-icon {
-		display: inline-flex;
 	}
 
 	form {
