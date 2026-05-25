@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { CheckCircle, RotateCcw } from '@lucide/svelte';
+	import { tiks } from '@rexa-developer/tiks';
 	import Button from '../Button.svelte';
 	import ProgressBar from '../ProgressBar.svelte';
 	import {
@@ -50,6 +51,7 @@
 	} from './types';
 
 	type AssessmentMode = 'quiz' | 'exam';
+	const FIRST_QUIZ_SOUND_DELAY_MS = 80;
 
 	type AssessmentProps = {
 		mode: AssessmentMode;
@@ -77,6 +79,8 @@
 		oncomplete
 	}: AssessmentProps = $props();
 
+	let quizSoundsInitialized = false;
+	let questionResultSoundPlayed = false;
 	let quizComplete = $state(false);
 	let examSubmitted = $state(false);
 	let progressSparkTrigger = $state(0);
@@ -109,6 +113,9 @@
 	let totalQuestions = $derived(questions.length);
 	let totalPages = $derived(pageGroups.length);
 	let hasMultiplePages = $derived(totalPages > 1);
+	let hasSingleQuestionPages = $derived(
+		mode === 'quiz' && pageGroups.length > 0 && pageGroups.every((page) => page.length === 1)
+	);
 	let answeredCount = $derived(questions.filter((question) => isQuestionAnswered(question)).length);
 	let submittedCount = $derived(
 		questions.filter((question) => questionSubmitted[question.id]).length
@@ -129,6 +136,23 @@
 				? Math.round((submittedCount / totalQuestions) * 100)
 				: Math.round((answeredCount / totalQuestions) * 100)
 	);
+
+	$effect(() => {
+		if (hasSingleQuestionPages) {
+			initQuizSounds();
+		}
+	});
+
+	initQuizSounds();
+
+	function initQuizSounds() {
+		if (typeof window === 'undefined' || quizSoundsInitialized) {
+			return;
+		}
+
+		tiks.init();
+		quizSoundsInitialized = true;
+	}
 
 	function isQuestionAnswered(question: QuizQuestionData) {
 		const response = question.response;
@@ -262,6 +286,7 @@
 		const result = getQuestionResult(question);
 		questionSubmitted[question.id] = true;
 		results[question.id] = result;
+		playQuestionResultSound(result);
 		if (
 			mode === 'quiz' &&
 			result.correct === true &&
@@ -270,6 +295,33 @@
 			progressSparkTrigger += 1;
 		}
 		onquestionresult?.(result);
+	}
+
+	function playQuestionResultSound(result: QuizQuestionResult) {
+		if (!hasSingleQuestionPages) {
+			return;
+		}
+
+		const playSound =
+			result.correct === true
+				? () => tiks.success()
+				: result.correct === false
+					? () => tiks.error()
+					: null;
+
+		if (!playSound) {
+			return;
+		}
+
+		initQuizSounds();
+
+		if (!questionResultSoundPlayed) {
+			questionResultSoundPlayed = true;
+			window.setTimeout(playSound, FIRST_QUIZ_SOUND_DELAY_MS);
+			return;
+		}
+
+		playSound();
 	}
 
 	function recordMathQuestionResult(question: QuizQuestionData, result: MathAnswerSubmitResult) {

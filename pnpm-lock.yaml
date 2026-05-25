@@ -181,6 +181,9 @@ importers:
       '@lucide/svelte':
         specifier: ^1.16.0
         version: 1.16.0(svelte@5.55.9)
+      '@rexa-developer/tiks':
+        specifier: ^0.2.0
+        version: 0.2.0(react@19.2.6)
       '@shopify/draggable':
         specifier: ^1.2.1
         version: 1.2.1
@@ -1442,6 +1445,17 @@ packages:
 
   '@protobufjs/utf8@1.1.1':
     resolution: {integrity: sha512-oOAWABowe8EAbMyWKM0tYDKi8Yaox52D+HWZhAIJqQXbqe0xI/GV7FhLWqlEKreMkfDjshR5FKgi3mnle0h6Eg==}
+
+  '@rexa-developer/tiks@0.2.0':
+    resolution: {integrity: sha512-fpm4EJqtOpidyHpt0Uvhh1SdEZL+YbK6jaPp8eh+UH+WgKzCMWbj5A4qJDutgD6g4PU2tKpSwEWfiw82MeQPYg==}
+    peerDependencies:
+      react: '>=18.0.0'
+      vue: '>=3.0.0'
+    peerDependenciesMeta:
+      react:
+        optional: true
+      vue:
+        optional: true
 
   '@rolldown/binding-android-arm64@1.0.2':
     resolution: {integrity: sha512-ZS4D1JPGn/MYQN/SYDWftIE/nVsM8j/AFOYEzAoOE2O3NktQOZru+/vYXGbR/qtdLdIfGCP0lcoJiYVzsEz+iQ==}
@@ -4257,6 +4271,10 @@ snapshots:
   '@protobufjs/pool@1.1.0': {}
 
   '@protobufjs/utf8@1.1.1': {}
+
+  '@rexa-developer/tiks@0.2.0(react@19.2.6)':
+    optionalDependencies:
+      react: 19.2.6
 
   '@rolldown/binding-android-arm64@1.0.2':
     optional: true
