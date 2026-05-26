@@ -28,48 +28,62 @@
 	let masteryBySkill = $derived(
 		new Map(data.mastery.map((projection) => [projection.skill_id, projection]))
 	);
-	let pathItems: PathMapItem[] = $derived(
-		[
-			...data.pathProgress.map((item) => ({
-				id: item.id,
-				title: item.title,
-				description: item.item_type === 'lesson' ? item.summary : item.description,
-				meta:
-					item.item_type === 'lesson'
-						? item.state === 'completed'
-							? 'Completed'
-							: `${item.estimated_minutes} min lesson`
-						: item.total_attempts > 0
-							? `Best score ${Math.round(item.best_score ?? 0)}%`
-							: `${item.question_count} questions`,
-				href:
-					item.state === 'locked'
-						? undefined
-						: item.item_type === 'lesson'
-							? `${topicBaseHref}/lesson/${item.item_id}`
-							: `${topicBaseHref}/quiz/${item.item_id}`,
-				state: item.state,
-				kind: item.item_type
-			})),
-			...(data.reviewSummary.available
-				? [
-						{
-							id: 'adaptive-review',
-							title: 'Adaptive review',
-							description: data.reviewSummary.reason_labels.join(' · '),
-							meta: `${data.reviewSummary.question_count} questions`,
-							href: `${topicBaseHref}/review`,
-							state: 'review' as const,
-							kind: 'review' as const
-						}
-					]
-				: [])
-		]
+	let pathProgressById = $derived(new Map(data.pathProgress.map((item) => [item.id, item])));
+	let modulePathGroups = $derived(
+		data.pathModules.map((module) => ({
+			...module,
+			pathItems: module.items
+				.flatMap((item) => {
+					const progressItem = pathProgressById.get(item.id);
+					return progressItem ? [toPathMapItem(progressItem)] : [];
+				})
+		}))
+	);
+	let reviewItem: PathMapItem | null = $derived(
+		data.reviewSummary.available
+			? {
+					id: 'adaptive-review',
+					title: 'Adaptive review',
+					description: data.reviewSummary.reason_labels.join(' · '),
+					meta: `${data.reviewSummary.question_count} questions`,
+					href: `${topicBaseHref}/review`,
+					state: 'review' as const,
+					kind: 'review' as const
+				}
+			: null
 	);
 	let nextAchievement = $derived(data.achievements.find((achievement) => !achievement.earned_at) ?? null);
 	let celebrationAchievements = $derived(
 		data.pendingAchievementCelebrations.map(toAchievementCelebrationItem)
 	);
+
+	function moduleAnchor(slug: string) {
+		return `module-${slug}`;
+	}
+
+	function toPathMapItem(item: (typeof data.pathProgress)[number]): PathMapItem {
+		return {
+			id: item.id,
+			title: item.title,
+			description: item.item_type === 'lesson' ? item.summary : item.description,
+			meta:
+				item.item_type === 'lesson'
+					? item.state === 'completed'
+						? 'Completed'
+						: `${item.estimated_minutes} min lesson`
+					: item.total_attempts > 0
+						? `Best score ${Math.round(item.best_score ?? 0)}%`
+						: `${item.question_count} questions`,
+			href:
+				item.state === 'locked'
+					? undefined
+					: item.item_type === 'lesson'
+						? `${topicBaseHref}/lesson/${item.item_id}`
+						: `${topicBaseHref}/quiz/${item.item_id}`,
+			state: item.state,
+			kind: item.item_type
+		};
+	}
 </script>
 
 <main class="page stack">
@@ -119,7 +133,45 @@
 				/>
 			</div>
 
-			<PathMap class="map-path" items={pathItems} ariaLabel={`${data.topic.name} learning path`} />
+			<div class="module-column">
+				<nav class="module-nav" aria-label="Modules">
+					{#each data.modules as module (module.topic_module_id)}
+						<a href={`#${moduleAnchor(module.slug)}`}>{module.title}</a>
+					{/each}
+				</nav>
+
+				<div class="module-list">
+					{#each modulePathGroups as module (module.topic_module_id)}
+						<section class="module-section" id={moduleAnchor(module.slug)}>
+							<div class="module-heading">
+								<p class="eyebrow">Module {module.ordering}</p>
+								<h2>{module.title}</h2>
+								<p>{module.description}</p>
+							</div>
+							<PathMap
+								class="map-path"
+								items={module.pathItems}
+								ariaLabel={`${module.title} learning path`}
+							/>
+						</section>
+					{/each}
+
+					{#if reviewItem}
+						<section class="module-section review-section" id="adaptive-review">
+							<div class="module-heading">
+								<p class="eyebrow">Review</p>
+								<h2>Adaptive review</h2>
+								<p>{data.reviewSummary.reason_labels.join(' · ')}</p>
+							</div>
+							<PathMap
+								class="map-path"
+								items={[reviewItem]}
+								ariaLabel={`${data.topic.name} adaptive review`}
+							/>
+						</section>
+					{/if}
+				</div>
+			</div>
 		</div>
 	</section>
 
@@ -268,6 +320,75 @@
 
 	.progress span {
 		color: var(--color-text-muted);
+	}
+
+	.module-column {
+		display: grid;
+		gap: 18px;
+		min-inline-size: 0;
+	}
+
+	.module-nav {
+		align-items: center;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.module-nav a {
+		background: color-mix(in srgb, var(--color-surface), transparent 8%);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-pill);
+		color: var(--color-text);
+		font-size: 0.86rem;
+		font-weight: 700;
+		padding: 7px 12px;
+		text-decoration: none;
+	}
+
+	.module-nav a:hover,
+	.module-nav a:focus-visible {
+		background: var(--color-surface-hover);
+		border-color: color-mix(in srgb, var(--color-accent), var(--color-border) 55%);
+	}
+
+	.module-list {
+		display: grid;
+		gap: 34px;
+	}
+
+	.module-section {
+		display: grid;
+		gap: 14px;
+		scroll-margin-block-start: 5.5rem;
+	}
+
+	.module-section + .module-section {
+		border-block-start: 1px solid var(--color-border);
+		padding-block-start: 28px;
+	}
+
+	.module-heading {
+		display: grid;
+		gap: 6px;
+		max-inline-size: 680px;
+	}
+
+	.module-heading h2,
+	.module-heading p {
+		margin: 0;
+	}
+
+	.module-heading h2 {
+		font-size: clamp(1.45rem, 3vw, 2rem);
+		letter-spacing: 0;
+		line-height: 1.05;
+	}
+
+	.module-heading p:not(.eyebrow) {
+		color: var(--color-text-muted);
+		font-size: 0.98rem;
+		line-height: 1.45;
 	}
 
 	.skills {

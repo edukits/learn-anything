@@ -2,6 +2,7 @@ export const defaultGenerationConfig = {
 	concurrency: 3,
 	model: 'openai-codex:gpt-5.5',
 	thinkingLevels: {
+		modules: 'high',
 		syllabus: 'high',
 		lesson: 'low',
 		quiz: 'medium',

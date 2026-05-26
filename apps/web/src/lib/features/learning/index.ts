@@ -9,6 +9,7 @@ export type {
 	Choice,
 	ContentRelease,
 	LearningPathItem,
+	LearningPathModule,
 	LearningPathItemProgress,
 	LessonVersion,
 	MetricItem,
@@ -22,7 +23,8 @@ export type {
 	ReviewSummary,
 	SkillAccuracyItem,
 	SkillVersion,
-	TopicContent
+	TopicContent,
+	TopicModuleVersion
 } from './types';
 export type { TopicDiscoveryMetadata } from '$lib/features/catalog';
 export type { LearningQuizQuestion } from './quiz';

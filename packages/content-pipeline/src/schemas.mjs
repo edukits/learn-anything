@@ -10,10 +10,29 @@ const skillSchema = z
 	})
 	.passthrough();
 
+const moduleSchema = z
+	.object({
+		id: z.string().min(1).optional(),
+		slug: z.string().min(1),
+		title: z.string().min(1),
+		description: z.string().min(1),
+		content_responsibility: z.string().min(1)
+	})
+	.passthrough();
+
+export const modulePlanSchema = z
+	.object({
+		summary: z.string().min(1).optional(),
+		modules: z.array(moduleSchema).min(1)
+	})
+	.passthrough();
+
 export const syllabusItemSchema = z
 	.object({
 		type: z.enum(['lesson', 'quiz']),
 		slug: z.string().min(1).optional(),
+		module_slug: z.string().min(1).optional(),
+		module_id: z.string().min(1).optional(),
 		focus: z.string().min(1),
 		goals: z.string().min(1),
 		nonGoals: z.string().min(1).optional(),
@@ -216,4 +235,5 @@ export function validateWithSchema(schema) {
 }
 
 export const validateSyllabus = validateWithSchema(syllabusSchema);
+export const validateModulePlan = validateWithSchema(modulePlanSchema);
 export const validateReviewedItem = validateWithSchema(reviewedItemSchema);

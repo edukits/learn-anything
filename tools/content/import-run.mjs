@@ -157,6 +157,7 @@ function releaseReviewRow(release) {
 const {
 	subject_areas: subjectAreas,
 	topic_areas: topicAreas,
+	topic_modules: topicModules = [],
 	skills,
 	lessons,
 	quizzes,
@@ -237,6 +238,41 @@ await upsert(
 		})
 	),
 	'topic_area_id,version'
+);
+
+await upsert(
+	'topic_modules',
+	topicModules.map(({ id, topic_area_id, slug }) => ({ id, topic_area_id, slug })),
+	'id'
+);
+await upsert(
+	'topic_module_versions',
+	topicModules.map(
+		({
+			id,
+			version,
+			topic_area_id,
+			title,
+			description,
+			content_responsibility,
+			ordering,
+			content_run_id,
+			source_refs,
+			schema_version
+		}) => ({
+			topic_module_id: id,
+			version,
+			topic_area_id,
+			title,
+			description,
+			content_responsibility,
+			ordering,
+			content_run_id,
+			source_refs,
+			schema_version
+		})
+	),
+	'topic_module_id,version'
 );
 
 await upsert(
@@ -447,6 +483,8 @@ await upsert(
 			item_type: item.item_type,
 			item_id: item.item_id,
 			item_version: item.item_version,
+			module_id: item.module_id ?? null,
+			module_version: item.module_version ?? null,
 			ordering: item.ordering,
 			required: item.required
 		}))

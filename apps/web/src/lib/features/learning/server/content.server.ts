@@ -3,6 +3,7 @@ import {
 	findPublicTopicDiscoveryBySlug,
 	findPublicTopicDiscoveryByTopicId
 } from '$lib/features/catalog/server/index.server';
+import { groupPathModules } from '$lib/features/learning/modules';
 import type {
 	ContentRelease,
 	LearningPathItem,
@@ -13,7 +14,8 @@ import type {
 	QuizVersion,
 	ReleaseItem,
 	SkillVersion,
-	TopicContent
+	TopicContent,
+	TopicModuleVersion
 } from '../types';
 
 function requireSingle<T>(value: T | null | undefined, label: string): T {
@@ -102,6 +104,12 @@ export async function getTopicContent(
 	const skillItems = getItemsByType(releaseItems, 'skill');
 	const skillIds = skillItems.map((item) => item.content_id);
 	const path = await getTopicPath(client, releaseItems);
+	const modules = await getTopicModules(
+		client,
+		releaseItems,
+		path.path,
+		requireSingle(topic, 'public topic metadata').topic_area_id
+	);
 
 	const { data: skills, error: skillsError } = await client
 		.from('skill_versions')
@@ -116,6 +124,8 @@ export async function getTopicContent(
 		releaseItems,
 		path: path.path,
 		pathItems: path.pathItems,
+		modules,
+		pathModules: groupPathModules(modules, path.pathItems),
 		skills: filterReleaseVersions(
 			skills as SkillVersion[] | null,
 			skillItems,
@@ -123,6 +133,48 @@ export async function getTopicContent(
 		),
 		topic: requireSingle(topic, 'public topic metadata')
 	};
+}
+
+async function getTopicModules(
+	client: SupabaseClient,
+	releaseItems: ReleaseItem[],
+	path: LearningPathVersion,
+	topicAreaId: string
+): Promise<TopicModuleVersion[]> {
+	const defaultModule = {
+		topic_module_id: `default:${path.learning_path_id}`,
+		version: path.version,
+		topic_area_id: topicAreaId,
+		slug: 'default',
+		title: path.title,
+		description: path.summary,
+		content_responsibility: path.summary,
+		ordering: 1
+	} satisfies TopicModuleVersion;
+	const moduleItems = getItemsByType(releaseItems, 'topic_module');
+	if (!moduleItems.length) {
+		return [defaultModule];
+	}
+
+	const { data, error } = await client
+		.from('topic_module_versions')
+		.select(
+			'topic_module_id,version,topic_area_id,slug,title,description,content_responsibility,ordering'
+		)
+		.in(
+			'topic_module_id',
+			moduleItems.map((item) => item.content_id)
+		)
+		.order('ordering');
+
+	if (error) throw new Error(error.message);
+
+	const releasedModules = filterReleaseVersions(
+		(data ?? []) as TopicModuleVersion[],
+		moduleItems,
+		(module) => module.topic_module_id
+	).toSorted((a, b) => a.ordering - b.ordering);
+	return releasedModules.length ? releasedModules : [defaultModule];
 }
 
 async function getTopicPath(client: SupabaseClient, releaseItems: ReleaseItem[]) {
@@ -141,7 +193,7 @@ async function getTopicPath(client: SupabaseClient, releaseItems: ReleaseItem[])
 				.maybeSingle(),
 			client
 				.from('learning_path_items')
-				.select('item_type,item_id,item_version,ordering,required')
+				.select('item_type,item_id,item_version,module_id,module_version,ordering,required')
 				.eq('learning_path_id', pathItem.content_id)
 				.eq('learning_path_version', pathItem.content_version)
 				.order('ordering')
@@ -209,6 +261,8 @@ async function getTopicPath(client: SupabaseClient, releaseItems: ReleaseItem[])
 					item_type: 'lesson',
 					item_id: item.item_id,
 					item_version: item.item_version,
+					module_id: item.module_id ?? null,
+					module_version: item.module_version ?? null,
 					ordering: item.ordering,
 					required: item.required,
 					title: lesson.title,
@@ -224,6 +278,8 @@ async function getTopicPath(client: SupabaseClient, releaseItems: ReleaseItem[])
 				item_type: 'quiz',
 				item_id: item.item_id,
 				item_version: item.item_version,
+				module_id: item.module_id ?? null,
+				module_version: item.module_version ?? null,
 				ordering: item.ordering,
 				required: item.required,
 				title: quiz.title,

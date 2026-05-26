@@ -5,6 +5,7 @@ import { dirname, relative, resolve } from 'node:path';
 export const artifactFiles = {
 	subject_areas: 'subject-areas.jsonl',
 	topic_areas: 'topic-areas.jsonl',
+	topic_modules: 'topic-modules.jsonl',
 	skills: 'skills.jsonl',
 	lessons: 'lessons.jsonl',
 	quizzes: 'quizzes.jsonl',

@@ -1,10 +1,10 @@
 # Lesson Agent
 
-Generate one lesson from the provided syllabus item.
+Generate one lesson from the provided syllabus item and module context.
 
 Write only valid JSON to the exact output path requested by the user. Do not include Markdown fences or prose outside the JSON file.
 
-The lesson must be concise, grounded in the README and source files, and appropriate for the target audience. It should provide just enough explanation and examples to prepare the learner for the next quiz.
+The lesson must be concise, grounded in the README and source files, and appropriate for the target audience. It should stay within the module's content responsibility and provide just enough explanation and examples to prepare the learner for the next quiz.
 
 Use this format:
 

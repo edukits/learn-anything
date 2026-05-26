@@ -1,0 +1,36 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://learn-anything.local/content-schemas/v1/topic-module.schema.json",
+	"title": "Topic module",
+	"type": "object",
+	"required": [
+		"id",
+		"version",
+		"topic_area_id",
+		"slug",
+		"title",
+		"description",
+		"content_responsibility",
+		"ordering",
+		"content_run_id",
+		"schema_version",
+		"source_refs"
+	],
+	"properties": {
+		"id": { "type": "string", "minLength": 1 },
+		"version": { "type": "integer", "minimum": 1 },
+		"topic_area_id": { "type": "string", "minLength": 1 },
+		"slug": { "type": "string", "minLength": 1 },
+		"title": { "type": "string", "minLength": 1 },
+		"description": { "type": "string", "minLength": 1 },
+		"content_responsibility": { "type": "string", "minLength": 1 },
+		"ordering": { "type": "integer", "minimum": 1 },
+		"content_run_id": { "type": "string", "minLength": 1 },
+		"schema_version": { "type": "integer", "minimum": 1 },
+		"source_refs": {
+			"type": "array",
+			"items": { "$ref": "subject-area.schema.json#/$defs/source_ref" }
+		}
+	},
+	"additionalProperties": false
+}

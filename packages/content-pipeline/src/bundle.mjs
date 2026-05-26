@@ -54,6 +54,40 @@ function itemSlug(item, index) {
 	return slugify(item.slug ?? item.focus ?? item.title ?? `${item.type}-${index + 1}`);
 }
 
+function normalizeModuleRecords({ input, modules, syllabus, runId, sourceRefs }) {
+	const topic = input.topic;
+	const plannedModules = modules?.modules ?? syllabus?.modules ?? [];
+	const sourceModules =
+		plannedModules.length > 0
+			? plannedModules
+			: [
+					{
+						slug: topic.learning_path.slug ?? `${topic.topic.slug}-module`,
+						title: topic.learning_path.title ?? topic.topic.name,
+						description: topic.learning_path.summary ?? syllabus.summary ?? topic.topic.summary,
+						content_responsibility:
+							topic.learning_path.summary ?? syllabus.summary ?? topic.topic.summary
+					}
+				];
+
+	return sourceModules.map((module, index) => {
+		const title = one(module.title ?? module.name, `Module ${index + 1}`);
+		const slug = slugify(module.slug ?? title);
+		const id = module.id ?? `module_${snakeId(topic.topic.slug)}_${snakeId(slug)}`;
+		return Object.assign(versionedBase(id, runId, sourceRefs), {
+			topic_area_id: topic.topic.id,
+			slug,
+			title,
+			description: one(module.description, module.summary ?? title),
+			content_responsibility: one(
+				module.content_responsibility,
+				module.responsibility ?? module.description ?? module.summary ?? title
+			),
+			ordering: Number.isInteger(module.ordering) ? module.ordering : index + 1
+		});
+	});
+}
+
 function lessonRecord({ item, index, topic, runId, sourceRefs, skillLookup }) {
 	const slug = itemSlug(item, index);
 	const id = item.id ?? `lesson_${snakeId(topic.topic.slug)}_${snakeId(slug)}`;
@@ -160,6 +194,7 @@ function validateReviewedItems(items) {
 export async function bundleRun({
 	input,
 	syllabus,
+	modules,
 	reviewedItems,
 	outDir,
 	runId,
@@ -173,6 +208,10 @@ export async function bundleRun({
 	const publishedAt = now.toISOString();
 	const title = `${topic.topic.name} ${runId.replace(/^run_/, '')}`;
 	const skills = normalizeSkills(topic.topic.slug, reviewedItems);
+	const topicModules = normalizeModuleRecords({ input, modules, syllabus, runId, sourceRefs });
+	const firstModule = topicModules[0];
+	const moduleBySlug = new Map(topicModules.map((topicModule) => [topicModule.slug, topicModule]));
+	const moduleById = new Map(topicModules.map((topicModule) => [topicModule.id, topicModule]));
 	const lessons = [];
 	const quizzes = [];
 	const questions = [];
@@ -180,6 +219,11 @@ export async function bundleRun({
 	const pathItems = [];
 
 	for (const [index, item] of reviewedItems.entries()) {
+		const syllabusItem = syllabus.syllabus?.[index] ?? {};
+		const module =
+			moduleById.get(item.module_id ?? syllabusItem.module_id) ??
+			moduleBySlug.get(item.module_slug ?? syllabusItem.module_slug ?? syllabusItem.module?.slug) ??
+			firstModule;
 		if (item.type === 'lesson') {
 			const lesson = lessonRecord({ item, index, topic, runId, sourceRefs, skillLookup: skills });
 			lessons.push(lesson);
@@ -187,6 +231,8 @@ export async function bundleRun({
 				item_type: 'lesson',
 				item_id: lesson.id,
 				item_version: 1,
+				module_id: module?.id,
+				module_version: module?.version,
 				ordering: index + 1,
 				required: true
 			});
@@ -199,6 +245,8 @@ export async function bundleRun({
 			item_type: 'quiz',
 			item_id: quiz.id,
 			item_version: 1,
+			module_id: module?.id,
+			module_version: module?.version,
 			ordering: index + 1,
 			required: true
 		});
@@ -233,6 +281,11 @@ export async function bundleRun({
 	const releaseItems = [
 		{ content_type: 'subject_area', content_id: topic.subject.id, content_version: 1 },
 		{ content_type: 'topic_area', content_id: topic.topic.id, content_version: 1 },
+		...topicModules.map((topicModule) => ({
+			content_type: 'topic_module',
+			content_id: topicModule.id,
+			content_version: 1
+		})),
 		...skills.map((skill) => ({ content_type: 'skill', content_id: skill.id, content_version: 1 })),
 		...lessons.map((lesson) => ({
 			content_type: 'lesson',
@@ -266,6 +319,7 @@ export async function bundleRun({
 				summary: topic.topic.summary
 			}
 		],
+		topic_modules: topicModules,
 		skills: skills.map((skill) => ({
 			...versionedBase(skill.id, runId, sourceRefs),
 			topic_area_id: topic.topic.id,

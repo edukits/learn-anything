@@ -55,12 +55,25 @@ export type LearningPathVersion = {
 	summary: string;
 };
 
+export type TopicModuleVersion = {
+	topic_module_id: string;
+	version: number;
+	topic_area_id: string;
+	slug: string;
+	title: string;
+	description: string;
+	content_responsibility: string;
+	ordering: number;
+};
+
 export type LearningPathItem =
 	| {
 			id: string;
 			item_type: 'lesson';
 			item_id: string;
 			item_version: number;
+			module_id: string | null;
+			module_version: number | null;
 			ordering: number;
 			required: boolean;
 			title: string;
@@ -72,6 +85,8 @@ export type LearningPathItem =
 			item_type: 'quiz';
 			item_id: string;
 			item_version: number;
+			module_id: string | null;
+			module_version: number | null;
 			ordering: number;
 			required: boolean;
 			title: string;
@@ -86,6 +101,10 @@ export type LearningPathItemProgress = LearningPathItem & {
 	latest_score: number | null;
 	best_score: number | null;
 	total_attempts: number;
+};
+
+export type LearningPathModule<TItem = LearningPathItem> = TopicModuleVersion & {
+	items: TItem[];
 };
 
 export type QuestionPurpose = 'recognition' | 'application';
@@ -139,6 +158,8 @@ export type TopicContent = {
 	releaseItems: ReleaseItem[];
 	path: LearningPathVersion;
 	pathItems: LearningPathItem[];
+	modules: TopicModuleVersion[];
+	pathModules: LearningPathModule[];
 	skills: SkillVersion[];
 	topic: TopicDiscoveryMetadata;
 };
