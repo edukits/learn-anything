@@ -1,4 +1,4 @@
-# Learn Anything
+# Clarifyst
 
 PNPM monorepo managed with Turborepo.
 

@@ -1,6 +1,6 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$id": "https://learn-anything.local/content-schemas/v1/learning-path.schema.json",
+	"$id": "https://clarifyst.local/content-schemas/v1/learning-path.schema.json",
 	"title": "Learning path",
 	"type": "object",
 	"required": ["id", "version", "topic_area_id", "slug", "title", "summary", "items", "content_run_id", "schema_version", "source_refs"],

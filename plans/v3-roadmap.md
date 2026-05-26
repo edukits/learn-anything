@@ -1,6 +1,6 @@
 # V3 Roadmap
 
-V3 moves Learn Anything from a polished single-topic learning app into the first version of the broad platform described in the product vision: many subjects, personalized practice, durable motivation, and a repeatable content pipeline.
+V3 moves Clarifyst from a polished single-topic learning app into the first version of the broad platform described in the product vision: many subjects, personalized practice, durable motivation, and a repeatable content pipeline.
 
 Theme: **expand, personalize, and compete**.
 
@@ -21,7 +21,7 @@ The implementation must provide these platform capabilities:
 
 ### 1. Multi-Subject Catalog
 
-V3 should prove that Learn Anything is not only an English Literary Devices app.
+V3 should prove that Clarifyst is not only an English Literary Devices app.
 
 Minimum catalog:
 

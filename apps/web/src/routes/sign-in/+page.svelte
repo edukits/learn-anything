@@ -13,7 +13,7 @@
 			<div class="brand-logo">
 				<BookOpenCheck size={28} strokeWidth={2.25} />
 			</div>
-			<h2 class="brand-title">Learn Anything</h2>
+			<h2 class="brand-title">Clarifyst</h2>
 			<p class="brand-tagline">
 				Master any topic with structured paths, spaced repetition, and AI-guided practice.
 			</p>

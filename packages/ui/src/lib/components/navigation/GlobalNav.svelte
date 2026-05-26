@@ -77,7 +77,7 @@
 			<span class="brand-mark" aria-hidden="true">
 				<BookOpenCheck size={22} strokeWidth={2.25} />
 			</span>
-			Learn Anything
+			Clarifyst
 		</a>
 
 		<nav

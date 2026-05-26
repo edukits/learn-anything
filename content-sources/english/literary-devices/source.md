@@ -2,7 +2,7 @@
 
 ## Purpose
 
-These notes ground the first Learn Anything content drop for English Literary Devices. The target learner is a high-school student who needs to recognize common literary devices, explain their effects, and apply the concepts to short examples.
+These notes ground the first Clarifyst content drop for English Literary Devices. The target learner is a high-school student who needs to recognize common literary devices, explain their effects, and apply the concepts to short examples.
 
 The first learning path should include one intro lesson and one 15-question mixed multiple-choice quiz. The quiz should include both recognition and application questions.
 

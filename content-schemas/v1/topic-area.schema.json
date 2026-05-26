@@ -1,6 +1,6 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$id": "https://learn-anything.local/content-schemas/v1/topic-area.schema.json",
+	"$id": "https://clarifyst.local/content-schemas/v1/topic-area.schema.json",
 	"title": "Topic area",
 	"type": "object",
 	"required": ["id", "version", "subject_area_id", "slug", "name", "summary", "content_run_id", "schema_version", "source_refs"],

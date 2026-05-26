@@ -1,6 +1,6 @@
 # V2 Roadmap
 
-V2 moves Learn Anything from one validated MVP loop into a small, repeatable learning platform. It builds directly on the v1 Literary Devices path rather than replacing it.
+V2 moves Clarifyst from one validated MVP loop into a small, repeatable learning platform. It builds directly on the v1 Literary Devices path rather than replacing it.
 
 Theme: **discover, return, and improve**.
 

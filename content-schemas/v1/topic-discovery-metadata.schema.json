@@ -1,6 +1,6 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$id": "https://learn-anything.local/content-schemas/v1/topic-discovery-metadata.schema.json",
+	"$id": "https://clarifyst.local/content-schemas/v1/topic-discovery-metadata.schema.json",
 	"title": "Topic discovery metadata",
 	"type": "object",
 	"additionalProperties": false,

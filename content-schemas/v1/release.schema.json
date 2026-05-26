@@ -1,6 +1,6 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$id": "https://learn-anything.local/content-schemas/v1/release.schema.json",
+	"$id": "https://clarifyst.local/content-schemas/v1/release.schema.json",
 	"title": "Content release",
 	"type": "object",
 	"required": ["id", "slug", "title", "scope_type", "scope_id", "status", "content_run_id", "bundle_key", "items", "manifest"],

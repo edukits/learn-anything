@@ -3,7 +3,7 @@
 </script>
 
 <svelte:head>
-	<title>Learn Anything Demo</title>
+	<title>Clarifyst Demo</title>
 </svelte:head>
 
 <main>

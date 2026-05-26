@@ -1,6 +1,6 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$id": "https://learn-anything.local/content-schemas/v1/quiz.schema.json",
+	"$id": "https://clarifyst.local/content-schemas/v1/quiz.schema.json",
 	"title": "Quiz",
 	"type": "object",
 	"required": ["id", "version", "topic_area_id", "slug", "title", "description", "kind", "question_count", "content_run_id", "schema_version", "source_refs"],
