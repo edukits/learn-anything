@@ -5,16 +5,12 @@
 	import {
 		AchievementCelebrationDialog,
 		Button,
-		NextAchievementStatus,
 		PathMap,
 		ProgressBar,
 		type AchievementCelebrationItem
 	} from '@learn-anything/ui';
 	import type { PathMapItem } from '@learn-anything/ui';
-	import {
-		toAchievementCardData,
-		toAchievementCelebrationItem
-	} from '$lib/features/engagement/achievement-ui';
+	import { toAchievementCelebrationItem } from '$lib/features/engagement/achievement-ui';
 
 	let { data, form }: PageProps = $props();
 	let topicBaseHref = $derived(`/app/topics/${data.topic.slug}`);
@@ -52,7 +48,6 @@
 				}
 			: null
 	);
-	let nextAchievement = $derived(data.achievements.find((achievement) => !achievement.earned_at) ?? null);
 	let celebrationAchievements = $derived(
 		data.pendingAchievementCelebrations.map(toAchievementCelebrationItem)
 	);
@@ -127,10 +122,6 @@
 						disableSparks
 					/>
 				</div>
-				<NextAchievementStatus
-					achievement={nextAchievement ? toAchievementCardData(nextAchievement) : null}
-					href="/app/achievements"
-				/>
 			</div>
 
 			<div class="module-column">

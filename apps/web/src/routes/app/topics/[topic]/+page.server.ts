@@ -2,7 +2,6 @@ import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { z } from 'zod';
 import {
-	getAchievements,
 	getPendingAchievementCelebrations,
 	markAchievementCelebrationsSeen
 } from '$lib/features/engagement/server/index.server';
@@ -24,21 +23,18 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		progress,
 		pathProgress,
 		mastery,
-		achievements,
 		pendingAchievementCelebrations,
 		reviewSummary
 	] = await Promise.all([
 		getUserProgress(locals.supabase, user.id, content.topic.topic_area_id, content.release.id),
 		getPathItemProgress(locals.supabase, user.id, content.release.id, content.pathItems),
 		getSkillMasteryProjections(locals.supabase, user.id, content.topic.topic_area_id),
-		getAchievements(locals.supabase, user.id),
 		getPendingAchievementCelebrations(locals.supabase, user.id),
 		getReviewSummary(locals.supabase, user.id, content)
 	]);
 
 	return {
 		...content,
-		achievements,
 		pendingAchievementCelebrations,
 		progress,
 		mastery,
