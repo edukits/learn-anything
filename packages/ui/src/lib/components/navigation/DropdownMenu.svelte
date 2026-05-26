@@ -243,6 +243,10 @@
 		box-shadow: 0 1px 0 inset rgb(255 255 255 / 0.35);
 	}
 
+	:global(.dropdown-menu-content .dropdown-menu-link[aria-current='page']) {
+		color: var(--color-accent);
+	}
+
 	:global(.dropdown-menu-content .dropdown-menu-link strong) {
 		color: var(--color-text);
 		display: block;
