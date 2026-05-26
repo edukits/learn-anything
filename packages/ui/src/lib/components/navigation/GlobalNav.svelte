@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { Spring, prefersReducedMotion } from 'svelte/motion';
-	import { BookOpenCheck, ChevronDown, ClipboardCheck, LogOut, User } from '@lucide/svelte';
+	import { ChevronDown, ClipboardCheck, LogOut, User } from '@lucide/svelte';
 	import Button from '../Button.svelte';
 	import DropdownMenu from './DropdownMenu.svelte';
 	import NavLink from './NavLink.svelte';
 	import NavStrip from './NavStrip.svelte';
 	import type { NavSubject, NavUser } from './types';
 	import { DropdownMenu as DropdownMenuPrimitive } from 'bits-ui';
+	import logoUrl from '../../assets/brand/logo-sm.jpg';
 
 	let {
 		subjects = [],
@@ -74,9 +75,7 @@
 <NavStrip tone="global" sticky class={className}>
 	<header class="global-nav">
 		<a class="brand" href={brandHref}>
-			<span class="brand-mark" aria-hidden="true">
-				<BookOpenCheck size={22} strokeWidth={2.25} />
-			</span>
+			<img class="brand-mark" src={logoUrl} alt="" aria-hidden="true" />
 			Clarifyst
 		</a>
 
@@ -197,21 +196,14 @@
 	}
 
 	.brand-mark {
-		align-items: center;
-		background: linear-gradient(
-			to bottom,
-			hsl(var(--color-accent-h) var(--color-accent-s) var(--color-accent-l)),
-			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 14%))
-		);
-		border: 1px solid hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 24%));
+		aspect-ratio: 1;
+		background: var(--color-surface);
+		border: 1px solid hsl(var(--color-border-h) var(--color-border-s) var(--color-border-l));
 		border-radius: var(--radius-sm);
-		box-shadow:
-			0 1px 0 inset hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) + 10%)),
-			0 2px 4px hsl(var(--color-accent-h) 20% 40% / 0.18);
-		color: var(--color-accent-contrast);
-		display: inline-flex;
+		display: block;
+		flex: 0 0 auto;
 		height: 2rem;
-		justify-content: center;
+		object-fit: contain;
 		width: 2rem;
 	}
 
