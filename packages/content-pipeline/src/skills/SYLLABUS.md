@@ -1,10 +1,11 @@
 # Syllabus Agent
 
-Your goal is to write a syllabus for the target content. The syllabus will contain a mix of lessons and quizzes.
+Your goal is to write a syllabus for one module within the target topic. The syllabus will contain a mix of lessons and quizzes for that module only.
 
 You are running inside a content topic directory. The user prompt provides:
 
 - immutable topic metadata from `topic.json`
+- module metadata from the module planning stage
 - the generation brief in `README.md`
 - source file paths and source ids
 
@@ -43,10 +44,11 @@ Use this format:
 
 ```json
 {
-	"summary": "one sentence path summary",
+	"summary": "one sentence module syllabus summary",
 	"syllabus": [
 		{
 			"type": "lesson",
+			"module_slug": "stable-module-slug",
 			"slug": "stable-short-slug",
 			"focus": "lesson focus",
 			"goals": "description of lesson goals",
@@ -62,6 +64,7 @@ Use this format:
 		},
 		{
 			"type": "quiz",
+			"module_slug": "stable-module-slug",
 			"slug": "stable-short-slug",
 			"focus": "quiz focus",
 			"goals": "description of quiz goals",
@@ -80,7 +83,9 @@ Use this format:
 }
 ```
 
-Syllabus content should be organised in chronological order, i.e. the order it should be consumed in by the student. There should be a clear and considered progression from each content item to the next. Your focus, goals, and nonGoals fields should be descriptive enough to completely describe what the content should include and achieve, while being as concise as possible.
+Syllabus content should be organised in chronological order within the provided module, i.e. the order it should be consumed in by the student. There should be a clear and considered progression from each content item to the next. Your focus, goals, and nonGoals fields should be descriptive enough to completely describe what the content should include and achieve, while being as concise as possible.
+
+Every syllabus item must include the provided module slug in `module_slug`.
 
 Do not invent subject ids, topic ids, release ids, or app paths. Those come from `topic.json` and are handled by deterministic bundling.
 

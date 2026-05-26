@@ -3,6 +3,7 @@ import {
 	findPublicTopicDiscoveryBySlug,
 	findPublicTopicDiscoveryByTopicId
 } from '$lib/features/catalog/server/index.server';
+import { groupPathModules } from '$lib/features/learning/modules';
 import type {
 	ContentRelease,
 	LearningPathItem,
@@ -13,7 +14,8 @@ import type {
 	QuizVersion,
 	ReleaseItem,
 	SkillVersion,
-	TopicContent
+	TopicContent,
+	TopicModuleVersion
 } from '../types';
 
 function requireSingle<T>(value: T | null | undefined, label: string): T {
@@ -69,6 +71,14 @@ function versionKey(contentId: string, version: number) {
 	return `${contentId}@${version}`;
 }
 
+function chunkItems<T>(items: T[], size: number) {
+	const chunks: T[][] = [];
+	for (let index = 0; index < items.length; index += size) {
+		chunks.push(items.slice(index, index + size));
+	}
+	return chunks;
+}
+
 function filterReleaseVersions<T extends { version: number }>(
 	rows: T[] | null,
 	items: ReleaseItem[],
@@ -102,6 +112,12 @@ export async function getTopicContent(
 	const skillItems = getItemsByType(releaseItems, 'skill');
 	const skillIds = skillItems.map((item) => item.content_id);
 	const path = await getTopicPath(client, releaseItems);
+	const modules = await getTopicModules(
+		client,
+		releaseItems,
+		path.path,
+		requireSingle(topic, 'public topic metadata').topic_area_id
+	);
 
 	const { data: skills, error: skillsError } = await client
 		.from('skill_versions')
@@ -116,6 +132,8 @@ export async function getTopicContent(
 		releaseItems,
 		path: path.path,
 		pathItems: path.pathItems,
+		modules,
+		pathModules: groupPathModules(modules, path.pathItems),
 		skills: filterReleaseVersions(
 			skills as SkillVersion[] | null,
 			skillItems,
@@ -123,6 +141,61 @@ export async function getTopicContent(
 		),
 		topic: requireSingle(topic, 'public topic metadata')
 	};
+}
+
+async function getTopicModules(
+	client: SupabaseClient,
+	releaseItems: ReleaseItem[],
+	path: LearningPathVersion,
+	topicAreaId: string
+): Promise<TopicModuleVersion[]> {
+	const defaultModule = {
+		topic_module_id: `default:${path.learning_path_id}`,
+		version: path.version,
+		topic_area_id: topicAreaId,
+		slug: 'default',
+		title: path.title,
+		description: path.summary,
+		content_responsibility: path.summary,
+		ordering: 1
+	} satisfies TopicModuleVersion;
+	const moduleItems = getItemsByType(releaseItems, 'topic_module');
+	if (!moduleItems.length) {
+		return [defaultModule];
+	}
+
+	const moduleIds = moduleItems.map((item) => item.content_id);
+	const [{ data, error }, { data: moduleRows, error: modulesError }] = await Promise.all([
+		client
+			.from('topic_module_versions')
+			.select(
+				'topic_module_id,version,topic_area_id,title,description,content_responsibility,ordering'
+			)
+			.in('topic_module_id', moduleIds)
+			.order('ordering'),
+		client.from('topic_modules').select('id,slug').in('id', moduleIds)
+	]);
+
+	if (error) throw new Error(error.message);
+	if (modulesError) throw new Error(modulesError.message);
+
+	const slugByModuleId = new Map((moduleRows ?? []).map((module) => [module.id, module.slug]));
+
+	const releasedModules = filterReleaseVersions(
+		(data ?? []).map((module) => ({
+			topic_module_id: module.topic_module_id,
+			version: module.version,
+			topic_area_id: module.topic_area_id,
+			slug: requireSingle(slugByModuleId.get(module.topic_module_id), 'topic module slug'),
+			title: module.title,
+			description: module.description,
+			content_responsibility: module.content_responsibility,
+			ordering: module.ordering
+		})) as TopicModuleVersion[],
+		moduleItems,
+		(module) => module.topic_module_id
+	).toSorted((a, b) => a.ordering - b.ordering);
+	return releasedModules.length ? releasedModules : [defaultModule];
 }
 
 async function getTopicPath(client: SupabaseClient, releaseItems: ReleaseItem[]) {
@@ -141,7 +214,7 @@ async function getTopicPath(client: SupabaseClient, releaseItems: ReleaseItem[])
 				.maybeSingle(),
 			client
 				.from('learning_path_items')
-				.select('item_type,item_id,item_version,ordering,required')
+				.select('item_type,item_id,item_version,module_id,module_version,ordering,required')
 				.eq('learning_path_id', pathItem.content_id)
 				.eq('learning_path_version', pathItem.content_version)
 				.order('ordering')
@@ -209,6 +282,8 @@ async function getTopicPath(client: SupabaseClient, releaseItems: ReleaseItem[])
 					item_type: 'lesson',
 					item_id: item.item_id,
 					item_version: item.item_version,
+					module_id: item.module_id ?? null,
+					module_version: item.module_version ?? null,
 					ordering: item.ordering,
 					required: item.required,
 					title: lesson.title,
@@ -224,6 +299,8 @@ async function getTopicPath(client: SupabaseClient, releaseItems: ReleaseItem[])
 				item_type: 'quiz',
 				item_id: item.item_id,
 				item_version: item.item_version,
+				module_id: item.module_id ?? null,
+				module_version: item.module_version ?? null,
 				ordering: item.ordering,
 				required: item.required,
 				title: quiz.title,
@@ -407,21 +484,27 @@ export async function getActiveReleaseQuestions(
 		return [];
 	}
 
-	const { data, error } = await client
-		.from('quiz_question_versions')
-		.select(
-			'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
-		)
-		.in(
-			'question_id',
-			questionItems.map((item) => item.content_id)
-		)
-		.eq('lifecycle_status', 'active');
+	const questionRowBatches = await Promise.all(
+		chunkItems(
+			questionItems.map((item) => item.content_id),
+			50
+		).map(async (questionIds) => {
+			const { data, error } = await client
+				.from('quiz_question_versions')
+				.select(
+					'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
+				)
+				.in('question_id', questionIds)
+				.eq('lifecycle_status', 'active');
 
-	if (error) throw new Error(error.message);
+			if (error) throw new Error(error.message);
+			return data ?? [];
+		})
+	);
+	const questionRows = questionRowBatches.flat();
 
 	return filterReleaseVersions(
-		(data ?? []).map((question) => ({
+		questionRows.map((question) => ({
 			question_id: question.question_id,
 			version: question.version,
 			skill_id: question.skill_id,

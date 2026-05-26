@@ -1,6 +1,6 @@
 # Review Agent
 
-Review and correct one generated lesson or quiz draft.
+Review and correct one generated lesson or quiz draft using the syllabus item and module context.
 
 Write only valid JSON to the exact output path requested by the user. Do not include Markdown fences or prose outside the JSON file.
 
@@ -8,7 +8,7 @@ Your job:
 
 - preserve the top-level `type`
 - fix factual errors, unclear wording, malformed JSON shape, missing required fields, weak explanations, and inappropriate difficulty
-- keep content aligned to the syllabus item, README brief, and sources
+- keep content aligned to the module responsibility, syllabus item, README brief, and sources
 - keep lessons concise
 - keep quiz questions deterministic and importable
 

@@ -3,7 +3,18 @@
 	"$id": "https://clarifyst.local/content-schemas/v1/release.schema.json",
 	"title": "Content release",
 	"type": "object",
-	"required": ["id", "slug", "title", "scope_type", "scope_id", "status", "content_run_id", "bundle_key", "items", "manifest"],
+	"required": [
+		"id",
+		"slug",
+		"title",
+		"scope_type",
+		"scope_id",
+		"status",
+		"content_run_id",
+		"bundle_key",
+		"items",
+		"manifest"
+	],
 	"properties": {
 		"id": { "type": "string", "minLength": 1 },
 		"slug": { "type": "string", "minLength": 1 },
@@ -21,7 +32,19 @@
 				"type": "object",
 				"required": ["content_type", "content_id", "content_version"],
 				"properties": {
-					"content_type": { "enum": ["subject_area", "topic_area", "skill", "lesson", "quiz", "quiz_question", "learning_path", "media_asset"] },
+					"content_type": {
+						"enum": [
+							"subject_area",
+							"topic_area",
+							"topic_module",
+							"skill",
+							"lesson",
+							"quiz",
+							"quiz_question",
+							"learning_path",
+							"media_asset"
+						]
+					},
 					"content_id": { "type": "string", "minLength": 1 },
 					"content_version": { "type": "integer", "minimum": 1 }
 				},

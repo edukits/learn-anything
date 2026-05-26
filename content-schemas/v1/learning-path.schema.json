@@ -3,7 +3,18 @@
 	"$id": "https://clarifyst.local/content-schemas/v1/learning-path.schema.json",
 	"title": "Learning path",
 	"type": "object",
-	"required": ["id", "version", "topic_area_id", "slug", "title", "summary", "items", "content_run_id", "schema_version", "source_refs"],
+	"required": [
+		"id",
+		"version",
+		"topic_area_id",
+		"slug",
+		"title",
+		"summary",
+		"items",
+		"content_run_id",
+		"schema_version",
+		"source_refs"
+	],
 	"properties": {
 		"id": { "type": "string", "minLength": 1 },
 		"version": { "type": "integer", "minimum": 1 },
@@ -21,15 +32,24 @@
 					"item_type": { "enum": ["lesson", "quiz"] },
 					"item_id": { "type": "string", "minLength": 1 },
 					"item_version": { "type": "integer", "minimum": 1 },
+					"module_id": { "type": "string", "minLength": 1 },
+					"module_version": { "type": "integer", "minimum": 1 },
 					"ordering": { "type": "integer", "minimum": 1 },
 					"required": { "type": "boolean" }
+				},
+				"dependentRequired": {
+					"module_id": ["module_version"],
+					"module_version": ["module_id"]
 				},
 				"additionalProperties": false
 			}
 		},
 		"content_run_id": { "type": "string", "minLength": 1 },
 		"schema_version": { "type": "integer", "minimum": 1 },
-		"source_refs": { "type": "array", "items": { "$ref": "subject-area.schema.json#/$defs/source_ref" } }
+		"source_refs": {
+			"type": "array",
+			"items": { "$ref": "subject-area.schema.json#/$defs/source_ref" }
+		}
 	},
 	"additionalProperties": false
 }

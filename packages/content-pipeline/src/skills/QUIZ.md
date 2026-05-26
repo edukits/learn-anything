@@ -1,10 +1,10 @@
 # Quiz Agent
 
-Generate one quiz from the provided syllabus item.
+Generate one quiz from the provided syllabus item and module context.
 
 Write only valid JSON to the exact output path requested by the user. Do not include Markdown fences or prose outside the JSON file.
 
-Use source material for factual grounding. Prefer deterministic grading formats unless the syllabus explicitly calls for another interaction.
+Use source material for factual grounding. Stay within the module's content responsibility. Prefer deterministic grading formats unless the syllabus explicitly calls for another interaction.
 
 Use this format:
 

@@ -59,6 +59,16 @@ const topicAreaSchema = z.object({
 	summary: z.string().min(1)
 });
 
+const topicModuleSchema = z.object({
+	...versionedBase,
+	topic_area_id: z.string().min(1),
+	slug: z.string().min(1),
+	title: z.string().min(1),
+	description: z.string().min(1),
+	content_responsibility: z.string().min(1),
+	ordering: z.number().int().positive()
+});
+
 const skillSchema = z.object({
 	...versionedBase,
 	topic_area_id: z.string().min(1),
@@ -232,13 +242,25 @@ const quizQuestionLinkSchema = z.object({
 	weight: z.number().positive()
 });
 
-const learningPathItemSchema = z.object({
-	item_type: z.enum(['lesson', 'quiz']),
-	item_id: z.string().min(1),
-	item_version: z.number().int().positive(),
-	ordering: z.number().int().positive(),
-	required: z.boolean()
-});
+const learningPathItemSchema = z
+	.object({
+		item_type: z.enum(['lesson', 'quiz']),
+		item_id: z.string().min(1),
+		item_version: z.number().int().positive(),
+		module_id: z.string().min(1).optional(),
+		module_version: z.number().int().positive().optional(),
+		ordering: z.number().int().positive(),
+		required: z.boolean()
+	})
+	.superRefine((item, context) => {
+		if (Boolean(item.module_id) !== Boolean(item.module_version)) {
+			context.addIssue({
+				code: 'custom',
+				message: 'module_id and module_version must be provided together',
+				path: ['module_id']
+			});
+		}
+	});
 
 const learningPathSchema = z.object({
 	...versionedBase,
@@ -253,6 +275,7 @@ const releaseItemSchema = z.object({
 	content_type: z.enum([
 		'subject_area',
 		'topic_area',
+		'topic_module',
 		'skill',
 		'lesson',
 		'quiz',
@@ -306,6 +329,7 @@ const mediaAssetSchema = z.object({
 const artifactSchemas = {
 	subject_areas: subjectAreaSchema,
 	topic_areas: topicAreaSchema,
+	topic_modules: topicModuleSchema,
 	skills: skillSchema,
 	lessons: lessonSchema,
 	quizzes: quizSchema,
@@ -467,6 +491,7 @@ export async function loadAndValidateRun(manifestPath, options = {}) {
 
 	const subjectAreas = artifacts.subject_areas ?? [];
 	const topicAreas = artifacts.topic_areas ?? [];
+	const topicModules = artifacts.topic_modules ?? [];
 	const skills = artifacts.skills ?? [];
 	const lessons = artifacts.lessons ?? [];
 	const quizzes = artifacts.quizzes ?? [];
@@ -480,6 +505,7 @@ export async function loadAndValidateRun(manifestPath, options = {}) {
 	for (const [name, records] of Object.entries({
 		subject_areas: subjectAreas,
 		topic_areas: topicAreas,
+		topic_modules: topicModules,
 		skills,
 		lessons,
 		quizzes,
@@ -494,6 +520,7 @@ export async function loadAndValidateRun(manifestPath, options = {}) {
 
 	const subjectMap = new Map(subjectAreas.map((record) => [keyFor(record), record]));
 	const topicMap = new Map(topicAreas.map((record) => [keyFor(record), record]));
+	const topicModuleMap = new Map(topicModules.map((record) => [keyFor(record), record]));
 	const skillMap = new Map(skills.map((record) => [keyFor(record), record]));
 	const lessonMap = new Map(lessons.map((record) => [keyFor(record), record]));
 	const quizMap = new Map(quizzes.map((record) => [keyFor(record), record]));
@@ -515,6 +542,27 @@ export async function loadAndValidateRun(manifestPath, options = {}) {
 				`Skill ${skill.id}@${skill.version} references missing topic ${skill.topic_area_id}@1`
 			);
 		}
+	}
+
+	for (const topicModule of topicModules) {
+		if (!has(topicMap, topicModule.topic_area_id, 1)) {
+			failures.push(
+				`Module ${topicModule.id}@${topicModule.version} references missing topic ${topicModule.topic_area_id}@1`
+			);
+		}
+	}
+
+	const moduleOrderingByTopicRun = new Map();
+	for (const topicModule of topicModules) {
+		const key = `${topicModule.content_run_id}:${topicModule.topic_area_id}`;
+		const orderSet = moduleOrderingByTopicRun.get(key) ?? new Set();
+		if (orderSet.has(topicModule.ordering)) {
+			failures.push(
+				`Topic ${topicModule.topic_area_id} has duplicate module ordering ${topicModule.ordering}`
+			);
+		}
+		orderSet.add(topicModule.ordering);
+		moduleOrderingByTopicRun.set(key, orderSet);
 	}
 
 	for (const lesson of lessons) {
@@ -609,6 +657,16 @@ export async function loadAndValidateRun(manifestPath, options = {}) {
 					`Learning path ${keyFor(learningPath)} references missing ${item.item_type} ${item.item_id}@${item.item_version}`
 				);
 			}
+			if (item.module_id && !topicModuleMap.has(refKey(item.module_id, item.module_version))) {
+				failures.push(
+					`Learning path ${keyFor(learningPath)} references missing module ${item.module_id}@${item.module_version}`
+				);
+			}
+			if (topicModules.length > 0 && !item.module_id) {
+				failures.push(
+					`Learning path ${keyFor(learningPath)} item ${item.item_type} ${item.item_id}@${item.item_version} is missing module metadata`
+				);
+			}
 			if (orderSet.has(item.ordering)) {
 				failures.push(
 					`Learning path ${keyFor(learningPath)} has duplicate ordering ${item.ordering}`
@@ -626,6 +684,7 @@ export async function loadAndValidateRun(manifestPath, options = {}) {
 	const contentMaps = {
 		subject_area: subjectMap,
 		topic_area: topicMap,
+		topic_module: topicModuleMap,
 		skill: skillMap,
 		lesson: lessonMap,
 		quiz: quizMap,
@@ -748,6 +807,9 @@ export async function loadAndValidateRun(manifestPath, options = {}) {
 	checks.push('Stable ids and versions are unique');
 	checks.push('Question answer keys point to declared choices');
 	checks.push('Quiz-to-question references are complete and ordered');
+	checks.push(
+		'Module records and module-linked path items are consistent when modules are present'
+	);
 	checks.push('Question interaction payloads match their declared response_type');
 	checks.push(
 		'Media assets, when present, have valid storage paths, MIME types, and accessibility metadata'

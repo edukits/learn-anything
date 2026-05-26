@@ -44,7 +44,34 @@ test('bundles reviewed items into valid v1 artifacts', async () => {
 
 	const run = await bundleRun({
 		input,
-		syllabus: { summary: 'Learn equations.' },
+		modules: {
+			summary: 'Two equation modules.',
+			modules: [
+				{
+					slug: 'inverse-operations',
+					title: 'Inverse Operations',
+					description: 'Undo operations to solve equations.',
+					content_responsibility: 'Teach and practice inverse operations.'
+				}
+			]
+		},
+		syllabus: {
+			summary: 'Learn equations.',
+			syllabus: [
+				{
+					type: 'lesson',
+					module_slug: 'inverse-operations',
+					focus: 'Inverse operations',
+					goals: 'Use inverse operations.'
+				},
+				{
+					type: 'quiz',
+					module_slug: 'inverse-operations',
+					focus: 'Inverse checks',
+					goals: 'Check inverse operation skill.'
+				}
+			]
+		},
 		runId: 'run_2026_05_22_math_linear_equations_v1',
 		outDir: join(dir, 'dist'),
 		now: new Date('2026-05-22T12:00:00.000Z'),
@@ -85,6 +112,7 @@ test('bundles reviewed items into valid v1 artifacts', async () => {
 	});
 
 	assert.equal(run.report.valid, true);
+	assert.equal(run.report.counts.topic_modules, 1);
 	assert.equal(run.report.counts.lessons, 1);
 	assert.equal(run.report.counts.quizzes, 1);
 	assert.equal(run.report.counts.questions, 1);
@@ -100,4 +128,80 @@ test('bundles reviewed items into valid v1 artifacts', async () => {
 		path.items.map((item) => item.item_type),
 		['lesson', 'quiz']
 	);
+	assert.deepEqual(
+		path.items.map((item) => item.module_id),
+		['module_linear_equations_inverse_operations', 'module_linear_equations_inverse_operations']
+	);
+
+	const topicModule = JSON.parse(
+		(await readFile(join(dir, 'dist', 'topic-modules.jsonl'), 'utf8')).trim()
+	);
+	assert.equal(topicModule.slug, 'inverse-operations');
+
+	const release = JSON.parse((await readFile(join(dir, 'dist', 'releases.jsonl'), 'utf8')).trim());
+	assert.equal(
+		release.items.some((item) => item.content_type === 'topic_module'),
+		true
+	);
+});
+
+test('bundles legacy reviewed items with a default module', async () => {
+	const dir = await tempDir();
+	const input = {
+		topicDir: dir,
+		sourceRefs: [{ source_id: 'source_test', path: 'sources/source.md' }],
+		topic: {
+			subject: {
+				id: 'subject_math',
+				slug: 'math',
+				name: 'Math',
+				summary: 'Math topics'
+			},
+			topic: {
+				id: 'topic_ratios',
+				slug: 'ratios',
+				name: 'Ratios',
+				summary: 'Practice ratios',
+				public_summary: 'Practice ratios.',
+				preview_markdown: 'A short path for ratios.',
+				app_path: '/app/topics/ratios',
+				level_label: 'Math'
+			},
+			release: {},
+			learning_path: {}
+		}
+	};
+	const skill = {
+		slug: 'read-ratios',
+		name: 'Read Ratios',
+		device: 'Read Ratios',
+		summary: 'Read ratio notation.'
+	};
+
+	const run = await bundleRun({
+		input,
+		syllabus: { summary: 'Learn ratios.' },
+		runId: 'run_2026_05_22_math_ratios_v1',
+		outDir: join(dir, 'dist'),
+		now: new Date('2026-05-22T12:00:00.000Z'),
+		reviewedItems: [
+			{
+				type: 'lesson',
+				slug: 'read-ratios',
+				title: 'Read Ratios',
+				summary: 'Read simple ratios.',
+				estimated_minutes: 5,
+				skills: [skill],
+				body_markdown: '# Read Ratios\n\nA ratio compares amounts.'
+			}
+		]
+	});
+
+	assert.equal(run.report.valid, true);
+	assert.equal(run.report.counts.topic_modules, 1);
+
+	const path = JSON.parse(
+		(await readFile(join(dir, 'dist', 'learning-paths.jsonl'), 'utf8')).trim()
+	);
+	assert.equal(path.items[0].module_id, 'module_ratios_ratios_module');
 });
