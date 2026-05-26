@@ -22,7 +22,9 @@
 	"dependencies": {
 		"@earendil-works/pi-ai": "^0.75.4",
 		"@earendil-works/pi-coding-agent": "^0.75.4",
+		"@opentui/core": "0.2.15",
 		"picocolors": "^1.1.1",
+		"web-tree-sitter": "0.25.10",
 		"zod": "^4.2.0"
 	}
 }

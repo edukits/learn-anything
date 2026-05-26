@@ -11,7 +11,6 @@ import {
 	SessionManager,
 	SettingsManager
 } from '@earendil-works/pi-coding-agent';
-import pc from 'picocolors';
 import { JsonReadError, readJson } from './utils.mjs';
 
 const skillDir = join(dirname(fileURLToPath(import.meta.url)), 'skills');
@@ -29,21 +28,31 @@ export function parseModel(value) {
 	return model;
 }
 
-function status(line) {
-	process.stderr.write(`${line}\n`);
-}
-
-function handleEvent(label, event) {
+function handleEvent(label, taskId, emit, event) {
 	if (event.type === 'tool_execution_start') {
-		status(`${pc.cyan('tool')} ${label} ${pc.yellow(event.toolName)}`);
+		emit({
+			type: 'task_tool_start',
+			taskId,
+			label,
+			toolName: event.toolName
+		});
 		return;
 	}
 	if (event.type === 'tool_execution_end' && event.isError) {
-		status(`${pc.red('tool failed')} ${label} ${pc.yellow(event.toolName)}`);
+		emit({
+			type: 'task_tool_failed',
+			taskId,
+			label,
+			toolName: event.toolName
+		});
 		return;
 	}
 	if (event.type === 'agent_end') {
-		status(`${pc.dim('agent finished')} ${label}`);
+		emit({
+			type: 'task_agent_finished',
+			taskId,
+			label
+		});
 	}
 }
 
@@ -94,7 +103,9 @@ export async function readValidatedJson({
 	session,
 	validate,
 	maxRepairAttempts = 3,
-	log = (line) => process.stderr.write(`${line}\n`)
+	log = () => {},
+	onRepair = ({ label: repairLabel, kind, attempt, maxRepairAttempts: max }) =>
+		log(`repair ${repairLabel} ${kind} validation failed; asking agent to rewrite (${attempt}/${max})`)
 }) {
 	let repairAttempts = 0;
 
@@ -110,9 +121,12 @@ export async function readValidatedJson({
 				throw error;
 			}
 			repairAttempts += 1;
-			log(
-				`${pc.yellow('repair')} ${label} invalid JSON; asking agent to rewrite (${repairAttempts}/${maxRepairAttempts})`
-			);
+			onRepair({
+				label,
+				kind: 'json',
+				attempt: repairAttempts,
+				maxRepairAttempts
+			});
 			const content = await readFile(absoluteJsonPath, 'utf8');
 			await session.prompt(jsonRepairPrompt(expectedJsonPath, error, content));
 			continue;
@@ -134,9 +148,13 @@ export async function readValidatedJson({
 		}
 
 		repairAttempts += 1;
-		log(
-			`${pc.yellow('repair')} ${label} schema validation failed; asking agent to rewrite (${repairAttempts}/${maxRepairAttempts})`
-		);
+		onRepair({
+			label,
+			kind: 'schema',
+			attempt: repairAttempts,
+			maxRepairAttempts,
+			error: validation.error
+		});
 		const content = await readFile(absoluteJsonPath, 'utf8');
 		await session.prompt(schemaRepairPrompt(expectedJsonPath, validation.error, content));
 	}
@@ -154,13 +172,15 @@ export class AgentRunner {
 	}
 
 	async run({
+		taskId = label,
 		label,
 		systemPromptName,
 		prompt,
 		expectedJsonPath,
 		thinkingLevel = this.defaultThinkingLevel,
 		validate,
-		maxRepairAttempts = 3
+		maxRepairAttempts = 3,
+		emit = () => {}
 	}) {
 		const systemPrompt = await readFile(join(skillDir, systemPromptName), 'utf8');
 		const loader = new DefaultResourceLoader({
@@ -185,7 +205,7 @@ export class AgentRunner {
 			authStorage: this.authStorage,
 			modelRegistry: this.modelRegistry
 		});
-		session.subscribe((event) => handleEvent(label, event));
+		session.subscribe((event) => handleEvent(label, taskId, emit, event));
 		try {
 			await session.prompt(prompt);
 			if (!expectedJsonPath) {
@@ -198,7 +218,14 @@ export class AgentRunner {
 				label,
 				session,
 				validate,
-				maxRepairAttempts
+				maxRepairAttempts,
+				onRepair: (repair) =>
+					emit({
+						type: 'task_repair',
+						taskId,
+						expectedJsonPath,
+						...repair
+					})
 			});
 		} finally {
 			session.dispose();

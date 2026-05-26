@@ -18,6 +18,8 @@ Run generation from the repo root:
 corepack pnpm --filter @learn-anything/content-pipeline content-pipeline generate <topic-dir>
 ```
 
+Interactive terminal runs try to use the OpenTUI dashboard by default. Use `--no-tui` for plain logs, or `--tui` to require the dashboard and fail if the local runtime cannot load OpenTUI.
+
 The pipeline writes planning files to `<topic-dir>/.content-pipeline/` and importable artifacts to `<topic-dir>/dist/manifest.json`.
 
 The generated flow is module-based:
