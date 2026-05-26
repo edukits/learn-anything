@@ -87,7 +87,6 @@
 						r="54"
 						class="progress-arc"
 						stroke-dasharray={`${earnedPercent * 3.39} ${339 - earnedPercent * 3.39}`}
-						stroke-dashoffset="85"
 					/>
 					<circle cx="60" cy="60" r="54" class="ring-sheen" />
 				</svg>
