@@ -5,8 +5,7 @@
 		RotateCcw,
 		Sparkles,
 		Trophy,
-		TrendingUp,
-		UserRound
+		TrendingUp
 	} from '@lucide/svelte';
 	import NavLink from './NavLink.svelte';
 	import NavStrip from './NavStrip.svelte';
@@ -78,13 +77,6 @@
 				href: '/app/leaderboard',
 				icon: Trophy,
 				isActive: (pathname) => pathname.startsWith('/app/leaderboard')
-			},
-			{
-				id: 'profile',
-				label: 'Profile',
-				href: '/app/profile',
-				icon: UserRound,
-				isActive: (pathname) => pathname.startsWith('/app/profile')
 			}
 		];
 	});

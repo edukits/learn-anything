@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { Spring, prefersReducedMotion } from 'svelte/motion';
-	import { ChevronDown, ClipboardCheck, LogOut, User } from '@lucide/svelte';
+	import { ChevronDown, LogOut, User, UserRound } from '@lucide/svelte';
 	import Button from '../Button.svelte';
 	import DropdownMenu from './DropdownMenu.svelte';
 	import NavLink from './NavLink.svelte';
@@ -26,7 +26,8 @@
 
 	let brandHref = $derived(user ? '/app' : '/');
 	let myLearningCurrent = $derived(
-		currentPathname === '/app' || currentPathname.startsWith('/app/')
+		currentPathname === '/app' ||
+			(currentPathname.startsWith('/app/') && !currentPathname.startsWith('/app/profile'))
 	);
 
 	let navEl: HTMLElement | undefined = $state();
@@ -150,6 +151,19 @@
 						<User size={18} strokeWidth={2.25} aria-hidden="true" />
 					{/snippet}
 					{#snippet children()}
+						<DropdownMenuPrimitive.Item closeOnSelect textValue="Profile">
+							{#snippet child({ props })}
+								<a
+									{...props}
+									href="/app/profile"
+									class="dropdown-menu-link"
+									aria-current={currentPathname.startsWith('/app/profile') ? 'page' : undefined}
+								>
+									<UserRound size={16} strokeWidth={2.25} aria-hidden="true" />
+									Profile
+								</a>
+							{/snippet}
+						</DropdownMenuPrimitive.Item>
 						<form method="POST" action="/app/logout">
 							<DropdownMenuPrimitive.Item closeOnSelect>
 								{#snippet child({ props })}

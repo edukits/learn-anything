@@ -91,7 +91,6 @@
 
 			<div class="form-actions">
 				<Button type="submit" label="Save profile" />
-				<Button href="/app/leaderboard" variant="ghost" label="Back to leaderboard" />
 			</div>
 
 			{#if form?.error}
