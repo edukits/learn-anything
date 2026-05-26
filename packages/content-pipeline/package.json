@@ -16,6 +16,7 @@
 		"build": "pnpm run check",
 		"check": "pnpm run lint",
 		"content-pipeline": "node src/cli.mjs",
+		"content-pipeline:tui": "bun src/cli.mjs",
 		"lint": "oxlint src --no-error-on-unmatched-pattern",
 		"test": "node --test test/*.test.mjs"
 	},

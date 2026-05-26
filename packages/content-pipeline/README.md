@@ -18,9 +18,16 @@ Run generation from the repo root:
 corepack pnpm --filter @learn-anything/content-pipeline content-pipeline generate <topic-dir>
 ```
 
-Interactive terminal runs try to use the OpenTUI dashboard by default. Use `--no-tui` for plain logs, or `--tui` to require the dashboard and fail if the local runtime cannot load OpenTUI.
+Interactive terminal runs try to use the OpenTUI dashboard by default. OpenTUI currently needs Bun for this package because stock Node 22 does not expose the `node:ffi` runtime it requires. Use this command for the dashboard:
+
+```sh
+corepack pnpm --filter @learn-anything/content-pipeline content-pipeline:tui generate <topic-dir> --tui
+```
+
+Use `--no-tui` with the Node command for plain logs, or `--tui` to require the dashboard and fail if the local runtime cannot load OpenTUI.
 
 The pipeline writes planning files to `<topic-dir>/.content-pipeline/` and importable artifacts to `<topic-dir>/dist/manifest.json`.
+Generation is resumable by default. If a previous run crashed, rerun the same command and the pipeline will reuse valid files from `.content-pipeline/`, then continue with only missing or invalid work. Use `--fresh` to ignore cached pipeline files and regenerate from the beginning.
 
 The generated flow is module-based:
 

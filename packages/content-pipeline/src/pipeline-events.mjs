@@ -127,12 +127,18 @@ export function reducePipelineEvent(state, event) {
 
 	if (event.type === 'task_queued' || event.type === 'task_start') {
 		const taskStatus = event.type === 'task_start' ? 'running' : 'queued';
+		const existingTask = state.tasks.find((task) => task.id === event.taskId);
 		const tasks = upsertById(state.tasks, event.taskId, {
 			label: event.label,
 			stage: event.stage,
 			status: taskStatus,
 			artifactPath: event.artifactPath,
-			message: taskStatus
+			message: taskStatus,
+			queuedAt: existingTask?.queuedAt ?? new Date().toISOString(),
+			startedAt:
+				event.type === 'task_start'
+					? (existingTask?.startedAt ?? new Date().toISOString())
+					: existingTask?.startedAt
 		});
 		const stages = state.stages.map((stage) => completeStageProgress(stage, tasks));
 		return {
@@ -143,18 +149,21 @@ export function reducePipelineEvent(state, event) {
 	}
 
 	if (
-		event.type === 'task_tool_start' ||
-		event.type === 'task_tool_failed' ||
-		event.type === 'task_agent_finished' ||
-		event.type === 'task_repair'
-	) {
+			event.type === 'task_tool_start' ||
+			event.type === 'task_tool_failed' ||
+			event.type === 'task_agent_finished' ||
+			event.type === 'task_repair' ||
+			event.type === 'resume_miss'
+		) {
 		const level = event.type === 'task_tool_failed' ? 'error' : 'task';
 		const message =
-			event.type === 'task_repair'
-				? `${event.label} repair ${event.kind} ${event.attempt}/${event.maxRepairAttempts}`
-				: event.toolName
-					? `${event.label} ${event.toolName}`
-					: `${event.label} agent finished`;
+				event.type === 'task_repair'
+					? `${event.label} repair ${event.kind} ${event.attempt}/${event.maxRepairAttempts}`
+					: event.type === 'resume_miss'
+						? `${event.label} resume miss`
+						: event.toolName
+						? `${event.label} ${event.toolName}`
+						: `${event.label} agent finished`;
 		return appendLog(
 			{
 				...state,
@@ -175,8 +184,9 @@ export function reducePipelineEvent(state, event) {
 			stage: event.stage,
 			status,
 			artifactPath: event.artifactPath,
-			message: event.error ?? status
-		});
+				message: event.resumed ? 'resumed' : (event.error ?? status),
+				endedAt: new Date().toISOString()
+			});
 		const stages = state.stages.map((stage) => completeStageProgress(stage, tasks));
 		return appendLog(
 			{
@@ -184,7 +194,9 @@ export function reducePipelineEvent(state, event) {
 				tasks,
 				stages
 			},
-			event.type === 'task_complete' ? `${event.label} completed` : `${event.label} failed: ${event.error}`,
+			event.type === 'task_complete'
+				? `${event.label} ${event.resumed ? 'resumed' : 'completed'}`
+				: `${event.label} failed: ${event.error}`,
 			event.type === 'task_complete' ? 'task' : 'error'
 		);
 	}

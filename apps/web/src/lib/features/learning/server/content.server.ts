@@ -71,6 +71,14 @@ function versionKey(contentId: string, version: number) {
 	return `${contentId}@${version}`;
 }
 
+function chunkItems<T>(items: T[], size: number) {
+	const chunks: T[][] = [];
+	for (let index = 0; index < items.length; index += size) {
+		chunks.push(items.slice(index, index + size));
+	}
+	return chunks;
+}
+
 function filterReleaseVersions<T extends { version: number }>(
 	rows: T[] | null,
 	items: ReleaseItem[],
@@ -156,21 +164,34 @@ async function getTopicModules(
 		return [defaultModule];
 	}
 
-	const { data, error } = await client
-		.from('topic_module_versions')
-		.select(
-			'topic_module_id,version,topic_area_id,slug,title,description,content_responsibility,ordering'
-		)
-		.in(
-			'topic_module_id',
-			moduleItems.map((item) => item.content_id)
-		)
-		.order('ordering');
+	const moduleIds = moduleItems.map((item) => item.content_id);
+	const [{ data, error }, { data: moduleRows, error: modulesError }] = await Promise.all([
+		client
+			.from('topic_module_versions')
+			.select(
+				'topic_module_id,version,topic_area_id,title,description,content_responsibility,ordering'
+			)
+			.in('topic_module_id', moduleIds)
+			.order('ordering'),
+		client.from('topic_modules').select('id,slug').in('id', moduleIds)
+	]);
 
 	if (error) throw new Error(error.message);
+	if (modulesError) throw new Error(modulesError.message);
+
+	const slugByModuleId = new Map((moduleRows ?? []).map((module) => [module.id, module.slug]));
 
 	const releasedModules = filterReleaseVersions(
-		(data ?? []) as TopicModuleVersion[],
+		(data ?? []).map((module) => ({
+			topic_module_id: module.topic_module_id,
+			version: module.version,
+			topic_area_id: module.topic_area_id,
+			slug: requireSingle(slugByModuleId.get(module.topic_module_id), 'topic module slug'),
+			title: module.title,
+			description: module.description,
+			content_responsibility: module.content_responsibility,
+			ordering: module.ordering
+		})) as TopicModuleVersion[],
 		moduleItems,
 		(module) => module.topic_module_id
 	).toSorted((a, b) => a.ordering - b.ordering);
@@ -463,21 +484,27 @@ export async function getActiveReleaseQuestions(
 		return [];
 	}
 
-	const { data, error } = await client
-		.from('quiz_question_versions')
-		.select(
-			'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
-		)
-		.in(
-			'question_id',
-			questionItems.map((item) => item.content_id)
-		)
-		.eq('lifecycle_status', 'active');
+	const questionRowBatches = await Promise.all(
+		chunkItems(
+			questionItems.map((item) => item.content_id),
+			50
+		).map(async (questionIds) => {
+			const { data, error } = await client
+				.from('quiz_question_versions')
+				.select(
+					'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
+				)
+				.in('question_id', questionIds)
+				.eq('lifecycle_status', 'active');
 
-	if (error) throw new Error(error.message);
+			if (error) throw new Error(error.message);
+			return data ?? [];
+		})
+	);
+	const questionRows = questionRowBatches.flat();
 
 	return filterReleaseVersions(
-		(data ?? []).map((question) => ({
+		questionRows.map((question) => ({
 			question_id: question.question_id,
 			version: question.version,
 			skill_id: question.skill_id,

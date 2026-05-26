@@ -30,6 +30,14 @@ export function createPlainLogger({ stdout = process.stdout, stderr = process.st
 			);
 			return;
 		}
+		if (event.type === 'task_complete' && event.resumed) {
+			stderr.write(`${pc.dim('resumed')} ${event.label}\n`);
+			return;
+		}
+		if (event.type === 'resume_miss') {
+			stderr.write(`${pc.dim('resume miss')} ${event.label}\n`);
+			return;
+		}
 		if (event.type === 'validation') {
 			stdout.write(`Content validation ${event.valid ? 'passed' : 'failed'}: ${event.manifestPath}\n`);
 			if (!event.valid) {

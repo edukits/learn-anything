@@ -10,6 +10,7 @@ test('parseArgs defaults TUI mode to auto', () => {
 	assert.equal(options.concurrency, defaultGenerationConfig.concurrency);
 	assert.equal(options.model, defaultGenerationConfig.model);
 	assert.equal(options.tui, 'auto');
+	assert.equal(options.resume, true);
 });
 
 test('parseArgs supports explicit TUI flags', () => {
@@ -35,6 +36,12 @@ test('parseArgs preserves existing model and concurrency options', () => {
 	]);
 	assert.equal(options.concurrency, 4);
 	assert.equal(options.model, 'openai-codex:test-model');
+});
+
+test('parseArgs supports resume controls', () => {
+	assert.equal(parseArgs(['generate', 'topics/math', '--fresh']).resume, false);
+	assert.equal(parseArgs(['generate', 'topics/math', '--no-resume']).resume, false);
+	assert.equal(parseArgs(['generate', 'topics/math', '--fresh', '--resume']).resume, true);
 });
 
 test('shouldUseTui follows explicit flags before TTY detection', () => {

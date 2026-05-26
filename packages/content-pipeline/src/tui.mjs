@@ -4,6 +4,7 @@ import { BoxRenderable, createCliRenderer, TextRenderable } from '@opentui/core'
 import { createPipelineState, moveArtifactSelection, reducePipelineEvent } from './pipeline-events.mjs';
 
 const maxPreviewBytes = 60_000;
+const spinnerFrames = ['-', '\\', '|', '/'];
 
 function clip(value, width) {
 	const text = String(value ?? '');
@@ -16,6 +17,9 @@ function clip(value, width) {
 function statusMark(status) {
 	if (status === 'completed' || status === 'valid') {
 		return '[x]';
+	}
+	if (status === 'resumed') {
+		return '[=]';
 	}
 	if (status === 'running') {
 		return '[>]';
@@ -64,7 +68,22 @@ function formatElapsed(startedAt, endedAt = null) {
 	return minutes ? `${minutes}m ${remainder}s` : `${remainder}s`;
 }
 
-function renderDashboard(state, width, height) {
+function runningMark(startedAt, now) {
+	if (!startedAt) {
+		return '[>]';
+	}
+	const frame = Math.floor(now.getTime() / 250) % spinnerFrames.length;
+	return `[${spinnerFrames[frame]}]`;
+}
+
+function statusMarkForTask(task, now) {
+	if (task?.status === 'running') {
+		return runningMark(task.startedAt, now);
+	}
+	return statusMark(task?.status);
+}
+
+function renderDashboard(state, width, height, now = new Date()) {
 	const leftWidth = Math.max(44, Math.floor(width * 0.48));
 	const rightWidth = Math.max(32, width - leftWidth - 3);
 	const previewHeight = Math.max(8, height - 13);
@@ -73,9 +92,9 @@ function renderDashboard(state, width, height) {
 
 	lines.push('Learn Anything content pipeline');
 	lines.push(
-		`Topic: ${state.topicDir ?? 'loading'} | Model: ${state.model ?? 'n/a'} | Concurrency: ${state.concurrency ?? 'n/a'} | ${state.status} | ${formatElapsed(state.startedAt, state.endedAt)}`
+		`Topic: ${state.topicDir ?? 'loading'} | Model: ${state.model ?? 'n/a'} | Concurrency: ${state.concurrency ?? 'n/a'} | ${state.status} | ${formatElapsed(state.startedAt, state.endedAt ?? now.toISOString())}`
 	);
-	lines.push('Keys: up/down select artifact, tab switch pane, l logs, a artifacts, q/esc close TUI');
+	lines.push(`Keys: up/down select artifact, tab switch pane, l logs, a artifacts, q/esc close TUI | Focus: ${state.focus}`);
 	lines.push('');
 
 	const stageLine = state.stages
@@ -97,7 +116,7 @@ function renderDashboard(state, width, height) {
 		const artifactIndex = artifact ? state.artifacts.indexOf(artifact) : -1;
 		const artifactPrefix = artifactIndex === state.selectedArtifactIndex ? '>' : ' ';
 		const taskText = task
-			? `${statusMark(task.status)} ${task.label} (${task.stage}) ${task.message ?? ''}`
+			? `${statusMarkForTask(task, now)} ${task.label} (${task.stage}) ${formatElapsed(task.startedAt ?? task.queuedAt, task.endedAt ?? now.toISOString())} ${task.message ?? ''}`
 			: '';
 		const artifactText = artifact
 			? `${artifactPrefix} ${statusMark(artifact.status)} ${artifact.label} ${artifact.count === undefined ? '' : `(${artifact.count})`} ${basename(artifact.path)}`
@@ -136,7 +155,7 @@ export async function createTuiSession({ plainLogger } = {}) {
 		clearOnShutdown: true,
 		screenMode: 'alternate-screen',
 		consoleMode: 'disabled',
-		externalOutputMode: 'capture-stdout',
+		externalOutputMode: 'passthrough',
 		backgroundColor: '#111416'
 	});
 	const root = new BoxRenderable(renderer, {
@@ -156,6 +175,7 @@ export async function createTuiSession({ plainLogger } = {}) {
 
 	let state = createPipelineState();
 	let closed = false;
+	let heartbeat = null;
 
 	function render() {
 		if (closed || renderer.isDestroyed) {
@@ -165,10 +185,18 @@ export async function createTuiSession({ plainLogger } = {}) {
 		renderer.requestRender();
 	}
 
+	function stopHeartbeat() {
+		if (heartbeat) {
+			clearInterval(heartbeat);
+			heartbeat = null;
+		}
+	}
+
 	function close() {
 		if (closed) {
 			return;
 		}
+		stopHeartbeat();
 		closed = true;
 		renderer.destroy();
 		process.stderr.write('TUI closed; generation continues with plain logs.\n');
@@ -208,6 +236,8 @@ export async function createTuiSession({ plainLogger } = {}) {
 	});
 
 	renderer.start();
+	heartbeat = setInterval(render, 1000);
+	heartbeat.unref?.();
 	render();
 
 	return {
@@ -222,6 +252,7 @@ export async function createTuiSession({ plainLogger } = {}) {
 		close,
 		finish() {
 			if (!closed) {
+				stopHeartbeat();
 				render();
 				renderer.destroy();
 				closed = true;

@@ -1,6 +1,6 @@
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { AgentRunner, buildSourceContext } from './agent.mjs';
+import { AgentRunner, buildSourceContext, readValidatedJson } from './agent.mjs';
 import { bundleRun } from './bundle.mjs';
 import { thinkingLevelForStage } from './config.mjs';
 import { runLimited } from './concurrency.mjs';
@@ -132,6 +132,72 @@ async function runAgentTask({
 	}
 }
 
+async function readCachedTask({
+	emit,
+	stage,
+	taskId,
+	label,
+	expectedJsonPath,
+	validate,
+	input,
+	artifactKind,
+	artifactLabel
+}) {
+	const absoluteJsonPath = resolve(input.topicDir, expectedJsonPath);
+	try {
+		const value = await readValidatedJson({
+			absoluteJsonPath,
+			expectedJsonPath,
+			label,
+			session: {
+				async prompt() {
+					throw new Error(`${expectedJsonPath} needs repair and cannot be resumed automatically.`);
+				}
+			},
+			validate,
+			maxRepairAttempts: 0
+		});
+		emit({
+			type: 'task_complete',
+			taskId,
+			stage,
+			label,
+			artifactPath: absoluteJsonPath,
+			resumed: true
+		});
+		artifactEvent({
+			emit,
+			input,
+			label: artifactLabel ?? label,
+			stage,
+			kind: artifactKind ?? 'json',
+			path: expectedJsonPath,
+			status: 'resumed'
+		});
+		return { hit: true, value };
+	} catch (error) {
+		emit({
+			type: 'resume_miss',
+			taskId,
+			stage,
+			label,
+			artifactPath: absoluteJsonPath,
+			reason: error instanceof Error ? error.message : String(error)
+		});
+		return { hit: false };
+	}
+}
+
+async function runResumableTask({ resume, ...options }) {
+	if (resume && options.expectedJsonPath) {
+		const cached = await readCachedTask(options);
+		if (cached.hit) {
+			return cached.value;
+		}
+	}
+	return runAgentTask(options);
+}
+
 function queueTasks(emit, stage, tasks) {
 	for (const task of tasks) {
 		emit({
@@ -150,6 +216,7 @@ export async function generateContent(options, dependencies = {}) {
 	const loadInput = dependencies.loadTopicInput ?? loadTopicInput;
 	const Runner = dependencies.AgentRunner ?? AgentRunner;
 	const bundle = dependencies.bundleRun ?? bundleRun;
+	const resume = options.resume !== false;
 	const input = await loadInput(options.topicDir);
 
 	emit({
@@ -181,7 +248,8 @@ export async function generateContent(options, dependencies = {}) {
 	const topicContext = contextFor(input);
 	const modulesPath = '.content-pipeline/TOPIC_MODULES.json';
 	emit({ type: 'stage_start', stage: 'modules', total: 1 });
-	const modulePlan = await runAgentTask({
+	const modulePlan = await runResumableTask({
+		resume,
 		runner,
 		emit,
 		input,
@@ -230,7 +298,8 @@ export async function generateContent(options, dependencies = {}) {
 		options.concurrency,
 		async (module, index) => {
 			const syllabusPath = moduleSyllabusPaths[index];
-			return runAgentTask({
+			return runResumableTask({
+				resume,
 				runner,
 				emit,
 				input,
@@ -290,7 +359,8 @@ export async function generateContent(options, dependencies = {}) {
 			const validateItem = validateWithSchema(schemaForItemType(item.type));
 			const module = moduleForItem(modulePlan, item);
 			const moduleSyllabus = moduleSyllabi[modulePlan.modules.indexOf(module)];
-			return runAgentTask({
+			return runResumableTask({
+				resume,
 				runner,
 				emit,
 				input,
@@ -349,7 +419,8 @@ export async function generateContent(options, dependencies = {}) {
 		const validateItem = validateWithSchema(schemaForItemType(syllabus.syllabus[index].type));
 		const module = moduleForItem(modulePlan, syllabus.syllabus[index]);
 		const moduleSyllabus = moduleSyllabi[modulePlan.modules.indexOf(module)];
-		return runAgentTask({
+		return runResumableTask({
+			resume,
 			runner,
 			emit,
 			input,

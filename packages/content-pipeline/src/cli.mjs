@@ -7,7 +7,7 @@ function usage() {
 	const { concurrency, model } = defaultGenerationConfig;
 	return [
 		'Usage:',
-		`  content-pipeline generate <topic-dir> [--concurrency ${concurrency}] [--model ${model}] [--tui|--no-tui]`,
+		`  content-pipeline generate <topic-dir> [--concurrency ${concurrency}] [--model ${model}] [--tui|--no-tui] [--fresh]`,
 		'',
 		'Topic directory contract:',
 		'  topic.json',
@@ -27,7 +27,8 @@ function parseArgs(args) {
 		concurrency: defaultGenerationConfig.concurrency,
 		model: defaultGenerationConfig.model,
 		thinkingLevels: defaultGenerationConfig.thinkingLevels,
-		tui: 'auto'
+		tui: 'auto',
+		resume: true
 	};
 	for (let index = 0; index < rest.length; index += 1) {
 		const arg = rest[index];
@@ -53,6 +54,14 @@ function parseArgs(args) {
 				throw new Error('Use only one of --tui or --no-tui.');
 			}
 			options.tui = false;
+			continue;
+		}
+		if (arg === '--fresh' || arg === '--no-resume') {
+			options.resume = false;
+			continue;
+		}
+		if (arg === '--resume') {
+			options.resume = true;
 			continue;
 		}
 		throw new Error(`Unknown option ${arg}\n\n${usage()}`);
@@ -103,11 +112,15 @@ async function runGenerate(options) {
 		}
 		return result;
 	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
 		emit({
 			type: 'pipeline_end',
 			ok: false,
-			error: error instanceof Error ? error.message : String(error)
+			error: message
 		});
+		if (tuiSession) {
+			plainLogger({ type: 'pipeline_end', ok: false, error: message });
+		}
 		process.exitCode = 1;
 		return null;
 	} finally {
