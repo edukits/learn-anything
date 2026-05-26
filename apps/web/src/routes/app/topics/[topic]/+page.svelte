@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
-	import { PageHeader } from '$lib/features/learning';
+	import { ModuleNumberNav, PageHeader } from '$lib/features/learning';
 	import mountainImage from '$lib/assets/topic-map/mountain-image.jpeg';
 	import {
 		AchievementCelebrationDialog,
@@ -21,6 +21,7 @@
 	let progressPercent = $derived(
 		data.pathProgress.length === 0 ? 0 : Math.round((completedCount / data.pathProgress.length) * 100)
 	);
+	let hasMultipleModules = $derived(data.modules.length > 1);
 	let masteryBySkill = $derived(
 		new Map(data.mastery.map((projection) => [projection.skill_id, projection]))
 	);
@@ -34,6 +35,15 @@
 					return progressItem ? [toPathMapItem(progressItem)] : [];
 				})
 		}))
+	);
+	let moduleNavItems = $derived(
+		modulePathGroups.map((module) =>
+			Object.assign({}, module, {
+				completed:
+					module.pathItems.length > 0 &&
+					module.pathItems.every((item) => item.state === 'completed' || item.state === 'review')
+			})
+		)
 	);
 	let reviewItem: PathMapItem | null = $derived(
 		data.reviewSummary.available
@@ -112,25 +122,23 @@
 					title={data.path.title}
 					description={data.path.summary}
 				/>
-				<div class="progress">
-					<strong>{progressPercent}%</strong>
-					<span>path progress</span>
-					<ProgressBar
-						value={progressPercent}
-						size="sm"
-						aria-label={`${data.topic.name} path progress`}
-						disableSparks
-					/>
-				</div>
+				{#if hasMultipleModules}
+					<ModuleNumberNav modules={moduleNavItems} anchorFor={moduleAnchor} />
+				{:else}
+					<div class="progress">
+						<strong>{progressPercent}%</strong>
+						<span>path progress</span>
+						<ProgressBar
+							value={progressPercent}
+							size="sm"
+							aria-label={`${data.topic.name} path progress`}
+							disableSparks
+						/>
+					</div>
+				{/if}
 			</div>
 
 			<div class="module-column">
-				<nav class="module-nav" aria-label="Modules">
-					{#each data.modules as module (module.topic_module_id)}
-						<a href={`#${moduleAnchor(module.slug)}`}>{module.title}</a>
-					{/each}
-				</nav>
-
 				<div class="module-list">
 					{#each modulePathGroups as module (module.topic_module_id)}
 						<section class="module-section" id={moduleAnchor(module.slug)}>
@@ -317,30 +325,6 @@
 		display: grid;
 		gap: 18px;
 		min-inline-size: 0;
-	}
-
-	.module-nav {
-		align-items: center;
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-	}
-
-	.module-nav a {
-		background: color-mix(in srgb, var(--color-surface), transparent 8%);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-pill);
-		color: var(--color-text);
-		font-size: 0.86rem;
-		font-weight: 700;
-		padding: 7px 12px;
-		text-decoration: none;
-	}
-
-	.module-nav a:hover,
-	.module-nav a:focus-visible {
-		background: var(--color-surface-hover);
-		border-color: color-mix(in srgb, var(--color-accent), var(--color-border) 55%);
 	}
 
 	.module-list {
