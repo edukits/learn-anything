@@ -6,6 +6,9 @@
 	let { form } = $props();
 
 	let submitted = $derived(!!form?.sent);
+
+	const logoSparklePath =
+		'M102.23,218.89s-23.55-49.65-34.98-95.02c-6.27-24.9-6.92-46.44-2.64-62.61C76.67,15.61,112.13,1.66,150.23.52s78.08,38.1,92.03,75.44-3.47,95.64-62.61,122.21c-44.51,19.99-118.64,39.37-161.06-10.82-41.11-48.66-4.66-103.45,35.08-116.29,36.21-11.69,107.26-20,156.19,44.77,48.25,63.86-5.24,140.21-44.54,146.09-47.9,7.17-89.47-70.64-70.91-132.87,19.6-65.73,90.62-84.52,165.21-30.07,53.56,39.1,25.27,129.75-45.45,163.83-25,12.05-59.41,19.26-82.56.32-20.87-17.08-29.38-44.24-29.38-44.24Z';
 </script>
 
 <main class="sign-in-page">
@@ -19,6 +22,57 @@
 			<div class="atmosphere-orb" aria-hidden="true"></div>
 			<div class="brand-logo">
 				<img src={logoUrl} alt="" aria-hidden="true" decoding="async" />
+				<svg
+					class="logo-sparkle-layer"
+					viewBox="0 0 287.97 275.25"
+					aria-hidden="true"
+					focusable="false"
+				>
+					<defs>
+						<filter id="logo-sparkle-glow" x="-80%" y="-80%" width="260%" height="260%">
+							<feGaussianBlur stdDeviation="3.4" result="blur" />
+							<feColorMatrix
+								in="blur"
+								type="matrix"
+								values="0 0 0 0 0.28 0 0 0 0 0.92 0 0 0 0 1 0 0 0 0.95 0"
+								result="glow"
+							/>
+							<feMerge>
+								<feMergeNode in="glow" />
+								<feMergeNode in="SourceGraphic" />
+							</feMerge>
+						</filter>
+						<radialGradient id="logo-sparkle-core" cx="50%" cy="50%" r="50%">
+							<stop offset="0%" stop-color="#ffffff" />
+							<stop offset="45%" stop-color="#8ff7ff" />
+							<stop offset="100%" stop-color="#ba72ff" stop-opacity="0" />
+						</radialGradient>
+					</defs>
+					<path id="logo-sparkle-path" d={logoSparklePath} fill="none" stroke="none" />
+
+					<g class="logo-sparkle logo-sparkle-primary">
+						<circle r="5.7" fill="url(#logo-sparkle-core)" />
+						<path d="M0 -12V12M-12 0H12" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
+						<animateMotion dur="9.5s" repeatCount="indefinite" rotate="auto">
+							<mpath href="#logo-sparkle-path" />
+						</animateMotion>
+					</g>
+
+					<g class="logo-sparkle logo-sparkle-secondary">
+						<circle r="3.8" fill="url(#logo-sparkle-core)" />
+						<path d="M0 -8V8M-8 0H8" stroke="#dffbff" stroke-width="1.5" stroke-linecap="round" />
+						<animateMotion dur="12.5s" begin="-4.3s" repeatCount="indefinite" rotate="auto">
+							<mpath href="#logo-sparkle-path" />
+						</animateMotion>
+					</g>
+
+					<g class="logo-sparkle logo-sparkle-tertiary">
+						<circle r="2.8" fill="url(#logo-sparkle-core)" />
+						<animateMotion dur="15s" begin="-8.2s" repeatCount="indefinite" rotate="auto">
+							<mpath href="#logo-sparkle-path" />
+						</animateMotion>
+					</g>
+				</svg>
 			</div>
 			<h2 class="brand-title">Clarifyst</h2>
 			<p class="brand-tagline">
@@ -253,6 +307,7 @@
 		display: inline-flex;
 		height: 4.5rem;
 		justify-content: center;
+		position: relative;
 		width: 4.5rem;
 	}
 
@@ -261,6 +316,39 @@
 		height: 100%;
 		object-fit: contain;
 		width: 100%;
+	}
+
+	.logo-sparkle-layer {
+		display: block;
+		filter: saturate(1.2);
+		inset: 0;
+		overflow: visible;
+		pointer-events: none;
+		position: absolute;
+	}
+
+	.logo-sparkle-layer path[id='logo-sparkle-path'] {
+		fill: none;
+		stroke: transparent;
+	}
+
+	.logo-sparkle {
+		animation: sparkle-pulse 9.5s ease-in-out infinite;
+		filter: url('#logo-sparkle-glow') drop-shadow(0 0 7px rgb(91 238 255 / 0.92))
+			drop-shadow(0 0 12px rgb(189 86 255 / 0.54));
+		mix-blend-mode: screen;
+		opacity: 0;
+	}
+
+	.logo-sparkle-secondary {
+		animation-delay: -4.3s;
+		animation-duration: 12.5s;
+		opacity: 0;
+	}
+
+	.logo-sparkle-tertiary {
+		animation-delay: -8.2s;
+		animation-duration: 15s;
 	}
 
 	.brand-title {
@@ -531,8 +619,48 @@
 		.atmosphere-wash,
 		.atmosphere-orb,
 		.atmosphere-stars,
-		.atmosphere-horizon {
+		.atmosphere-horizon,
+		.logo-sparkle {
 			animation: none;
+		}
+
+		.logo-sparkle-layer {
+			display: none;
+		}
+	}
+
+	@keyframes sparkle-pulse {
+		0%,
+		100% {
+			opacity: 0;
+		}
+
+		8% {
+			opacity: 0.96;
+		}
+
+		18% {
+			opacity: 0.42;
+		}
+
+		29% {
+			opacity: 0.88;
+		}
+
+		42% {
+			opacity: 0.18;
+		}
+
+		57% {
+			opacity: 1;
+		}
+
+		71% {
+			opacity: 0.28;
+		}
+
+		84% {
+			opacity: 0.76;
 		}
 	}
 
