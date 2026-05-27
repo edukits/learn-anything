@@ -3,10 +3,13 @@ import type { Actions, PageServerLoad } from './$types';
 import {
 	completeLesson,
 	getLesson,
+	getLessonInteractions,
 	getPathItemProgress,
+	parseSubmittedAnswers,
 	parseIssueReportForm,
 	reportContentIssue,
-	requireProtectedTopic
+	requireProtectedTopic,
+	submitLessonInteraction
 } from '$lib/features/learning/server/index.server';
 
 export const load: PageServerLoad = async ({ locals, parent, params }) => {
@@ -26,10 +29,14 @@ export const load: PageServerLoad = async ({ locals, parent, params }) => {
 
 	const locked = itemProgress.state === 'locked';
 	const lesson = locked ? null : await getLesson(locals.supabase, content, params.lessonId);
+	const lessonInteractions = lesson
+		? await getLessonInteractions(locals.supabase, content, lesson, user.id)
+		: [];
 
 	return {
 		...content,
 		lesson,
+		lessonInteractions,
 		itemProgress,
 		locked
 	};
@@ -55,6 +62,13 @@ export const actions: Actions = {
 		}
 
 		const lesson = await getLesson(locals.supabase, content, params.lessonId);
+		const lessonInteractions = await getLessonInteractions(locals.supabase, content, lesson, user.id);
+		const incompleteInteraction = lessonInteractions.find((interaction) => !interaction.completed);
+		if (incompleteInteraction) {
+			return fail(400, {
+				error: 'Complete the lesson checks before marking this lesson complete.'
+			});
+		}
 
 		try {
 			await completeLesson(
@@ -71,6 +85,45 @@ export const actions: Actions = {
 		}
 
 		throw redirect(303, `/app/topics/${params.topic}`);
+	},
+	submitInteraction: async ({ request, locals, params }) => {
+		const { user, content } = await requireProtectedTopic(locals, params.topic);
+		const formData = await request.formData();
+		const interactionSlug = String(formData.get('interactionSlug') ?? '');
+		const submission = parseSubmittedAnswers(formData);
+		if (!submission.success) {
+			return fail(submission.status, { error: submission.error });
+		}
+
+		try {
+			const lesson = await getLesson(locals.supabase, content, params.lessonId);
+			const lessonInteractions = await getLessonInteractions(
+				locals.supabase,
+				content,
+				lesson,
+				user.id
+			);
+			const interaction = lessonInteractions.find((item) => item.slug === interactionSlug);
+			if (!interaction) {
+				return fail(404, { error: 'Lesson interaction not found.' });
+			}
+
+			await submitLessonInteraction(locals.supabaseService, {
+				userId: user.id,
+				topicId: content.topic.topic_area_id,
+				release: content.release,
+				lesson,
+				interaction,
+				answers: submission.answers,
+				submissionKey: submission.submissionKey
+			});
+		} catch (error) {
+			return fail(500, {
+				error: error instanceof Error ? error.message : 'Unable to submit lesson interaction.'
+			});
+		}
+
+		return { interactionSubmitted: interactionSlug };
 	},
 	reportIssue: async ({ request, locals, params }) => {
 		const { user, content } = await requireProtectedTopic(locals, params.topic);

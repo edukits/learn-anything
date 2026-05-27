@@ -163,6 +163,7 @@ const {
 	quizzes,
 	questions,
 	quiz_question_links: quizQuestionLinks,
+	lesson_interaction_links: lessonInteractionLinks = [],
 	learning_paths: learningPaths,
 	releases,
 	topic_discovery_metadata: topicDiscoveryMetadata = [],
@@ -323,6 +324,7 @@ await upsert(
 			title,
 			summary,
 			body_markdown,
+			render_blocks,
 			skill_ids,
 			estimated_minutes,
 			sort_order,
@@ -336,6 +338,7 @@ await upsert(
 			title,
 			summary,
 			body_markdown,
+			render_blocks,
 			skill_ids,
 			estimated_minutes,
 			sort_order,
@@ -442,6 +445,12 @@ await upsert(
 	'quiz_question_to_quiz',
 	quizQuestionLinks,
 	'quiz_id,quiz_version,question_id,question_version'
+);
+
+await upsert(
+	'lesson_interaction_links',
+	lessonInteractionLinks,
+	'lesson_id,lesson_version,interaction_slug,ordering'
 );
 
 await upsert(

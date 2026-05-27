@@ -11,6 +11,7 @@ export const artifactFiles = {
 	quizzes: 'quizzes.jsonl',
 	questions: 'questions.jsonl',
 	quiz_question_links: 'quiz-question-links.jsonl',
+	lesson_interaction_links: 'lesson-interaction-links.jsonl',
 	learning_paths: 'learning-paths.jsonl',
 	releases: 'releases.jsonl',
 	topic_discovery_metadata: 'topic-discovery-metadata.jsonl',

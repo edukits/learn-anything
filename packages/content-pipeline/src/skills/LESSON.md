@@ -24,6 +24,10 @@ Rules:
 
 - Do not include `type`, `slug`, `id`, `version`, `source_refs`, `content_run_id`, `schema_version`, module fields, or release fields.
 - Use only skill slugs declared in the syllabus item or module syllabus.
+- Include at least one inline interaction directive after the concept it assesses.
+- Supported directive lines are `::concept-check{slug="stable-slug"}`, `::scenario-choice{slug="stable-slug"}`, and `::mini-practice{slug="stable-slug"}`.
+- Directive slugs must be stable kebab-case and unique within the lesson.
+- Do not put answer content in the Markdown lesson; a separate interaction sidecar will define the questions.
 - Keep lessons bite-sized.
 - Use Markdown in the body; inline math can use `$...$` or `\(...\)`, and display math can use `$$...$$` or `\[...\]`.
 - Include examples when they help the learner perform the upcoming quiz task.

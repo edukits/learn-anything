@@ -36,9 +36,23 @@ export type LessonVersion = {
 	title: string;
 	summary: string;
 	body_markdown: string;
+	render_blocks: LessonRenderBlock[];
 	skill_ids: string[];
 	estimated_minutes: number;
 };
+
+export type LessonRenderBlock =
+	| {
+			type: 'markdown';
+			markdown: string;
+	  }
+	| {
+			type: 'interaction';
+			slug: string;
+			interaction_type: LessonInteractionType;
+	  };
+
+export type LessonInteractionType = 'concept_check' | 'scenario_choice' | 'mini_practice';
 
 export type QuizVersion = {
 	quiz_id: string;
@@ -145,6 +159,15 @@ export type PracticeQuizQuestion = Omit<
 	| 'accepted_answers'
 	| 'explanation'
 >;
+
+export type LessonInteraction = {
+	slug: string;
+	interaction_type: LessonInteractionType;
+	title: string;
+	questions: QuizQuestionVersion[];
+	completed: boolean;
+	submissionKey: string;
+};
 
 export type ContentRelease = {
 	id: string;

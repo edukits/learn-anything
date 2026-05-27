@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import { getTopicRenderer } from '$lib/features/topic-renderers';
-	import { ContentIssueReportForm } from '$lib/features/learning';
+	import { ContentIssueReportForm, InteractiveLessonRenderer } from '$lib/features/learning';
 	import { Popover } from 'bits-ui';
 	import { Button } from '@learn-anything/ui';
 	import { ArrowLeft, Check, Flag, Lock } from '@lucide/svelte';
@@ -25,7 +25,11 @@
 	{:else}
 		<article class="lesson">
 			<p class="eyebrow">Lesson</p>
-			<RichTextRenderer content={data.lesson.body_markdown} />
+			<InteractiveLessonRenderer
+				blocks={data.lesson.render_blocks}
+				interactions={data.lessonInteractions}
+				{RichTextRenderer}
+			/>
 
 			{#if form?.error}
 				<p class="message error">{form.error}</p>
@@ -58,7 +62,10 @@
 				</div>
 
 				<form method="POST" action="?/complete">
-					<Button type="submit">
+					<Button
+						type="submit"
+						disabled={data.lessonInteractions.some((interaction) => !interaction.completed)}
+					>
 						<Check size={16} strokeWidth={2.5} aria-hidden="true" />
 						{data.itemProgress?.state === 'completed' ? 'Continue to map' : 'Mark complete'}
 					</Button>
@@ -154,7 +161,9 @@
 		justify-content: center;
 		min-block-size: 2.5rem;
 		min-inline-size: 2.5rem;
-		transition: color 120ms ease-out, border-color 120ms ease-out;
+		transition:
+			color 120ms ease-out,
+			border-color 120ms ease-out;
 	}
 
 	:global(.report-trigger:hover) {

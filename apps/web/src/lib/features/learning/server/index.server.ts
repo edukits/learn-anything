@@ -10,6 +10,7 @@ export {
 	getActiveReleaseQuestions,
 	getLatestTopicRelease,
 	getLesson,
+	getLessonInteractions,
 	getPracticeQuizQuestions,
 	getQuiz,
 	getQuizQuestions,
@@ -21,6 +22,7 @@ export {
 	LearnerMutationError,
 	completeLesson,
 	completeReviewSession,
+	submitLessonInteraction,
 	submitQuiz
 } from './mutations.server';
 export {

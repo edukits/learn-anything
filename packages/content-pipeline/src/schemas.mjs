@@ -1,6 +1,10 @@
 import { parseDocument } from 'yaml';
 import { z } from 'zod';
 import { JsonReadError } from './utils.mjs';
+import {
+	interactionQuestionCount,
+	validateLessonInteractionSidecar
+} from './lesson-interactions.mjs';
 
 const skillSchema = z
 	.object({
@@ -78,7 +82,22 @@ const lessonFrontmatterSchema = z
 const lessonAuthoringSchema = lessonFrontmatterSchema
 	.extend({
 		type: z.literal('lesson'),
-		body_markdown: z.string().min(1)
+		body_markdown: z.string().min(1),
+		render_blocks: z
+			.array(
+				z.discriminatedUnion('type', [
+					z.object({ type: z.literal('markdown'), markdown: z.string().min(1) }).strict(),
+					z
+						.object({
+							type: z.literal('interaction'),
+							slug: z.string().min(1),
+							interaction_type: z.enum(['concept_check', 'scenario_choice', 'mini_practice'])
+						})
+						.strict()
+				])
+			)
+			.optional(),
+		interactions: z.array(z.unknown()).optional()
 	})
 	.strict();
 
@@ -182,6 +201,33 @@ const quizAuthoringSchema = z
 	.strict()
 	.transform((quiz) => ({ type: 'quiz', kind: 'practice', ...quiz }));
 
+const lessonInteractionSchema = z
+	.object({
+		slug: z.string().min(1),
+		type: z.enum(['concept_check', 'scenario_choice', 'mini_practice']),
+		questions: z.array(questionSchema).min(1)
+	})
+	.strict()
+	.superRefine((interaction, context) => {
+		const rule = interactionQuestionCount[interaction.type];
+		if (
+			rule &&
+			(interaction.questions.length < rule.min || interaction.questions.length > rule.max)
+		) {
+			context.addIssue({
+				code: 'custom',
+				message: `${interaction.type} requires ${rule.min === rule.max ? rule.min : `${rule.min}-${rule.max}`} questions`,
+				path: ['questions']
+			});
+		}
+	});
+
+export const lessonInteractionsAuthoringSchema = z
+	.object({
+		interactions: z.array(lessonInteractionSchema).min(1)
+	})
+	.strict();
+
 const reviewedItemSchema = z.union([lessonAuthoringSchema, quizAuthoringSchema]);
 
 export function formatSchemaError(error) {
@@ -231,6 +277,15 @@ export function parseLessonMarkdown(content, path = 'lesson.md') {
 		...metadata.data,
 		body_markdown: body
 	};
+}
+
+export function parseLessonInteractionsJson(content, path = 'lesson-interactions.json') {
+	try {
+		return JSON.parse(content);
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		throw new JsonReadError(path, message, 'parse', { cause: error });
+	}
 }
 
 export function schemaForItemType(type) {
@@ -305,6 +360,33 @@ export function validateItemForContext(context) {
 			return schemaResult;
 		}
 		return validateContext(schemaResult.data);
+	};
+}
+
+export function validateLessonInteractionsForContext({ lesson, syllabusItem, moduleSyllabus }) {
+	const validateSchema = validateWithSchema(lessonInteractionsAuthoringSchema);
+	return (value) => {
+		const schemaResult = validateSchema(value);
+		if (!schemaResult.success) {
+			return schemaResult;
+		}
+
+		const knownSkillSlugs = collectSkillSlugs(syllabusItem, moduleSyllabus?.syllabus ?? []);
+		const failures = [];
+		for (const interaction of schemaResult.data.interactions) {
+			for (const question of interaction.questions) {
+				if (!knownSkillSlugs.has(question.skill_slug)) {
+					failures.push(
+						`Unknown skill_slug ${question.skill_slug}. Use one of: ${[...knownSkillSlugs].toSorted().join(', ')}.`
+					);
+				}
+			}
+		}
+		if (failures.length > 0) {
+			return { success: false, error: failures.join('\n') };
+		}
+
+		return validateLessonInteractionSidecar({ lesson, sidecar: schemaResult.data });
 	};
 }
 

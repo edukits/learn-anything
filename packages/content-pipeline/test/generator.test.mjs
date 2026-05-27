@@ -39,6 +39,47 @@ function fakeInput(topicDir) {
 	};
 }
 
+function lessonMarkdown(title = 'Balance') {
+	return `# ${title}\n\nKeep both sides equal.\n\n::concept-check{slug="balance-check"}\n`;
+}
+
+function interactionSidecar(skillSlug = 'balance') {
+	return {
+		interactions: [
+			{
+				slug: 'balance-check',
+				type: 'concept_check',
+				questions: [
+					{
+						skill_slug: skillSlug,
+						question_purpose: 'recognition',
+						response_type: 'multiple_choice',
+						difficulty: 'easy',
+						prompt: 'What must stay equal when solving?',
+						choices: ['Both sides', 'Only the left side'],
+						correct_index: 0,
+						explanation: 'Equation solving preserves equality.'
+					}
+				]
+			}
+		]
+	};
+}
+
+function lessonFile({ title, summary, skillSlug, body = lessonMarkdown(title) }) {
+	return [
+		'---',
+		`title: ${title}`,
+		`summary: ${summary}`,
+		'estimated_minutes: 5',
+		'skill_slugs:',
+		`  - ${skillSlug}`,
+		'---',
+		'',
+		body
+	].join('\n');
+}
+
 class FakeRunner {
 	async run({ label, systemPromptName, emit, taskId }) {
 		emit({ type: 'task_tool_start', taskId, label, toolName: 'fake-write' });
@@ -84,8 +125,11 @@ class FakeRunner {
 				summary: 'Balance equations.',
 				estimated_minutes: 5,
 				skill_slugs: ['balance'],
-				body_markdown: '# Balance\n'
+				body_markdown: lessonMarkdown()
 			};
+		}
+		if (systemPromptName === 'INTERACTIONS.md') {
+			return interactionSidecar();
 		}
 		if (systemPromptName === 'QUIZ.md') {
 			return {
@@ -113,7 +157,7 @@ class FakeRunner {
 			summary: 'Reviewed.',
 			estimated_minutes: 5,
 			skill_slugs: ['balance'],
-			body_markdown: '# Reviewed\n',
+			body_markdown: lessonMarkdown('Reviewed'),
 			description: 'Reviewed.',
 			kind: 'practice',
 			questions: label.includes('1')
@@ -164,7 +208,7 @@ test('generateContent emits structured progress and artifact events', async () =
 	assert.equal(events[0].type, 'pipeline_start');
 	assert.equal(events.some((event) => event.type === 'warning' && event.message === 'test warning'), true);
 	assert.equal(events.some((event) => event.type === 'stage_start' && event.stage === 'generate'), true);
-	assert.equal(events.filter((event) => event.type === 'task_complete').length, 6);
+	assert.equal(events.filter((event) => event.type === 'task_complete').length, 8);
 	assert.equal(events.some((event) => event.type === 'artifact' && event.kind === 'manifest'), true);
 	assert.equal(events.some((event) => event.type === 'validation' && event.valid), true);
 	assert.equal(events.at(-1).type, 'pipeline_end');
@@ -305,7 +349,7 @@ test('generateContent resumes valid cached artifacts without calling agents', as
 		summary: 'Balance equations.',
 		estimated_minutes: 5,
 		skill_slugs: ['balance'],
-		body_markdown: '# Balance\n'
+		body_markdown: lessonMarkdown()
 	};
 	await mkdir(join(topicDir, '.content-pipeline', 'modules', '001-basics'), { recursive: true });
 	await mkdir(join(topicDir, '.content-pipeline', 'items'), { recursive: true });
@@ -320,11 +364,29 @@ test('generateContent resumes valid cached artifacts without calling agents', as
 	);
 	await writeFile(
 		join(topicDir, '.content-pipeline', 'items', '001-lesson-balance-equations.lesson.md'),
-		`---\ntitle: ${lesson.title}\nsummary: ${lesson.summary}\nestimated_minutes: ${lesson.estimated_minutes}\nskill_slugs:\n  - balance\n---\n\n${lesson.body_markdown}`
+		lessonFile({
+			title: lesson.title,
+			summary: lesson.summary,
+			skillSlug: 'balance',
+			body: lesson.body_markdown
+		})
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'items', '001-lesson-balance-equations.lesson-interactions.json'),
+		`${JSON.stringify(interactionSidecar(), null, 2)}\n`
 	);
 	await writeFile(
 		join(topicDir, '.content-pipeline', 'reviewed', '001-lesson-balance-equations.lesson.md'),
-		`---\ntitle: ${lesson.title}\nsummary: ${lesson.summary}\nestimated_minutes: ${lesson.estimated_minutes}\nskill_slugs:\n  - balance\n---\n\n${lesson.body_markdown}`
+		lessonFile({
+			title: lesson.title,
+			summary: lesson.summary,
+			skillSlug: 'balance',
+			body: lesson.body_markdown
+		})
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'reviewed', '001-lesson-balance-equations.lesson-interactions.json'),
+		`${JSON.stringify(interactionSidecar(), null, 2)}\n`
 	);
 
 	const events = [];
@@ -356,7 +418,7 @@ test('generateContent resumes valid cached artifacts without calling agents', as
 	);
 
 	assert.equal(events.some((event) => event.type === 'resume_miss'), false);
-	assert.equal(events.filter((event) => event.type === 'task_complete' && event.resumed).length, 4);
+	assert.equal(events.filter((event) => event.type === 'task_complete' && event.resumed).length, 6);
 });
 
 test('generateContent matches cached items to later modules by slug when module ids are absent', async () => {
@@ -402,8 +464,18 @@ test('generateContent matches cached items to later modules by slug when module 
 			}
 		]
 	};
-	const balanceLesson = `---\ntitle: Balance Equations\nsummary: Balance equations.\nestimated_minutes: 5\nskill_slugs:\n  - balance\n---\n\n# Balance\n`;
-	const graphLesson = `---\ntitle: Graph Equations\nsummary: Graph equations.\nestimated_minutes: 5\nskill_slugs:\n  - graph\n---\n\n# Graph\n`;
+	const balanceLesson = lessonFile({
+		title: 'Balance Equations',
+		summary: 'Balance equations.',
+		skillSlug: 'balance',
+		body: lessonMarkdown()
+	});
+	const graphLesson = lessonFile({
+		title: 'Graph Equations',
+		summary: 'Graph equations.',
+		skillSlug: 'graph',
+		body: lessonMarkdown('Graph')
+	});
 	await mkdir(join(topicDir, '.content-pipeline', 'modules', '001-basics'), { recursive: true });
 	await mkdir(join(topicDir, '.content-pipeline', 'modules', '002-graphs'), { recursive: true });
 	await mkdir(join(topicDir, '.content-pipeline', 'items'), { recursive: true });
@@ -425,16 +497,32 @@ test('generateContent matches cached items to later modules by slug when module 
 		balanceLesson
 	);
 	await writeFile(
+		join(topicDir, '.content-pipeline', 'items', '001-lesson-balance-equations.lesson-interactions.json'),
+		`${JSON.stringify(interactionSidecar(), null, 2)}\n`
+	);
+	await writeFile(
 		join(topicDir, '.content-pipeline', 'items', '002-lesson-graph-equations.lesson.md'),
 		graphLesson
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'items', '002-lesson-graph-equations.lesson-interactions.json'),
+		`${JSON.stringify(interactionSidecar('graph'), null, 2)}\n`
 	);
 	await writeFile(
 		join(topicDir, '.content-pipeline', 'reviewed', '001-lesson-balance-equations.lesson.md'),
 		balanceLesson
 	);
 	await writeFile(
+		join(topicDir, '.content-pipeline', 'reviewed', '001-lesson-balance-equations.lesson-interactions.json'),
+		`${JSON.stringify(interactionSidecar(), null, 2)}\n`
+	);
+	await writeFile(
 		join(topicDir, '.content-pipeline', 'reviewed', '002-lesson-graph-equations.lesson.md'),
 		graphLesson
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'reviewed', '002-lesson-graph-equations.lesson-interactions.json'),
+		`${JSON.stringify(interactionSidecar('graph'), null, 2)}\n`
 	);
 
 	const events = [];
@@ -466,7 +554,7 @@ test('generateContent matches cached items to later modules by slug when module 
 	);
 
 	assert.equal(events.some((event) => event.type === 'resume_miss'), false);
-	assert.equal(events.filter((event) => event.type === 'task_complete' && event.resumed).length, 7);
+	assert.equal(events.filter((event) => event.type === 'task_complete' && event.resumed).length, 11);
 });
 
 test('generateContent ignores legacy item JSON caches after authoring format migration', async () => {
@@ -539,13 +627,16 @@ test('generateContent ignores legacy item JSON caches after authoring format mig
 			AgentRunner: class {
 				async run() {
 					agentCalls += 1;
+					if (agentCalls === 2 || agentCalls === 4) {
+						return interactionSidecar();
+					}
 					return {
 						type: 'lesson',
 						title: 'Balance Equations',
 						summary: 'Balance equations.',
 						estimated_minutes: 5,
 						skill_slugs: ['balance'],
-						body_markdown: '# Balance\n'
+						body_markdown: lessonMarkdown()
 					};
 				}
 			},
@@ -560,7 +651,7 @@ test('generateContent ignores legacy item JSON caches after authoring format mig
 		}
 	);
 
-	assert.equal(agentCalls, 2);
+	assert.equal(agentCalls, 4);
 	assert.equal(
 		events.some(
 			(event) =>
