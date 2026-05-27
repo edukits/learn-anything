@@ -10,6 +10,12 @@
 
 <main class="sign-in-page">
 	<aside class="brand-panel">
+		<div class="brand-atmosphere" aria-hidden="true">
+			<div class="atmosphere-wash"></div>
+			<div class="atmosphere-orb"></div>
+			<div class="atmosphere-stars"></div>
+			<div class="atmosphere-horizon"></div>
+		</div>
 		<div class="brand-content">
 			<div class="brand-logo">
 				<img src={logoUrl} alt="" aria-hidden="true" decoding="async" />
@@ -33,7 +39,6 @@
 				</div>
 			</div>
 		</div>
-		<div class="brand-glow" aria-hidden="true"></div>
 	</aside>
 
 	<section class="form-panel">
@@ -104,16 +109,10 @@
 	.brand-panel {
 		align-items: center;
 		background:
-			radial-gradient(
-				ellipse 80% 60% at 50% 100%,
-				hsl(var(--color-accent-h) 60% 20% / 0.5),
-				transparent
-			),
-			linear-gradient(
-				160deg,
-				hsl(var(--color-accent-h) 70% 14%),
-				hsl(var(--color-accent-h) 55% 8%)
-			);
+			radial-gradient(ellipse 78% 62% at 96% 70%, rgb(0 198 226 / 0.38), transparent 58%),
+			radial-gradient(ellipse 64% 52% at 0% 98%, rgb(133 45 255 / 0.48), transparent 58%),
+			radial-gradient(ellipse 70% 42% at 50% 48%, rgb(36 104 255 / 0.16), transparent 66%),
+			linear-gradient(153deg, #030823 0%, #061037 42%, #082653 73%, #073044 100%);
 		display: flex;
 		justify-content: center;
 		overflow: hidden;
@@ -121,12 +120,144 @@
 		position: relative;
 	}
 
+	.brand-panel::before {
+		animation: atmosphere-drift 24s ease-in-out infinite alternate;
+		background:
+			radial-gradient(ellipse 54% 42% at 102% 64%, rgb(0 226 245 / 0.26), transparent 72%),
+			linear-gradient(118deg, rgb(38 75 255 / 0.14), transparent 34%),
+			linear-gradient(247deg, transparent 42%, rgb(0 220 245 / 0.16) 72%, transparent 91%);
+		content: '';
+		filter: blur(40px);
+		inset: -18%;
+		mix-blend-mode: screen;
+		opacity: 0.72;
+		position: absolute;
+		transform: translate3d(-1%, 0, 0) scale(1.04);
+	}
+
+	.brand-panel::after {
+		background-image:
+			linear-gradient(rgb(255 255 255 / 0.008) 1px, transparent 1px),
+			linear-gradient(90deg, rgb(255 255 255 / 0.007) 1px, transparent 1px);
+		background-size: 56px 56px;
+		content: '';
+		inset: 0;
+		mask-image: linear-gradient(to bottom, transparent 0%, black 28%, black 74%, transparent 100%);
+		opacity: 0.22;
+		position: absolute;
+	}
+
+	.brand-atmosphere {
+		inset: 0;
+		pointer-events: none;
+		position: absolute;
+	}
+
+	.atmosphere-wash {
+		animation: color-shift 18s ease-in-out infinite alternate;
+		background:
+			radial-gradient(ellipse 62% 48% at 92% 70%, rgb(0 228 245 / 0.32), transparent 70%),
+			radial-gradient(ellipse 54% 46% at 0% 94%, rgb(154 49 255 / 0.42), transparent 68%),
+			radial-gradient(ellipse 44% 32% at 55% 88%, rgb(74 115 255 / 0.16), transparent 76%);
+		filter: blur(24px) saturate(1.28);
+		inset: -12%;
+		mix-blend-mode: screen;
+		position: absolute;
+		transform: translate3d(0, 0, 0);
+	}
+
+	.atmosphere-orb {
+		animation: orb-drift 22s ease-in-out infinite alternate;
+		aspect-ratio: 1;
+		background:
+			radial-gradient(circle at 72% 21%, rgb(0 218 255 / 0.28), transparent 31%),
+			radial-gradient(circle at 24% 78%, rgb(134 61 255 / 0.3), transparent 32%),
+			conic-gradient(
+				from 24deg,
+				transparent 0deg 24deg,
+				rgb(37 119 255 / 0.16) 42deg,
+				rgb(0 226 245 / 0.24) 58deg,
+				transparent 82deg 210deg,
+				rgb(144 54 255 / 0.22) 232deg,
+				rgb(66 112 255 / 0.15) 254deg,
+				transparent 278deg 360deg
+			);
+		border-radius: 50%;
+		filter: blur(18px) saturate(1.44);
+		inline-size: min(54vw, 520px);
+		inset-block-start: 22%;
+		inset-inline-start: 15%;
+		mask-image: radial-gradient(circle, black 0 42%, rgb(0 0 0 / 0.64) 52%, transparent 72%);
+		mix-blend-mode: screen;
+		opacity: 0.86;
+		position: absolute;
+		transform: translate3d(0, 0, 0) rotate(-9deg);
+	}
+
+	.atmosphere-orb::before {
+		background: conic-gradient(
+			from 26deg,
+			transparent 0deg 26deg,
+			rgb(84 184 255 / 0.48) 44deg,
+			rgb(0 240 255 / 0.4) 60deg,
+			transparent 88deg 212deg,
+			rgb(154 63 255 / 0.46) 235deg,
+			rgb(77 124 255 / 0.28) 258deg,
+			transparent 286deg 360deg
+		);
+		border-radius: inherit;
+		content: '';
+		filter: blur(12px);
+		inset: 7%;
+		mask-image: radial-gradient(circle, transparent 0 58%, black 66%, transparent 78%);
+		position: absolute;
+	}
+
+	.atmosphere-stars {
+		animation: star-glimmer 7s ease-in-out infinite alternate;
+		background-image:
+			radial-gradient(circle at 21% 18%, rgb(95 185 255 / 0.72) 0 1px, transparent 1.5px),
+			radial-gradient(circle at 31% 25%, rgb(123 80 255 / 0.58) 0 1px, transparent 1.5px),
+			radial-gradient(circle at 57% 28%, rgb(191 113 255 / 0.68) 0 1px, transparent 1.5px),
+			radial-gradient(circle at 23% 46%, rgb(56 211 255 / 0.52) 0 1px, transparent 1.5px),
+			radial-gradient(circle at 72% 34%, rgb(255 255 255 / 0.42) 0 1px, transparent 1.5px),
+			radial-gradient(circle at 39% 36%, rgb(55 128 255 / 0.5) 0 0.8px, transparent 1.3px),
+			radial-gradient(circle at 47% 19%, rgb(0 219 255 / 0.36) 0 0.8px, transparent 1.3px);
+		filter: drop-shadow(0 0 7px rgb(73 143 255 / 0.72));
+		inset: 0;
+		opacity: 0.66;
+		position: absolute;
+	}
+
+	.atmosphere-horizon {
+		animation: horizon-breathe 16s ease-in-out infinite alternate;
+		background:
+			radial-gradient(ellipse 48% 72% at 6% 78%, rgb(150 45 255 / 0.38), transparent 70%),
+			radial-gradient(ellipse 72% 52% at 78% 55%, rgb(0 204 224 / 0.22), transparent 74%),
+			linear-gradient(110deg, rgb(94 60 255 / 0.16), rgb(14 181 255 / 0.14));
+		block-size: 40%;
+		border-block-start: 1px solid rgb(90 190 255 / 0.78);
+		border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+		box-shadow:
+			0 -1px 10px rgb(117 203 255 / 0.9),
+			0 -7px 24px rgb(121 74 255 / 0.42),
+			0 -22px 58px rgb(0 184 255 / 0.2);
+		filter: saturate(1.2);
+		inline-size: 200%;
+		inset-block-end: -22%;
+		inset-inline-start: 0;
+		opacity: 0.86;
+		position: absolute;
+		transform: rotate(-6deg);
+		transform-origin: 50% 0;
+	}
+
 	.brand-content {
 		display: grid;
 		gap: var(--space-6);
 		max-inline-size: 380px;
 		position: relative;
-		z-index: 1;
+		z-index: 2;
 	}
 
 	.brand-logo {
@@ -179,17 +310,6 @@
 		font-weight: 500;
 		gap: 6px;
 		padding: 6px 12px;
-	}
-
-	.brand-glow {
-		background: radial-gradient(
-			circle 300px at 30% 80%,
-			hsl(var(--color-accent-h) 80% 50% / 0.15),
-			transparent
-		);
-		inset: 0;
-		pointer-events: none;
-		position: absolute;
 	}
 
 	/* ── Form Panel ── */
@@ -389,6 +509,17 @@
 			padding: var(--space-8);
 		}
 
+		.atmosphere-horizon {
+			block-size: 44%;
+			inset-block-end: -28%;
+		}
+
+		.atmosphere-orb {
+			inline-size: min(86vw, 440px);
+			inset-block-start: 15%;
+			inset-inline-start: 12%;
+		}
+
 		.brand-features {
 			display: none;
 		}
@@ -410,6 +541,74 @@
 
 		.form-panel {
 			padding: var(--space-6) var(--space-4);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.brand-panel::before,
+		.atmosphere-wash,
+		.atmosphere-orb,
+		.atmosphere-stars,
+		.atmosphere-horizon {
+			animation: none;
+		}
+	}
+
+	@keyframes atmosphere-drift {
+		from {
+			opacity: 0.62;
+			transform: translate3d(-3%, -1%, 0) scale(1.04);
+		}
+
+		to {
+			opacity: 0.9;
+			transform: translate3d(4%, 2%, 0) scale(1.12);
+		}
+	}
+
+	@keyframes color-shift {
+		from {
+			opacity: 0.72;
+			transform: translate3d(-2%, 1%, 0) scale(1);
+		}
+
+		to {
+			opacity: 0.95;
+			transform: translate3d(3%, -2%, 0) scale(1.08);
+		}
+	}
+
+	@keyframes orb-drift {
+		from {
+			opacity: 0.56;
+			transform: translate3d(-2%, 1%, 0) rotate(-11deg) scale(0.98);
+		}
+
+		to {
+			opacity: 0.78;
+			transform: translate3d(2%, -1%, 0) rotate(-7deg) scale(1.04);
+		}
+	}
+
+	@keyframes star-glimmer {
+		from {
+			opacity: 0.42;
+		}
+
+		to {
+			opacity: 0.78;
+		}
+	}
+
+	@keyframes horizon-breathe {
+		from {
+			opacity: 0.76;
+			transform: rotate(-6.8deg) translate3d(-1%, 1%, 0);
+		}
+
+		to {
+			opacity: 1;
+			transform: rotate(-4.8deg) translate3d(2%, -1%, 0);
 		}
 	}
 </style>
