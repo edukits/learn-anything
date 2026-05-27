@@ -167,22 +167,8 @@
 	}
 
 	.atmosphere-orb {
-		animation: orb-drift 22s ease-in-out infinite alternate;
+		animation: orb-drift 8s ease-in-out infinite alternate;
 		aspect-ratio: 1;
-		background:
-			radial-gradient(circle at 72% 21%, rgb(0 218 255 / 0.28), transparent 31%),
-			radial-gradient(circle at 24% 78%, rgb(134 61 255 / 0.3), transparent 32%),
-			conic-gradient(
-				from 24deg,
-				transparent 0deg 24deg,
-				rgb(37 119 255 / 0.16) 42deg,
-				rgb(0 226 245 / 0.24) 58deg,
-				transparent 82deg 210deg,
-				rgb(144 54 255 / 0.22) 232deg,
-				rgb(66 112 255 / 0.15) 254deg,
-				transparent 278deg 360deg
-			);
-		border-radius: 50%;
 		filter: blur(18px) saturate(1.44);
 		inline-size: clamp(370px, 182%, 680px);
 		inset-block-start: 50%;
@@ -197,16 +183,16 @@
 
 	.atmosphere-orb::before {
 		background: conic-gradient(
-			from 26deg,
+			from -10deg,
 			transparent 0deg 26deg,
-			rgb(84 184 255 / 0.48) 44deg,
-			rgb(0 240 255 / 0.4) 60deg,
+			rgb(84 184 255 / 0.78) 44deg,
+			rgb(0 240 255 / 0.7) 60deg,
 			transparent 88deg 212deg,
-			rgb(154 63 255 / 0.46) 235deg,
-			rgb(77 124 255 / 0.28) 258deg,
+			rgb(154 63 255 / 0.76) 235deg,
+			rgb(77 124 255 / 0.58) 258deg,
 			transparent 286deg 360deg
 		);
-		border-radius: inherit;
+		border-radius: 50%;
 		content: '';
 		filter: blur(12px);
 		inset: 7%;
@@ -576,13 +562,13 @@
 
 	@keyframes orb-drift {
 		from {
-			opacity: 0.56;
-			transform: translate(-51.5%, -48.5%) rotate(-11deg) scale(0.98);
+			opacity: 0.6;
+			transform: translate(-51.5%, -44.5%) rotate(-11deg) scale(0.98);
 		}
 
 		to {
-			opacity: 0.78;
-			transform: translate(-48.5%, -51.5%) rotate(-7deg) scale(1.04);
+			opacity: 0.8;
+			transform: translate(-58.5%, -44.5%) rotate(-7deg) scale(1.04);
 		}
 	}
 
