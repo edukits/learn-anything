@@ -78,6 +78,10 @@ function normalizeChoices(question) {
 	);
 }
 
+function choiceIdAtIndex(choices, index) {
+	return Number.isInteger(index) ? choices?.[index]?.id : undefined;
+}
+
 function sequenceIdFor(label, index, seen) {
 	const base = slugify(label) || `item-${index + 1}`;
 	if (!seen.has(base)) {
@@ -204,10 +208,10 @@ function normalizeQuestion({
 		choices,
 		correct_choice_id:
 			question.correct_choice_id ??
-			(Number.isInteger(question.correct_index) ? choiceIdForIndex(question.correct_index) : undefined),
+			choiceIdAtIndex(choices, question.correct_index),
 		correct_choice_ids:
 			question.correct_choice_ids ??
-			question.correct_indices?.map((correctIndex) => choiceIdForIndex(correctIndex)),
+			question.correct_indices?.map((correctIndex) => choiceIdAtIndex(choices, correctIndex)),
 		correct_numeric_answer: question.correct_numeric_answer,
 		sequence_items: sequenceItems,
 		accepted_answers: question.accepted_answers,

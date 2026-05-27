@@ -138,6 +138,90 @@ test('bundles reviewed items into valid v1 artifacts', async () => {
 	);
 });
 
+test('bundles indexed answer keys using normalized custom choice ids', async () => {
+	const dir = await tempDir();
+	const input = {
+		topicDir: dir,
+		sourceRefs: [{ source_id: 'source_test', path: 'sources/source.md' }],
+		topic: {
+			subject: {
+				id: 'subject_math',
+				slug: 'math',
+				name: 'Math',
+				summary: 'Math topics'
+			},
+			topic: {
+				id: 'topic_linear_equations',
+				slug: 'linear-equations',
+				name: 'Linear Equations',
+				summary: 'Solve linear equations',
+				public_summary: 'Practice linear equations.',
+				preview_markdown: 'A short path for solving equations.',
+				app_path: '/app/topics/linear-equations',
+				level_label: 'Algebra'
+			},
+			release: {},
+			learning_path: {}
+		}
+	};
+
+	const run = await bundleRun({
+		input,
+		syllabus: { summary: 'Learn equations.' },
+		runId: 'run_2026_05_22_math_linear_equations_v1',
+		outDir: join(dir, 'dist'),
+		now: new Date('2026-05-22T12:00:00.000Z'),
+		reviewedItems: [
+			{
+				type: 'quiz',
+				title: 'Equation Checks',
+				description: 'Choose correct equations.',
+				questions: [
+					{
+						skill_slug: 'inverse-operations',
+						question_purpose: 'application',
+						response_type: 'multiple_choice',
+						difficulty: 'easy',
+						prompt: 'Which value solves `x + 3 = 7`?',
+						choices: [
+							{ id: 'four', label: 'x = 4' },
+							{ id: 'ten', label: 'x = 10' }
+						],
+						correct_index: 0,
+						explanation: 'Subtract 3 from both sides.'
+					},
+					{
+						skill_slug: 'inverse-operations',
+						question_purpose: 'application',
+						response_type: 'multiple_select',
+						difficulty: 'medium',
+						prompt: 'Which equations have `x = 4` as a solution?',
+						choices: [
+							{ id: 'plus-three', label: 'x + 3 = 7' },
+							{ id: 'times-two', label: '2x = 8' },
+							{ id: 'plus-two', label: 'x + 2 = 8' }
+						],
+						correct_indices: [0, 1],
+						explanation: 'Substitute 4 into each equation.'
+					}
+				]
+			}
+		]
+	});
+
+	assert.equal(run.report.valid, true);
+	const questions = (await readFile(join(dir, 'dist', 'questions.jsonl'), 'utf8'))
+		.trim()
+		.split('\n')
+		.map((line) => JSON.parse(line));
+	assert.equal(questions[0].correct_choice_id, 'four');
+	assert.deepEqual(questions[0].choices, [
+		{ id: 'four', label: 'x = 4' },
+		{ id: 'ten', label: 'x = 10' }
+	]);
+	assert.deepEqual(questions[1].correct_choice_ids, ['plus-three', 'times-two']);
+});
+
 test('bundles legacy reviewed items with a default module', async () => {
 	const dir = await tempDir();
 	const input = {
