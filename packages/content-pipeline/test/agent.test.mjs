@@ -3,8 +3,8 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
-import { readValidatedJson } from '../src/agent.mjs';
-import { schemaForItemType, validateWithSchema } from '../src/schemas.mjs';
+import { readValidatedArtifact, readValidatedJson } from '../src/agent.mjs';
+import { parseLessonMarkdown, schemaForItemType, validateWithSchema } from '../src/schemas.mjs';
 
 async function tempDir() {
 	return mkdtemp(join(tmpdir(), 'content-pipeline-agent-'));
@@ -12,21 +12,16 @@ async function tempDir() {
 
 function invalidQuiz() {
 	return {
-		type: 'quiz',
-		slug: 'analysis-chain-builder',
 		title: 'Analysis Chain Builder',
 		description: 'Practice sequencing analysis components.',
-		kind: 'practice',
 		questions: [
 			{
+				skill_slug: 'analysis-chain',
 				question_purpose: 'sequencing',
 				response_type: 'sequencing',
 				difficulty: 'easy',
 				prompt: 'Put the analysis parts in order.',
-				sequence_items: [
-					{ id: 'claim', label: 'Claim' },
-					{ id: 'evidence', label: 'Evidence' }
-				],
+				sequence_items: ['Claim', 'Evidence'],
 				explanation: 'The claim frames the evidence.'
 			}
 		]
@@ -65,6 +60,45 @@ test('readValidatedJson asks the agent to repair schema-invalid JSON', async () 
 	assert.match(prompts[0], /recognition/);
 	assert.match(prompts[0], /application/);
 	assert.equal(result.questions[0].question_purpose, 'application');
+});
+
+test('readValidatedArtifact reports markdown parse repairs with markdown kind', async () => {
+	const dir = await tempDir();
+	const path = join(dir, 'lesson.md');
+	await writeFile(path, '# Missing frontmatter\n');
+	const repairs = [];
+	const session = {
+		async prompt() {
+			await writeFile(
+				path,
+				[
+					'---',
+					'title: Fixed Lesson',
+					'summary: Fixed summary.',
+					'estimated_minutes: 5',
+					'skill_slugs:',
+					'  - analysis-chain',
+					'---',
+					'',
+					'# Fixed Lesson'
+				].join('\n')
+			);
+		}
+	};
+
+	const result = await readValidatedArtifact({
+		absoluteJsonPath: path,
+		expectedJsonPath: 'lesson.md',
+		label: 'lesson 1',
+		session,
+		parse: parseLessonMarkdown,
+		format: 'markdown',
+		onRepair: (repair) => repairs.push(repair)
+	});
+
+	assert.equal(result.title, 'Fixed Lesson');
+	assert.equal(repairs.length, 1);
+	assert.equal(repairs[0].kind, 'markdown');
 });
 
 test('readValidatedJson fails after the repair limit', async () => {

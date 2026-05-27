@@ -25,13 +25,21 @@ function skillId(topicSlug, skill) {
 	);
 }
 
-function normalizeSkills(topicSlug, reviewedItems) {
+function normalizeSkills(topicSlug, reviewedItems, syllabus) {
 	const skills = new Map();
-	for (const item of reviewedItems) {
+	for (const item of [...(syllabus?.syllabus ?? []), ...reviewedItems]) {
 		const candidates = [
 			...(item.skills ?? []),
+			...(item.skill_slugs ?? []).map((slug) => ({ slug, name: slug.replaceAll('-', ' ') })),
 			...(item.skill_ids ?? []).map((id) => ({ id, slug: id.replace(/^skill_/, ''), name: id })),
-			...(item.questions ?? []).map((question) => question.skill).filter(Boolean)
+			...(item.questions ?? []).map((question) => question.skill).filter(Boolean),
+			...(item.questions ?? [])
+				.map((question) =>
+					question.skill_slug
+						? { slug: question.skill_slug, name: question.skill_slug.replaceAll('-', ' ') }
+						: null
+				)
+				.filter(Boolean)
 		];
 		for (const candidate of candidates) {
 			const id = skillId(topicSlug, candidate);
@@ -52,6 +60,51 @@ function normalizeSkills(topicSlug, reviewedItems) {
 
 function itemSlug(item, index) {
 	return slugify(item.slug ?? item.focus ?? item.title ?? `${item.type}-${index + 1}`);
+}
+
+function choiceIdForIndex(index) {
+	if (index >= 0 && index < 26) {
+		return String.fromCharCode('a'.charCodeAt(0) + index);
+	}
+	return `choice-${index + 1}`;
+}
+
+function normalizeChoices(question) {
+	if (!question.choices) {
+		return undefined;
+	}
+	return question.choices.map((choice, index) =>
+		typeof choice === 'string' ? { id: choiceIdForIndex(index), label: choice } : choice
+	);
+}
+
+function choiceIdAtIndex(choices, index) {
+	return Number.isInteger(index) ? choices?.[index]?.id : undefined;
+}
+
+function sequenceIdFor(label, index, seen) {
+	const base = slugify(label) || `item-${index + 1}`;
+	if (!seen.has(base)) {
+		seen.add(base);
+		return base;
+	}
+	const id = `${base}-${index + 1}`;
+	seen.add(id);
+	return id;
+}
+
+function normalizeSequenceItems(question) {
+	if (!question.sequence_items) {
+		return undefined;
+	}
+	const seen = new Set();
+	return question.sequence_items.map((item, index) => {
+		if (typeof item !== 'string') {
+			seen.add(item.id);
+			return item;
+		}
+		return { id: sequenceIdFor(item, index, seen), label: item };
+	});
 }
 
 function normalizeModuleRecords({ input, modules, syllabus, runId, sourceRefs }) {
@@ -95,6 +148,9 @@ function lessonRecord({ item, index, topic, runId, sourceRefs, skillLookup }) {
 		item.skill_ids?.map((skill) =>
 			typeof skill === 'string' ? skill : skillId(topic.topic.slug, skill)
 		) ??
+		item.skill_slugs?.map((skillSlug) =>
+			skillId(topic.topic.slug, { slug: skillSlug, name: skillSlug })
+		) ??
 		item.skills?.map((skill) => skillId(topic.topic.slug, skill)) ??
 		[skillLookup[0]?.id].filter(Boolean);
 
@@ -124,12 +180,16 @@ function normalizeQuestion({
 	const fallbackSkill = skillLookup[0];
 	const skill = question.skill;
 	const resolvedSkillId =
-		question.skill_id ?? (skill ? skillId(topic.topic.slug, skill) : fallbackSkill?.id);
+		question.skill_id ??
+		(question.skill_slug ? skillId(topic.topic.slug, { slug: question.skill_slug }) : undefined) ??
+		(skill ? skillId(topic.topic.slug, skill) : fallbackSkill?.id);
 	const id =
 		question.id ??
 		`question_${snakeId(topic.topic.slug)}_${snakeId(quizSlug)}_${String(questionIndex + 1).padStart(2, '0')}`;
 	const questionPurpose = question.question_purpose ?? 'application';
 	const responseType = question.response_type ?? 'multiple_choice';
+	const choices = normalizeChoices(question);
+	const sequenceItems = normalizeSequenceItems(question);
 
 	return compactObject({
 		...versionedBase(id, runId, sourceRefs),
@@ -145,11 +205,15 @@ function normalizeQuestion({
 		response_type: responseType,
 		difficulty: question.difficulty ?? 'medium',
 		prompt: question.prompt,
-		choices: question.choices,
-		correct_choice_id: question.correct_choice_id,
-		correct_choice_ids: question.correct_choice_ids,
+		choices,
+		correct_choice_id:
+			question.correct_choice_id ??
+			choiceIdAtIndex(choices, question.correct_index),
+		correct_choice_ids:
+			question.correct_choice_ids ??
+			question.correct_indices?.map((correctIndex) => choiceIdAtIndex(choices, correctIndex)),
 		correct_numeric_answer: question.correct_numeric_answer,
-		sequence_items: question.sequence_items,
+		sequence_items: sequenceItems,
 		accepted_answers: question.accepted_answers,
 		grading_rubric: question.grading_rubric,
 		explanation: question.explanation
@@ -207,7 +271,7 @@ export async function bundleRun({
 	const sourceRefs = input.sourceRefs;
 	const publishedAt = now.toISOString();
 	const title = `${topic.topic.name} ${runId.replace(/^run_/, '')}`;
-	const skills = normalizeSkills(topic.topic.slug, reviewedItems);
+	const skills = normalizeSkills(topic.topic.slug, reviewedItems, syllabus);
 	const topicModules = normalizeModuleRecords({ input, modules, syllabus, runId, sourceRefs });
 	const firstModule = topicModules[0];
 	const moduleBySlug = new Map(topicModules.map((topicModule) => [topicModule.slug, topicModule]));

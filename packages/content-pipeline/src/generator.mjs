@@ -1,15 +1,15 @@
 import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { AgentRunner, buildSourceContext, readValidatedJson } from './agent.mjs';
+import { AgentRunner, buildSourceContext, readValidatedArtifact } from './agent.mjs';
 import { bundleRun } from './bundle.mjs';
 import { thinkingLevelForStage } from './config.mjs';
 import { runLimited } from './concurrency.mjs';
 import { loadTopicInput } from './input.mjs';
 import {
-	schemaForItemType,
+	parseLessonMarkdown,
+	validateItemForContext,
 	validateModulePlan,
-	validateSyllabus,
-	validateWithSchema
+	validateSyllabusForModule
 } from './schemas.mjs';
 import { artifactFiles, slugify, snakeId, writeJson } from './utils.mjs';
 
@@ -20,7 +20,8 @@ export function runIdFor(input, now = new Date()) {
 
 function itemPathFor(item, index, dir) {
 	const slug = slugify(item.slug ?? item.focus ?? `${item.type}-${index + 1}`);
-	return `${dir}/${String(index + 1).padStart(3, '0')}-${item.type}-${slug}.json`;
+	const extension = item.type === 'lesson' ? 'lesson.md' : 'quiz.json';
+	return `${dir}/${String(index + 1).padStart(3, '0')}-${item.type}-${slug}.${extension}`;
 }
 
 function modulePathSegment(module, index) {
@@ -57,9 +58,54 @@ function combineModuleSyllabi(modulePlan, moduleSyllabi) {
 function moduleForItem(modulePlan, item) {
 	return (
 		modulePlan.modules.find(
-			(module) => module.id === item.module_id || module.slug === item.module_slug
+			(module) =>
+				(item.module_id !== undefined && module.id === item.module_id) ||
+				module.slug === item.module_slug
 		) ?? modulePlan.modules[0]
 	);
+}
+
+function formatForPrompt(value) {
+	if (value?.type === 'lesson') {
+		return [
+			'---',
+			`title: ${JSON.stringify(value.title)}`,
+			`summary: ${JSON.stringify(value.summary)}`,
+			`estimated_minutes: ${value.estimated_minutes}`,
+			'skill_slugs:',
+			...(value.skill_slugs ?? []).map((slug) => `  - ${JSON.stringify(slug)}`),
+			'---',
+			'',
+			value.body_markdown
+		].join('\n');
+	}
+	if (value?.type === 'quiz') {
+		return JSON.stringify(
+			{
+				title: value.title,
+				description: value.description,
+				questions: value.questions
+			},
+			null,
+			2
+		);
+	}
+	return JSON.stringify(value, null, 2);
+}
+
+function itemFormatFor(item) {
+	return item.type === 'lesson' ? 'markdown' : 'json';
+}
+
+function itemParserFor(item) {
+	return item.type === 'lesson' ? parseLessonMarkdown : undefined;
+}
+
+function outputInstructionFor(item, outputPath) {
+	if (item.type === 'lesson') {
+		return `Write only a Markdown lesson with YAML frontmatter to ${outputPath}.`;
+	}
+	return `Write only valid simplified quiz JSON to ${outputPath}.`;
 }
 
 function artifactEvent({ emit, input, label, stage, kind, path, count, status }) {
@@ -139,13 +185,15 @@ async function readCachedTask({
 	label,
 	expectedJsonPath,
 	validate,
+	parse,
+	format,
 	input,
 	artifactKind,
 	artifactLabel
 }) {
 	const absoluteJsonPath = resolve(input.topicDir, expectedJsonPath);
 	try {
-		const value = await readValidatedJson({
+		const value = await readValidatedArtifact({
 			absoluteJsonPath,
 			expectedJsonPath,
 			label,
@@ -155,6 +203,8 @@ async function readCachedTask({
 				}
 			},
 			validate,
+			parse,
+			format,
 			maxRepairAttempts: 0
 		});
 		emit({
@@ -311,7 +361,7 @@ export async function generateContent(options, dependencies = {}) {
 				artifactKind: 'syllabus',
 				artifactLabel: module.title ?? `Syllabus ${index + 1}`,
 				thinkingLevel: thinkingLevelForStage(options, 'syllabus'),
-				validate: validateSyllabus,
+				validate: validateSyllabusForModule(module),
 				prompt: [
 					`Create the syllabus for module ${index + 1}.`,
 					`Write only valid JSON to ${syllabusPath}.`,
@@ -356,9 +406,14 @@ export async function generateContent(options, dependencies = {}) {
 		async (item, index) => {
 			const outputPath = itemPathFor(item, index, '.content-pipeline/items');
 			const systemPromptName = item.type === 'lesson' ? 'LESSON.md' : 'QUIZ.md';
-			const validateItem = validateWithSchema(schemaForItemType(item.type));
 			const module = moduleForItem(modulePlan, item);
 			const moduleSyllabus = moduleSyllabi[modulePlan.modules.indexOf(module)];
+			const validateItem = validateItemForContext({
+				itemType: item.type,
+				syllabusItem: item,
+				module,
+				moduleSyllabus
+			});
 			return runResumableTask({
 				resume,
 				runner,
@@ -372,10 +427,12 @@ export async function generateContent(options, dependencies = {}) {
 				artifactKind: item.type,
 				artifactLabel: item.focus ?? `${item.type} ${index + 1}`,
 				thinkingLevel: thinkingLevelForStage(options, item.type),
+				format: itemFormatFor(item),
+				parse: itemParserFor(item),
 				validate: validateItem,
 				prompt: [
 					`Generate syllabus item ${index + 1}.`,
-					`Write only valid JSON to ${outputPath}.`,
+					outputInstructionFor(item, outputPath),
 					'',
 					'Topic metadata:',
 					topicContext,
@@ -416,9 +473,14 @@ export async function generateContent(options, dependencies = {}) {
 	);
 	const reviewedItems = await runLimited(draftItems, options.concurrency, async (draft, index) => {
 		const outputPath = itemPathFor(syllabus.syllabus[index], index, '.content-pipeline/reviewed');
-		const validateItem = validateWithSchema(schemaForItemType(syllabus.syllabus[index].type));
 		const module = moduleForItem(modulePlan, syllabus.syllabus[index]);
 		const moduleSyllabus = moduleSyllabi[modulePlan.modules.indexOf(module)];
+		const validateItem = validateItemForContext({
+			itemType: syllabus.syllabus[index].type,
+			syllabusItem: syllabus.syllabus[index],
+			module,
+			moduleSyllabus
+		});
 		return runResumableTask({
 			resume,
 			runner,
@@ -432,11 +494,13 @@ export async function generateContent(options, dependencies = {}) {
 			artifactKind: 'reviewed-item',
 			artifactLabel: syllabus.syllabus[index].focus ?? `review ${index + 1}`,
 			thinkingLevel: thinkingLevelForStage(options, 'review'),
+			format: itemFormatFor(syllabus.syllabus[index]),
+			parse: itemParserFor(syllabus.syllabus[index]),
 			validate: validateItem,
 			prompt: [
 				`Review and correct syllabus item ${index + 1}.`,
-				`Write only valid JSON to ${outputPath}.`,
-				'Preserve the same top-level item type.',
+				outputInstructionFor(syllabus.syllabus[index], outputPath),
+				`Preserve the ${syllabus.syllabus[index].type} authoring format.`,
 				'',
 				'Topic metadata:',
 				topicContext,
@@ -451,7 +515,7 @@ export async function generateContent(options, dependencies = {}) {
 				JSON.stringify(syllabus.syllabus[index], null, 2),
 				'',
 				'Draft item:',
-				JSON.stringify(draft, null, 2),
+				formatForPrompt(draft),
 				'',
 				sourceContext
 			].join('\n')

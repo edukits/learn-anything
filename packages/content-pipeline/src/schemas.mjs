@@ -1,14 +1,16 @@
+import { parseDocument } from 'yaml';
 import { z } from 'zod';
+import { JsonReadError } from './utils.mjs';
 
 const skillSchema = z
 	.object({
 		id: z.string().min(1).optional(),
-		slug: z.string().min(1).optional(),
+		slug: z.string().min(1),
 		name: z.string().min(1),
 		device: z.string().min(1).optional(),
 		summary: z.string().min(1).optional()
 	})
-	.passthrough();
+	.strict();
 
 const moduleSchema = z
 	.object({
@@ -18,14 +20,14 @@ const moduleSchema = z
 		description: z.string().min(1),
 		content_responsibility: z.string().min(1)
 	})
-	.passthrough();
+	.strict();
 
 export const modulePlanSchema = z
 	.object({
 		summary: z.string().min(1).optional(),
 		modules: z.array(moduleSchema).min(1)
 	})
-	.passthrough();
+	.strict();
 
 export const syllabusItemSchema = z
 	.object({
@@ -39,27 +41,14 @@ export const syllabusItemSchema = z
 		skills: z.array(skillSchema).optional(),
 		question_count: z.number().int().positive().optional()
 	})
-	.passthrough();
+	.strict();
 
 export const syllabusSchema = z
 	.object({
 		summary: z.string().min(1).optional(),
 		syllabus: z.array(syllabusItemSchema).min(1)
 	})
-	.passthrough();
-
-const lessonItemSchema = z
-	.object({
-		type: z.literal('lesson'),
-		slug: z.string().min(1),
-		title: z.string().min(1),
-		summary: z.string().min(1),
-		estimated_minutes: z.number().int().positive(),
-		skills: z.array(skillSchema).min(1).optional(),
-		skill_ids: z.array(z.string().min(1)).min(1).optional(),
-		body_markdown: z.string().min(1)
-	})
-	.passthrough();
+	.strict();
 
 const renderedMarkdownSchema = z
 	.string()
@@ -70,155 +59,130 @@ const answerExplanationMarkdownSchema = z
 	.min(1)
 	.describe('Answer explanation Markdown rendered after submission. Supports LaTeX math.');
 
-const choiceSchema = z
-	.object({
-		id: z.string().min(1),
-		label: renderedMarkdownSchema
-	})
-	.passthrough();
-
 const numericAnswerSchema = z
 	.object({
 		value: z.number(),
 		tolerance: z.number().nonnegative().default(0)
 	})
-	.passthrough();
+	.strict();
 
-const sequenceItemSchema = z
+const lessonFrontmatterSchema = z
 	.object({
-		id: z.string().min(1),
-		label: renderedMarkdownSchema
+		title: z.string().min(1),
+		summary: z.string().min(1),
+		estimated_minutes: z.number().int().positive(),
+		skill_slugs: z.array(z.string().min(1)).min(1)
 	})
-	.passthrough();
+	.strict();
+
+const lessonAuthoringSchema = lessonFrontmatterSchema
+	.extend({
+		type: z.literal('lesson'),
+		body_markdown: z.string().min(1)
+	})
+	.strict();
+
+const baseQuestionSchema = z.object({
+	skill_slug: z.string().min(1),
+	question_purpose: z.enum(['recognition', 'application']),
+	response_type: z.enum([
+		'multiple_choice',
+		'multiple_select',
+		'numeric',
+		'sequencing',
+		'short_answer'
+	]),
+	difficulty: z.enum(['easy', 'medium', 'hard']),
+	prompt: renderedMarkdownSchema,
+	explanation: answerExplanationMarkdownSchema,
+	grading_rubric: z.string().min(1).optional()
+});
+
+const multipleChoiceQuestionSchema = baseQuestionSchema
+	.extend({
+		response_type: z.literal('multiple_choice'),
+		choices: z.array(renderedMarkdownSchema).min(2),
+		correct_index: z.number().int().nonnegative()
+	})
+	.strict();
+
+const multipleSelectQuestionSchema = baseQuestionSchema
+	.extend({
+		response_type: z.literal('multiple_select'),
+		choices: z.array(renderedMarkdownSchema).min(2),
+		correct_indices: z.array(z.number().int().nonnegative()).min(2)
+	})
+	.strict();
+
+const numericQuestionSchema = baseQuestionSchema
+	.extend({
+		response_type: z.literal('numeric'),
+		correct_numeric_answer: numericAnswerSchema
+	})
+	.strict();
+
+const sequencingQuestionSchema = baseQuestionSchema
+	.extend({
+		response_type: z.literal('sequencing'),
+		sequence_items: z.array(renderedMarkdownSchema).min(2)
+	})
+	.strict();
+
+const shortAnswerQuestionSchema = baseQuestionSchema
+	.extend({
+		response_type: z.literal('short_answer'),
+		accepted_answers: z.array(z.string().min(1)).min(1)
+	})
+	.strict();
 
 const questionSchema = z
-	.object({
-		skill: skillSchema.optional(),
-		skill_id: z.string().min(1).optional(),
-		device: z.string().min(1).optional(),
-		question_purpose: z.enum(['recognition', 'application']),
-		response_type: z.enum([
-			'multiple_choice',
-			'multiple_select',
-			'numeric',
-			'sequencing',
-			'short_answer'
-		]),
-		difficulty: z.enum(['easy', 'medium', 'hard']),
-		prompt: renderedMarkdownSchema,
-		choices: z.array(choiceSchema).optional(),
-		correct_choice_id: z.string().min(1).optional(),
-		correct_choice_ids: z.array(z.string().min(1)).optional(),
-		correct_numeric_answer: numericAnswerSchema.optional(),
-		sequence_items: z.array(sequenceItemSchema).optional(),
-		accepted_answers: z.array(z.string().min(1)).optional(),
-		grading_rubric: z.string().min(1).optional(),
-		explanation: answerExplanationMarkdownSchema
-	})
-	.passthrough()
+	.discriminatedUnion('response_type', [
+		multipleChoiceQuestionSchema,
+		multipleSelectQuestionSchema,
+		numericQuestionSchema,
+		sequencingQuestionSchema,
+		shortAnswerQuestionSchema
+	])
 	.superRefine((question, context) => {
-		const choices = question.choices ?? [];
-		const choiceIds = new Set(choices.map((choice) => choice.id));
-
-		if (question.response_type === 'multiple_choice') {
-			if (choices.length < 2) {
-				context.addIssue({
-					code: 'custom',
-					message: 'multiple_choice responses require at least 2 choices',
-					path: ['choices']
-				});
-			}
-			if (!question.correct_choice_id) {
-				context.addIssue({
-					code: 'custom',
-					message: 'multiple_choice responses require correct_choice_id',
-					path: ['correct_choice_id']
-				});
-			} else if (!choiceIds.has(question.correct_choice_id)) {
-				context.addIssue({
-					code: 'custom',
-					message: `correct_choice_id ${question.correct_choice_id} is not present in choices`,
-					path: ['correct_choice_id']
-				});
-			}
-			return;
+		if (question.response_type === 'multiple_choice' && question.correct_index >= question.choices.length) {
+			context.addIssue({
+				code: 'custom',
+				message: `correct_index ${question.correct_index} is outside choices range`,
+				path: ['correct_index']
+			});
 		}
-
 		if (question.response_type === 'multiple_select') {
-			if (choices.length < 2) {
-				context.addIssue({
-					code: 'custom',
-					message: 'multiple_select questions require at least 2 choices',
-					path: ['choices']
-				});
-			}
-			if ((question.correct_choice_ids ?? []).length < 2) {
-				context.addIssue({
-					code: 'custom',
-					message: 'multiple_select questions require at least 2 correct_choice_ids',
-					path: ['correct_choice_ids']
-				});
-			}
-			for (const choiceId of question.correct_choice_ids ?? []) {
-				if (!choiceIds.has(choiceId)) {
+			const seen = new Set();
+			for (const [index, correctIndex] of question.correct_indices.entries()) {
+				if (correctIndex >= question.choices.length) {
 					context.addIssue({
 						code: 'custom',
-						message: `correct_choice_ids contains ${choiceId}, which is not present in choices`,
-						path: ['correct_choice_ids']
+						message: `correct_indices[${index}] ${correctIndex} is outside choices range`,
+						path: ['correct_indices', index]
 					});
 				}
+				if (seen.has(correctIndex)) {
+					context.addIssue({
+						code: 'custom',
+						message: `correct_indices contains duplicate index ${correctIndex}`,
+						path: ['correct_indices', index]
+					});
+				}
+				seen.add(correctIndex);
 			}
-			return;
-		}
-
-		if (question.response_type === 'numeric' && !question.correct_numeric_answer) {
-			context.addIssue({
-				code: 'custom',
-				message: 'numeric responses require correct_numeric_answer',
-				path: ['correct_numeric_answer']
-			});
-		}
-
-		if (question.response_type === 'sequencing' && (question.sequence_items ?? []).length < 2) {
-			context.addIssue({
-				code: 'custom',
-				message: 'sequencing questions require at least 2 sequence_items',
-				path: ['sequence_items']
-			});
-		}
-
-		if (question.response_type === 'short_answer' && !question.accepted_answers?.length) {
-			context.addIssue({
-				code: 'custom',
-				message: 'short_answer questions require accepted_answers for deterministic grading',
-				path: ['accepted_answers']
-			});
 		}
 	});
 
-const quizItemSchema = z
+const quizAuthoringSchema = z
 	.object({
-		type: z.literal('quiz'),
-		slug: z.string().min(1),
 		title: z.string().min(1),
 		description: z.string().min(1),
-		kind: z.enum(['practice', 'assessment']).default('practice'),
-		skills: z.array(skillSchema).min(1).optional(),
 		questions: z.array(questionSchema).min(1)
 	})
-	.passthrough();
+	.strict()
+	.transform((quiz) => ({ type: 'quiz', kind: 'practice', ...quiz }));
 
-const reviewedItemSchema = z.discriminatedUnion('type', [lessonItemSchema, quizItemSchema]);
-
-export function schemaForItemType(type) {
-	if (type === 'lesson') {
-		return lessonItemSchema;
-	}
-	if (type === 'quiz') {
-		return quizItemSchema;
-	}
-	throw new Error(`Unknown item type ${type}`);
-}
+const reviewedItemSchema = z.union([lessonAuthoringSchema, quizAuthoringSchema]);
 
 export function formatSchemaError(error) {
 	return z.prettifyError(error);
@@ -234,6 +198,138 @@ export function validateWithSchema(schema) {
 	};
 }
 
+function extractFrontmatter(content, path) {
+	const startMatch = content.match(/^---\r?\n/);
+	if (!startMatch) {
+		throw new JsonReadError(path, 'Lesson Markdown must start with YAML frontmatter.', 'parse');
+	}
+	const startLength = startMatch[0].length;
+	const closeMatch = content.slice(startLength).match(/\r?\n---\r?\n/);
+	if (!closeMatch?.index && closeMatch?.index !== 0) {
+		throw new JsonReadError(path, 'Lesson Markdown is missing closing frontmatter fence.', 'parse');
+	}
+	const frontmatter = content.slice(startLength, startLength + closeMatch.index);
+	const body = content.slice(startLength + closeMatch.index + closeMatch[0].length).trim();
+	if (!body) {
+		throw new JsonReadError(path, 'Lesson Markdown body is empty.', 'parse');
+	}
+	return { frontmatter, body };
+}
+
+export function parseLessonMarkdown(content, path = 'lesson.md') {
+	const { frontmatter, body } = extractFrontmatter(content, path);
+	const document = parseDocument(frontmatter);
+	if (document.errors.length > 0) {
+		throw new JsonReadError(path, document.errors.map((error) => error.message).join('\n'), 'parse');
+	}
+	const metadata = lessonFrontmatterSchema.safeParse(document.toJSON());
+	if (!metadata.success) {
+		throw new JsonReadError(path, formatSchemaError(metadata.error), 'parse');
+	}
+	return {
+		type: 'lesson',
+		...metadata.data,
+		body_markdown: body
+	};
+}
+
+export function schemaForItemType(type) {
+	if (type === 'lesson') {
+		return lessonAuthoringSchema;
+	}
+	if (type === 'quiz') {
+		return quizAuthoringSchema;
+	}
+	throw new Error(`Unknown item type ${type}`);
+}
+
+function collectSkillSlugs(...items) {
+	const skillSlugs = new Set();
+	for (const item of items.flat()) {
+		for (const skill of item?.skills ?? []) {
+			skillSlugs.add(skill.slug);
+		}
+	}
+	return skillSlugs;
+}
+
+export function validateAuthoringItemContext({ itemType, syllabusItem, module, moduleSyllabus }) {
+	return (value) => {
+		const expectedModuleSlug = module?.slug;
+		const failures = [];
+		if (value.type !== itemType) {
+			failures.push(`Expected item type ${itemType}, received ${value.type}.`);
+		}
+		if (expectedModuleSlug && syllabusItem.module_slug && syllabusItem.module_slug !== expectedModuleSlug) {
+			failures.push(
+				`Syllabus item module_slug ${syllabusItem.module_slug} does not match module ${expectedModuleSlug}.`
+			);
+		}
+		const knownSkillSlugs = collectSkillSlugs(syllabusItem, moduleSyllabus?.syllabus ?? []);
+		if (knownSkillSlugs.size === 0) {
+			failures.push('No skill slugs were declared by the syllabus item or module syllabus.');
+		}
+		const usedSkillSlugs =
+			value.type === 'lesson'
+				? value.skill_slugs
+				: value.questions.map((question) => question.skill_slug);
+		for (const skillSlug of usedSkillSlugs) {
+			if (!knownSkillSlugs.has(skillSlug)) {
+				failures.push(
+					`Unknown skill_slug ${skillSlug}. Use one of: ${[...knownSkillSlugs].toSorted().join(', ')}.`
+				);
+			}
+		}
+		if (
+			value.type === 'quiz' &&
+			syllabusItem.question_count !== undefined &&
+			value.questions.length !== syllabusItem.question_count
+		) {
+			failures.push(
+				`Expected ${syllabusItem.question_count} questions, received ${value.questions.length}.`
+			);
+		}
+		if (failures.length > 0) {
+			return { success: false, error: failures.join('\n') };
+		}
+		return { success: true, data: value };
+	};
+}
+
+export function validateItemForContext(context) {
+	const validateSchema = validateWithSchema(schemaForItemType(context.itemType));
+	const validateContext = validateAuthoringItemContext(context);
+	return (value) => {
+		const schemaResult = validateSchema(value);
+		if (!schemaResult.success) {
+			return schemaResult;
+		}
+		return validateContext(schemaResult.data);
+	};
+}
+
 export const validateSyllabus = validateWithSchema(syllabusSchema);
 export const validateModulePlan = validateWithSchema(modulePlanSchema);
 export const validateReviewedItem = validateWithSchema(reviewedItemSchema);
+export { lessonAuthoringSchema, quizAuthoringSchema };
+
+export function validateSyllabusForModule(module) {
+	return (value) => {
+		const schemaResult = validateSyllabus(value);
+		if (!schemaResult.success) {
+			return schemaResult;
+		}
+		const failures = [];
+		for (const [index, item] of schemaResult.data.syllabus.entries()) {
+			if (item.module_slug !== module.slug) {
+				failures.push(
+					`syllabus[${index}].module_slug must be ${module.slug}, received ${item.module_slug ?? 'missing'}.`
+				);
+			}
+		}
+		if (failures.length > 0) {
+			return { success: false, error: failures.join('\n') };
+		}
+		return schemaResult;
+	};
+}
