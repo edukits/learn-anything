@@ -3,8 +3,9 @@ import type { Actions, PageServerLoad } from './$types';
 import { getAchievements, getRewardInventory } from '$lib/features/engagement/server/index.server';
 import { equipPublicProfileTitleReward } from '$lib/features/social/server/index.server';
 import { requireUser } from '$lib/server/auth/requireUser.server';
+import { noindexSeo } from '$lib/seo';
 
-export const load: PageServerLoad = async ({ locals, parent }) => {
+export const load: PageServerLoad = async ({ locals, parent, url }) => {
 	const { user } = await parent();
 	const [achievements, rewards] = await Promise.all([
 		getAchievements(locals.supabase, user.id),
@@ -13,7 +14,8 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 
 	return {
 		achievements,
-		rewards
+		rewards,
+		seo: noindexSeo('Achievements', url)
 	};
 };
 

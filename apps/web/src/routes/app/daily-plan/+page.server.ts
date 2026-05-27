@@ -6,8 +6,9 @@ import {
 } from '$lib/features/recommendations/server/index.server';
 import { getEngagementDateValue } from '$lib/features/engagement/server/index.server';
 import { requireUser } from '$lib/server/auth/requireUser.server';
+import { noindexSeo } from '$lib/seo';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
 	const user = await requireUser(locals);
 	const dailyPlan = await getDailyPlanForUser(locals.supabase, user.id);
 
@@ -15,6 +16,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		enrollments: dailyPlan.enrollments,
 		plan: dailyPlan.plan,
 		engagement: dailyPlan.engagement,
+		seo: noindexSeo('Daily plan', url),
 		streakToday: getEngagementDateValue()
 	};
 };

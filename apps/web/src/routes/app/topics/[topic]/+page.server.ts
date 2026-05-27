@@ -12,26 +12,22 @@ import {
 } from '$lib/features/learning/server/index.server';
 import { getReviewSummary } from '$lib/features/review/server/index.server';
 import { requireUser } from '$lib/server/auth/requireUser.server';
+import { noindexSeo } from '$lib/seo';
 
 const dismissCelebrationsSchema = z.object({
 	eventIds: z.array(z.string().uuid()).min(1).max(20)
 });
 
-export const load: PageServerLoad = async ({ locals, parent }) => {
+export const load: PageServerLoad = async ({ locals, parent, url }) => {
 	const { user, content } = await parent();
-	const [
-		progress,
-		pathProgress,
-		mastery,
-		pendingAchievementCelebrations,
-		reviewSummary
-	] = await Promise.all([
-		getUserProgress(locals.supabase, user.id, content.topic.topic_area_id, content.release.id),
-		getPathItemProgress(locals.supabase, user.id, content.release.id, content.pathItems),
-		getSkillMasteryProjections(locals.supabase, user.id, content.topic.topic_area_id),
-		getPendingAchievementCelebrations(locals.supabase, user.id),
-		getReviewSummary(locals.supabase, user.id, content)
-	]);
+	const [progress, pathProgress, mastery, pendingAchievementCelebrations, reviewSummary] =
+		await Promise.all([
+			getUserProgress(locals.supabase, user.id, content.topic.topic_area_id, content.release.id),
+			getPathItemProgress(locals.supabase, user.id, content.release.id, content.pathItems),
+			getSkillMasteryProjections(locals.supabase, user.id, content.topic.topic_area_id),
+			getPendingAchievementCelebrations(locals.supabase, user.id),
+			getReviewSummary(locals.supabase, user.id, content)
+		]);
 
 	return {
 		...content,
@@ -39,7 +35,8 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		progress,
 		mastery,
 		pathProgress,
-		reviewSummary
+		reviewSummary,
+		seo: noindexSeo(content.topic.name, url, content.topic.public_summary)
 	};
 };
 

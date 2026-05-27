@@ -1,5 +1,10 @@
 import type { PageServerLoad } from './$types';
-import { getAttemptSkillAccuracyStats, getAttempts, getUserProgress } from '$lib/features/learning/server/index.server';
+import {
+	getAttemptSkillAccuracyStats,
+	getAttempts,
+	getUserProgress
+} from '$lib/features/learning/server/index.server';
+import { noindexSeo } from '$lib/seo';
 
 const completedAtFormatter = new Intl.DateTimeFormat('en-US', {
 	dateStyle: 'medium',
@@ -9,17 +14,28 @@ const completedAtFormatter = new Intl.DateTimeFormat('en-US', {
 
 export const load: PageServerLoad = async ({ locals, parent, url }) => {
 	const { user, content } = await parent();
-	const progress = await getUserProgress(locals.supabase, user.id, content.topic.topic_area_id, content.release.id);
+	const progress = await getUserProgress(
+		locals.supabase,
+		user.id,
+		content.topic.topic_area_id,
+		content.release.id
+	);
 	const attempts = await getAttempts(locals.supabase, user.id, content.release.id);
 	const requestedAttemptId = url.searchParams.get('attempt');
-	const attempt = attempts.find((candidate) => candidate.id === requestedAttemptId) ?? attempts[0] ?? null;
-	const skillAccuracy = attempt ? await getAttemptSkillAccuracyStats(locals.supabase, attempt.id) : [];
+	const attempt =
+		attempts.find((candidate) => candidate.id === requestedAttemptId) ?? attempts[0] ?? null;
+	const skillAccuracy = attempt
+		? await getAttemptSkillAccuracyStats(locals.supabase, attempt.id)
+		: [];
 
 	return {
 		...content,
 		progress,
 		attempt,
-		attemptCompletedAtLabel: attempt ? completedAtFormatter.format(new Date(attempt.completed_at)) : null,
-		skillAccuracy
+		attemptCompletedAtLabel: attempt
+			? completedAtFormatter.format(new Date(attempt.completed_at))
+			: null,
+		skillAccuracy,
+		seo: noindexSeo(`${content.topic.name} quiz results`, url, content.topic.public_summary)
 	};
 };

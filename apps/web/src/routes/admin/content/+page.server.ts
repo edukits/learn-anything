@@ -9,8 +9,9 @@ import {
 	updateContentIssueStatus
 } from '$lib/features/content-admin/server/index.server';
 import { requireUser } from '$lib/server/auth/requireUser.server';
+import { noindexSeo } from '$lib/seo';
 
-export const load: PageServerLoad = async ({ locals, parent }) => {
+export const load: PageServerLoad = async ({ locals, parent, url }) => {
 	const { user } = await parent();
 	const signedInUser = user ?? (await requireUser(locals));
 	const admin = await requireContentAdmin(locals.supabaseService, signedInUser.id);
@@ -24,7 +25,8 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		admin,
 		openIssues,
 		qualityMetrics,
-		releaseReviews
+		releaseReviews,
+		seo: noindexSeo('Content admin', url)
 	};
 };
 

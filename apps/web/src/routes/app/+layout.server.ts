@@ -2,8 +2,9 @@ import type { LayoutServerLoad } from './$types';
 import { getEnrollments } from '$lib/features/catalog/server/index.server';
 import { getEngagementSummary } from '$lib/features/engagement/server/index.server';
 import { requireUser } from '$lib/server/auth/requireUser.server';
+import { noindexSeo } from '$lib/seo';
 
-export const load: LayoutServerLoad = async ({ locals }) => {
+export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const user = await requireUser(locals);
 	const [engagement, enrollments] = await Promise.all([
 		getEngagementSummary(locals.supabase, user.id),
@@ -14,6 +15,7 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		engagement,
 		enrollments,
 		session: null,
+		seo: noindexSeo('My learning', url),
 		user
 	};
 };

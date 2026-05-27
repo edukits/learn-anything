@@ -8,14 +8,16 @@ import {
 	upsertPublicProfile
 } from '$lib/features/social/server/index.server';
 import { requireUser } from '$lib/server/auth/requireUser.server';
+import { noindexSeo } from '$lib/seo';
 
-export const load: PageServerLoad = async ({ locals, parent }) => {
+export const load: PageServerLoad = async ({ locals, parent, url }) => {
 	const { user } = await parent();
 	const profile = await getPublicProfile(locals.supabase, user.id, user.email);
 	const rewards = await getRewardInventory(locals.supabase, user.id);
 
 	return {
 		profile,
+		seo: noindexSeo('Profile', url),
 		titleRewards: rewards.filter((reward) => reward.reward_kind === 'title')
 	};
 };

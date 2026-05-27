@@ -1,4 +1,5 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
+import type { SeoMetadata } from '$lib/seo';
 
 declare global {
 	namespace App {
@@ -13,6 +14,7 @@ declare global {
 
 		interface PageData {
 			session: import('@supabase/supabase-js').Session | null;
+			seo?: SeoMetadata;
 			user: User | null;
 		}
 	}
