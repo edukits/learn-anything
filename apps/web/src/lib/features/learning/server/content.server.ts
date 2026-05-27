@@ -19,6 +19,8 @@ import type {
 	TopicModuleVersion
 } from '../types';
 
+const RELEASE_ITEMS_PAGE_SIZE = 1_000;
+
 function requireSingle<T>(value: T | null | undefined, label: string): T {
 	if (!value) {
 		throw new Error(`Missing ${label}. Import and publish the topic content first.`);
@@ -52,16 +54,42 @@ export async function getReleaseItems(
 	client: SupabaseClient,
 	releaseId: string
 ): Promise<ReleaseItem[]> {
-	const { data, error } = await client
-		.from('content_release_items')
-		.select('content_type,content_id,content_version')
-		.eq('release_id', releaseId);
+	const fetchReleaseItemsPage = async (offset: number, includeCount = false) => {
+		const { data, error, count } = await client
+			.from('content_release_items')
+			.select(
+				'content_type,content_id,content_version',
+				includeCount ? { count: 'exact' } : undefined
+			)
+			.eq('release_id', releaseId)
+			.order('content_type')
+			.order('content_id')
+			.order('content_version')
+			.range(offset, offset + RELEASE_ITEMS_PAGE_SIZE - 1);
 
-	if (error) {
-		throw new Error(error.message);
+		if (error) {
+			throw new Error(error.message);
+		}
+
+		return { count, rows: (data ?? []) as ReleaseItem[] };
+	};
+
+	const firstPage = await fetchReleaseItemsPage(0, true);
+	const totalCount = firstPage.count ?? firstPage.rows.length;
+	const remainingOffsets = Array.from(
+		{ length: Math.ceil(totalCount / RELEASE_ITEMS_PAGE_SIZE) - 1 },
+		(_, index) => (index + 1) * RELEASE_ITEMS_PAGE_SIZE
+	);
+
+	if (!remainingOffsets.length) {
+		return firstPage.rows;
 	}
 
-	return data ?? [];
+	const remainingPages = await Promise.all(
+		remainingOffsets.map((offset) => fetchReleaseItemsPage(offset))
+	);
+
+	return [firstPage.rows, ...remainingPages.map((page) => page.rows)].flat();
 }
 
 function getItemsByType(items: ReleaseItem[], contentType: string) {

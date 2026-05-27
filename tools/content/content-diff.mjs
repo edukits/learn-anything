@@ -25,6 +25,9 @@ function identityFor(artifactName, record) {
 	if (artifactName === 'quiz_question_links') {
 		return `${record.quiz_id}@${record.quiz_version}:${record.question_id}@${record.question_version}`;
 	}
+	if (artifactName === 'lesson_interaction_links') {
+		return `${record.lesson_id}@${record.lesson_version}:${record.interaction_slug}:${record.question_id}@${record.question_version}`;
+	}
 	if (artifactName === 'topic_discovery_metadata') {
 		return `${record.topic_area_id}:${record.release_id}`;
 	}

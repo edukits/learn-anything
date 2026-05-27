@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -421,6 +421,240 @@ test('generateContent resumes valid cached artifacts without calling agents', as
 	assert.equal(events.filter((event) => event.type === 'task_complete' && event.resumed).length, 6);
 });
 
+test('generateContent promotes valid draft lesson interactions when reviewed cache is invalid', async () => {
+	const topicDir = await tempTopic();
+	const modulePlan = {
+		summary: 'One module',
+		modules: [
+			{
+				slug: 'basics',
+				title: 'Basics',
+				description: 'Equation basics',
+				content_responsibility: 'Teach basics'
+			}
+		]
+	};
+	const syllabus = {
+		summary: 'One item',
+		syllabus: [
+			{
+				type: 'lesson',
+				module_slug: 'basics',
+				focus: 'Balance equations',
+				goals: 'Balance equations',
+				skills: [{ slug: 'balance', name: 'Balance', device: 'Balance', summary: 'Balance.' }]
+			}
+		]
+	};
+	const lesson = {
+		type: 'lesson',
+		title: 'Balance Equations',
+		summary: 'Balance equations.',
+		estimated_minutes: 5,
+		skill_slugs: ['balance'],
+		body_markdown: lessonMarkdown()
+	};
+	await mkdir(join(topicDir, '.content-pipeline', 'modules', '001-basics'), { recursive: true });
+	await mkdir(join(topicDir, '.content-pipeline', 'items'), { recursive: true });
+	await mkdir(join(topicDir, '.content-pipeline', 'reviewed'), { recursive: true });
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'TOPIC_MODULES.json'),
+		`${JSON.stringify(modulePlan, null, 2)}\n`
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'modules', '001-basics', 'SYLLABUS.json'),
+		`${JSON.stringify(syllabus, null, 2)}\n`
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'items', '001-lesson-balance-equations.lesson.md'),
+		lessonFile({
+			title: lesson.title,
+			summary: lesson.summary,
+			skillSlug: 'balance',
+			body: lesson.body_markdown
+		})
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'items', '001-lesson-balance-equations.lesson-interactions.json'),
+		`${JSON.stringify(interactionSidecar(), null, 2)}\n`
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'reviewed', '001-lesson-balance-equations.lesson.md'),
+		lessonFile({
+			title: lesson.title,
+			summary: lesson.summary,
+			skillSlug: 'balance',
+			body: lesson.body_markdown
+		})
+	);
+	await writeFile(
+		join(
+			topicDir,
+			'.content-pipeline',
+			'reviewed',
+			'001-lesson-balance-equations.lesson-interactions.json'
+		),
+		`${JSON.stringify({ interactions: [] }, null, 2)}\n`
+	);
+
+	let bundledItems = null;
+	const events = [];
+	await generateContent(
+		{
+			command: 'generate',
+			topicDir,
+			concurrency: 2,
+			model: defaultGenerationConfig.model,
+			thinkingLevels: defaultGenerationConfig.thinkingLevels
+		},
+		{
+			emit: (event) => events.push(event),
+			loadTopicInput: async () => fakeInput(topicDir),
+			AgentRunner: class {
+				async run() {
+					throw new Error('agent should not run when draft interactions are valid');
+				}
+			},
+			bundleRun: async ({ reviewedItems }) => {
+				bundledItems = reviewedItems;
+				return {
+					report: {
+						valid: true,
+						counts: { lessons: 1, quizzes: 0, questions: 0 },
+						failures: []
+					}
+				};
+			},
+			now: () => new Date('2026-05-26T12:00:00.000Z')
+		}
+	);
+
+	const reviewedSidecar = JSON.parse(
+		await readFile(
+			join(
+				topicDir,
+				'.content-pipeline',
+				'reviewed',
+				'001-lesson-balance-equations.lesson-interactions.json'
+			),
+			'utf8'
+		)
+	);
+	assert.deepEqual(reviewedSidecar, interactionSidecar());
+	assert.equal(bundledItems[0].type, 'lesson');
+	assert.equal(bundledItems[0].interactions.length, 1);
+	assert.equal(
+		events.some((event) => event.type === 'resume_miss' && event.label === 'review interactions 1'),
+		true
+	);
+});
+
+test('generateContent promotes draft lesson when reviewed cache drops interaction directives', async () => {
+	const topicDir = await tempTopic();
+	const modulePlan = {
+		summary: 'One module',
+		modules: [
+			{
+				slug: 'basics',
+				title: 'Basics',
+				description: 'Equation basics',
+				content_responsibility: 'Teach basics'
+			}
+		]
+	};
+	const syllabus = {
+		summary: 'One item',
+		syllabus: [
+			{
+				type: 'lesson',
+				module_slug: 'basics',
+				focus: 'Balance equations',
+				goals: 'Balance equations',
+				skills: [{ slug: 'balance', name: 'Balance', device: 'Balance', summary: 'Balance.' }]
+			}
+		]
+	};
+	const lesson = {
+		type: 'lesson',
+		title: 'Balance Equations',
+		summary: 'Balance equations.',
+		estimated_minutes: 5,
+		skill_slugs: ['balance'],
+		body_markdown: lessonMarkdown()
+	};
+	await mkdir(join(topicDir, '.content-pipeline', 'modules', '001-basics'), { recursive: true });
+	await mkdir(join(topicDir, '.content-pipeline', 'items'), { recursive: true });
+	await mkdir(join(topicDir, '.content-pipeline', 'reviewed'), { recursive: true });
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'TOPIC_MODULES.json'),
+		`${JSON.stringify(modulePlan, null, 2)}\n`
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'modules', '001-basics', 'SYLLABUS.json'),
+		`${JSON.stringify(syllabus, null, 2)}\n`
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'items', '001-lesson-balance-equations.lesson.md'),
+		lessonFile({
+			title: lesson.title,
+			summary: lesson.summary,
+			skillSlug: 'balance',
+			body: lesson.body_markdown
+		})
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'items', '001-lesson-balance-equations.lesson-interactions.json'),
+		`${JSON.stringify(interactionSidecar(), null, 2)}\n`
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'reviewed', '001-lesson-balance-equations.lesson.md'),
+		lessonFile({
+			title: lesson.title,
+			summary: lesson.summary,
+			skillSlug: 'balance',
+			body: '# Balance Equations\n\nKeep both sides equal.\n'
+		})
+	);
+
+	let bundledItems = null;
+	await generateContent(
+		{
+			command: 'generate',
+			topicDir,
+			concurrency: 2,
+			model: defaultGenerationConfig.model,
+			thinkingLevels: defaultGenerationConfig.thinkingLevels
+		},
+		{
+			loadTopicInput: async () => fakeInput(topicDir),
+			AgentRunner: class {
+				async run() {
+					throw new Error('agent should not run when the draft lesson is structurally valid');
+				}
+			},
+			bundleRun: async ({ reviewedItems }) => {
+				bundledItems = reviewedItems;
+				return {
+					report: {
+						valid: true,
+						counts: { lessons: 1, quizzes: 0, questions: 0 },
+						failures: []
+					}
+				};
+			},
+			now: () => new Date('2026-05-26T12:00:00.000Z')
+		}
+	);
+
+	const reviewedLesson = await readFile(
+		join(topicDir, '.content-pipeline', 'reviewed', '001-lesson-balance-equations.lesson.md'),
+		'utf8'
+	);
+	assert.equal(reviewedLesson.includes('::concept-check{slug="balance-check"}'), true);
+	assert.equal(bundledItems[0].type, 'lesson');
+	assert.equal(bundledItems[0].interactions.length, 1);
+});
+
 test('generateContent matches cached items to later modules by slug when module ids are absent', async () => {
 	const topicDir = await tempTopic();
 	const modulePlan = {
@@ -651,7 +885,7 @@ test('generateContent ignores legacy item JSON caches after authoring format mig
 		}
 	);
 
-	assert.equal(agentCalls, 4);
+	assert.equal(agentCalls, 3);
 	assert.equal(
 		events.some(
 			(event) =>
