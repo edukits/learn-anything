@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button } from '@learn-anything/ui';
-	import { ArrowLeft, BookOpenCheck, Sparkles, Mail } from '@lucide/svelte';
+	import { ArrowLeft, Sparkles, Mail } from '@lucide/svelte';
+	import logoUrl from '../../../../../packages/ui/src/lib/assets/brand/logo-dark-md.png';
 
 	let { form } = $props();
 
@@ -11,7 +12,7 @@
 	<aside class="brand-panel">
 		<div class="brand-content">
 			<div class="brand-logo">
-				<BookOpenCheck size={28} strokeWidth={2.25} />
+				<img src={logoUrl} alt="" aria-hidden="true" decoding="async" />
 			</div>
 			<h2 class="brand-title">Clarifyst</h2>
 			<p class="brand-tagline">
@@ -130,22 +131,17 @@
 
 	.brand-logo {
 		align-items: center;
-		background: linear-gradient(
-			to bottom,
-			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) + 4%)),
-			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 14%))
-		);
-		border: 1px solid hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 24%));
-		border-radius: var(--radius-lg);
-		box-shadow:
-			0 2px 1px inset hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) + 14%)),
-			0 1px 3px 0 hsl(var(--color-accent-h) 60% 20% / 0.5),
-			0 4px 16px hsl(var(--color-accent-h) 60% 30% / 0.4);
-		color: var(--color-accent-contrast);
 		display: inline-flex;
-		height: 3rem;
+		height: 4.5rem;
 		justify-content: center;
-		width: 3rem;
+		width: 4.5rem;
+	}
+
+	.brand-logo img {
+		display: block;
+		height: 100%;
+		object-fit: contain;
+		width: 100%;
 	}
 
 	.brand-title {
