@@ -58,7 +58,9 @@ function combineModuleSyllabi(modulePlan, moduleSyllabi) {
 function moduleForItem(modulePlan, item) {
 	return (
 		modulePlan.modules.find(
-			(module) => module.id === item.module_id || module.slug === item.module_slug
+			(module) =>
+				(item.module_id !== undefined && module.id === item.module_id) ||
+				module.slug === item.module_slug
 		) ?? modulePlan.modules[0]
 	);
 }

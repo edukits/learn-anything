@@ -255,6 +255,116 @@ test('generateContent resumes valid cached artifacts without calling agents', as
 	assert.equal(events.filter((event) => event.type === 'task_complete' && event.resumed).length, 4);
 });
 
+test('generateContent matches cached items to later modules by slug when module ids are absent', async () => {
+	const topicDir = await tempTopic();
+	const modulePlan = {
+		summary: 'Two modules',
+		modules: [
+			{
+				slug: 'basics',
+				title: 'Basics',
+				description: 'Equation basics',
+				content_responsibility: 'Teach basics'
+			},
+			{
+				slug: 'graphs',
+				title: 'Graphs',
+				description: 'Graphing equations',
+				content_responsibility: 'Teach graphing'
+			}
+		]
+	};
+	const basicsSyllabus = {
+		summary: 'Basics items',
+		syllabus: [
+			{
+				type: 'lesson',
+				module_slug: 'basics',
+				focus: 'Balance equations',
+				goals: 'Balance equations',
+				skills: [{ slug: 'balance', name: 'Balance', device: 'Balance', summary: 'Balance.' }]
+			}
+		]
+	};
+	const graphsSyllabus = {
+		summary: 'Graph items',
+		syllabus: [
+			{
+				type: 'lesson',
+				module_slug: 'graphs',
+				focus: 'Graph equations',
+				goals: 'Graph equations',
+				skills: [{ slug: 'graph', name: 'Graph', device: 'Graph', summary: 'Graph.' }]
+			}
+		]
+	};
+	const balanceLesson = `---\ntitle: Balance Equations\nsummary: Balance equations.\nestimated_minutes: 5\nskill_slugs:\n  - balance\n---\n\n# Balance\n`;
+	const graphLesson = `---\ntitle: Graph Equations\nsummary: Graph equations.\nestimated_minutes: 5\nskill_slugs:\n  - graph\n---\n\n# Graph\n`;
+	await mkdir(join(topicDir, '.content-pipeline', 'modules', '001-basics'), { recursive: true });
+	await mkdir(join(topicDir, '.content-pipeline', 'modules', '002-graphs'), { recursive: true });
+	await mkdir(join(topicDir, '.content-pipeline', 'items'), { recursive: true });
+	await mkdir(join(topicDir, '.content-pipeline', 'reviewed'), { recursive: true });
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'TOPIC_MODULES.json'),
+		`${JSON.stringify(modulePlan, null, 2)}\n`
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'modules', '001-basics', 'SYLLABUS.json'),
+		`${JSON.stringify(basicsSyllabus, null, 2)}\n`
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'modules', '002-graphs', 'SYLLABUS.json'),
+		`${JSON.stringify(graphsSyllabus, null, 2)}\n`
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'items', '001-lesson-balance-equations.lesson.md'),
+		balanceLesson
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'items', '002-lesson-graph-equations.lesson.md'),
+		graphLesson
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'reviewed', '001-lesson-balance-equations.lesson.md'),
+		balanceLesson
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'reviewed', '002-lesson-graph-equations.lesson.md'),
+		graphLesson
+	);
+
+	const events = [];
+	await generateContent(
+		{
+			command: 'generate',
+			topicDir,
+			concurrency: 2,
+			model: defaultGenerationConfig.model,
+			thinkingLevels: defaultGenerationConfig.thinkingLevels
+		},
+		{
+			emit: (event) => events.push(event),
+			loadTopicInput: async () => fakeInput(topicDir),
+			AgentRunner: class {
+				async run() {
+					throw new Error('agent should not run for cached artifacts');
+				}
+			},
+			bundleRun: async () => ({
+				report: {
+					valid: true,
+					counts: { lessons: 2, quizzes: 0, questions: 0 },
+					failures: []
+				}
+			}),
+			now: () => new Date('2026-05-26T12:00:00.000Z')
+		}
+	);
+
+	assert.equal(events.some((event) => event.type === 'resume_miss'), false);
+	assert.equal(events.filter((event) => event.type === 'task_complete' && event.resumed).length, 7);
+});
+
 test('generateContent ignores legacy item JSON caches after authoring format migration', async () => {
 	const topicDir = await tempTopic();
 	const modulePlan = {
