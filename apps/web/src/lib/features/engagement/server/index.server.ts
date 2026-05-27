@@ -9,4 +9,4 @@ export type {
 	PendingAchievementCelebration,
 	RewardInventoryItem
 } from './achievements.server';
-export { getEngagementSummary } from './xp.server';
+export { getEngagementDateValue, getEngagementSummary } from './xp.server';

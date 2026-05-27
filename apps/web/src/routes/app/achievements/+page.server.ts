@@ -1,9 +1,6 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import {
-	getAchievements,
-	getRewardInventory
-} from '$lib/features/engagement/server/index.server';
+import { getAchievements, getRewardInventory } from '$lib/features/engagement/server/index.server';
 import { equipPublicProfileTitleReward } from '$lib/features/social/server/index.server';
 import { requireUser } from '$lib/server/auth/requireUser.server';
 

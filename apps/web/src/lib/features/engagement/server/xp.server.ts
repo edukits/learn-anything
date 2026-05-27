@@ -35,6 +35,12 @@ function formatTimeZoneDay(date: Date) {
 	};
 }
 
+export function getEngagementDateValue(date = new Date()) {
+	const { year, month, day } = formatTimeZoneDay(date);
+
+	return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
 function getTimeZoneOffsetMs(date: Date) {
 	const parts = TIME_PARTS_FORMATTER.formatToParts(date);
 	const part = (type: string) => parts.find((candidate) => candidate.type === type)?.value ?? '0';

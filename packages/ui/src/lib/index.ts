@@ -7,7 +7,8 @@ export {
 	AchievementCard,
 	AchievementCelebrationDialog,
 	NextAchievementStatus,
-	RewardInventoryCard
+	RewardInventoryCard,
+	StreakWeek
 } from './components/achievements';
 export type {
 	AchievementCategory,
@@ -15,7 +16,8 @@ export type {
 	AchievementCelebrationItem,
 	NextAchievementData,
 	RewardKind,
-	RewardInventoryCardData
+	RewardInventoryCardData,
+	StreakWeekDay
 } from './components/achievements';
 export {
 	formatAchievementCategoryLabel,

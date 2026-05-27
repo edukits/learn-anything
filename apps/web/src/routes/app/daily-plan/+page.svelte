@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import type { RecommendationReason } from '$lib/features/recommendations/types';
-	import { Button } from '@learn-anything/ui';
+	import { Button, StreakWeek } from '@learn-anything/ui';
 	import {
 		ArrowRight,
 		BookOpen,
@@ -59,23 +59,30 @@
 			</p>
 		</div>
 
-		<div class="hero-stats">
-			<div class="stat">
-				<strong>{data.engagement.daily_xp_goal - data.engagement.daily_goal_remaining}</strong>
-				<span>XP earned</span>
-			</div>
-			<div class="stat-divider" aria-hidden="true"></div>
-			<div class="stat">
-				<strong>{data.engagement.daily_xp_goal}</strong>
-				<span>XP goal</span>
-			</div>
-			<div class="stat-divider" aria-hidden="true"></div>
-			<div class="stat">
-				<strong class="streak-val">
-					<Flame size={18} />
-					{data.engagement.current_streak}
-				</strong>
-				<span>Day streak</span>
+		<div class="hero-summary-card">
+			<StreakWeek
+				currentStreak={data.engagement.current_streak}
+				currentDate={data.streakToday}
+				ariaLabel="Weekly streak progress"
+			/>
+			<div class="hero-stats">
+				<div class="stat">
+					<strong>{data.engagement.daily_xp_goal - data.engagement.daily_goal_remaining}</strong>
+					<span>XP earned</span>
+				</div>
+				<div class="stat-divider" aria-hidden="true"></div>
+				<div class="stat">
+					<strong>{data.engagement.daily_xp_goal}</strong>
+					<span>XP goal</span>
+				</div>
+				<div class="stat-divider" aria-hidden="true"></div>
+				<div class="stat">
+					<strong class="streak-val">
+						<Flame size={18} />
+						{data.engagement.current_streak}
+					</strong>
+					<span>Day streak</span>
+				</div>
 			</div>
 		</div>
 	</section>
@@ -278,6 +285,20 @@
 	.hero-subtitle {
 		color: var(--color-text-muted);
 		max-inline-size: 38ch;
+	}
+
+	.hero-summary-card {
+		background: var(--color-surface);
+		border: 1px solid color-mix(in srgb, var(--color-border), transparent 20%);
+		border-radius: var(--radius-md);
+		box-shadow:
+			0 1px 0 hsl(0 0% 100% / 0.8),
+			0 2px 8px hsl(0 0% 0% / 0.05);
+		display: grid;
+		gap: 16px;
+		justify-items: center;
+		min-inline-size: 340px;
+		padding: 16px 18px 18px;
 	}
 
 	.hero-stats {
@@ -596,9 +617,11 @@
 		.hero-stats {
 			justify-self: stretch;
 			justify-content: center;
-			background: var(--color-surface-raised);
-			border-radius: var(--radius-sm);
-			padding: 14px;
+		}
+
+		.hero-summary-card {
+			inline-size: 100%;
+			min-inline-size: 0;
 		}
 	}
 

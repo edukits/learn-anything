@@ -4,6 +4,7 @@ import {
 	getDailyPlanForUser,
 	logRecommendationDecision
 } from '$lib/features/recommendations/server/index.server';
+import { getEngagementDateValue } from '$lib/features/engagement/server/index.server';
 import { requireUser } from '$lib/server/auth/requireUser.server';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -13,7 +14,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		enrollments: dailyPlan.enrollments,
 		plan: dailyPlan.plan,
-		engagement: dailyPlan.engagement
+		engagement: dailyPlan.engagement,
+		streakToday: getEngagementDateValue()
 	};
 };
 
@@ -35,12 +37,7 @@ export const actions: Actions = {
 				return fail(404, { error: 'Recommendation is no longer available.' });
 			}
 
-			await logRecommendationDecision(
-				locals.supabaseService,
-				user.id,
-				recommendation,
-				'skipped'
-			);
+			await logRecommendationDecision(locals.supabaseService, user.id, recommendation, 'skipped');
 		} catch (error) {
 			return fail(400, {
 				error: error instanceof Error ? error.message : 'Unable to skip recommendation.'
