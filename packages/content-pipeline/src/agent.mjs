@@ -11,7 +11,7 @@ import {
 	SessionManager,
 	SettingsManager
 } from '@earendil-works/pi-coding-agent';
-import { JsonReadError, readJson } from './utils.mjs';
+import { JsonReadError } from './utils.mjs';
 
 const skillDir = join(dirname(fileURLToPath(import.meta.url)), 'skills');
 
@@ -72,17 +72,45 @@ function jsonRepairPrompt(path, error, content) {
 	].join('\n');
 }
 
-function schemaRepairPrompt(path, error, content) {
+function artifactParseRepairPrompt(path, error, content, format) {
+	if (format === 'json') {
+		return jsonRepairPrompt(path, error, content);
+	}
 	return [
-		`The JSON file at ${path} is valid JSON but does not match the required schema.`,
-		'Fix the validation errors and rewrite that same file as JSON only.',
-		'Preserve the intended content. Do not add Markdown fences or prose.',
+		`The Markdown lesson file at ${path} is invalid and could not be parsed.`,
+		'Rewrite that same file as a Markdown lesson with YAML frontmatter only.',
+		'Preserve the intended content and schema. Do not add Markdown fences or prose outside the file content.',
+		'',
+		'Parser error:',
+		error.message,
+		'',
+		'Current file content:',
+		'```markdown',
+		content,
+		'```'
+	].join('\n');
+}
+
+function schemaRepairPrompt(path, error, content, format = 'json') {
+	const fileDescription =
+		format === 'json'
+			? 'JSON file'
+			: 'Markdown lesson file with YAML frontmatter';
+	const rewriteInstruction =
+		format === 'json'
+			? 'Fix the validation errors and rewrite that same file as JSON only.'
+			: 'Fix the validation errors and rewrite that same file as Markdown with YAML frontmatter only.';
+	const fence = format === 'json' ? 'json' : 'markdown';
+	return [
+		`The ${fileDescription} at ${path} does not match the required schema or context.`,
+		rewriteInstruction,
+		'Preserve the intended content. Do not add Markdown fences or prose outside the file content.',
 		'',
 		'Validation errors:',
 		error,
 		'',
 		'Current file content:',
-		'```json',
+		`\`\`\`${fence}`,
 		content,
 		'```'
 	].join('\n');
@@ -95,13 +123,33 @@ function normalizeValidationResult(result) {
 	return { success: true, data: result };
 }
 
+function parseJsonContent(content, path) {
+	try {
+		return JSON.parse(content);
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		throw new JsonReadError(path, message, 'parse', { cause: error });
+	}
+}
+
+async function readArtifactContent(path) {
+	try {
+		return await readFile(path, 'utf8');
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		throw new JsonReadError(path, message, 'read', { cause: error });
+	}
+}
+
 /* eslint-disable no-await-in-loop */
-export async function readValidatedJson({
+export async function readValidatedArtifact({
 	absoluteJsonPath,
 	expectedJsonPath,
 	label,
 	session,
 	validate,
+	parse = parseJsonContent,
+	format = 'json',
 	maxRepairAttempts = 3,
 	log = () => {},
 	onRepair = ({ label: repairLabel, kind, attempt, maxRepairAttempts: max }) =>
@@ -110,9 +158,11 @@ export async function readValidatedJson({
 	let repairAttempts = 0;
 
 	while (true) {
+		let content;
 		let value;
 		try {
-			value = await readJson(absoluteJsonPath);
+			content = await readArtifactContent(absoluteJsonPath);
+			value = parse(content, absoluteJsonPath);
 		} catch (error) {
 			if (!(error instanceof JsonReadError) || error.kind !== 'parse') {
 				throw error;
@@ -127,8 +177,10 @@ export async function readValidatedJson({
 				attempt: repairAttempts,
 				maxRepairAttempts
 			});
-			const content = await readFile(absoluteJsonPath, 'utf8');
-			await session.prompt(jsonRepairPrompt(expectedJsonPath, error, content));
+			const currentContent = await readArtifactContent(absoluteJsonPath);
+			await session.prompt(
+				artifactParseRepairPrompt(expectedJsonPath, error, currentContent, format)
+			);
 			continue;
 		}
 
@@ -155,11 +207,14 @@ export async function readValidatedJson({
 			maxRepairAttempts,
 			error: validation.error
 		});
-		const content = await readFile(absoluteJsonPath, 'utf8');
-		await session.prompt(schemaRepairPrompt(expectedJsonPath, validation.error, content));
+		await session.prompt(schemaRepairPrompt(expectedJsonPath, validation.error, content, format));
 	}
 }
 /* eslint-enable no-await-in-loop */
+
+export function readValidatedJson(options) {
+	return readValidatedArtifact({ ...options, format: 'json', parse: parseJsonContent });
+}
 
 export class AgentRunner {
 	constructor({ cwd, modelName, thinkingLevel = 'minimal' }) {
@@ -179,6 +234,8 @@ export class AgentRunner {
 		expectedJsonPath,
 		thinkingLevel = this.defaultThinkingLevel,
 		validate,
+		parse,
+		format = 'json',
 		maxRepairAttempts = 3,
 		emit = () => {}
 	}) {
@@ -212,12 +269,14 @@ export class AgentRunner {
 				return undefined;
 			}
 			const absoluteJsonPath = resolve(this.cwd, expectedJsonPath);
-			return await readValidatedJson({
+			return await readValidatedArtifact({
 				absoluteJsonPath,
 				expectedJsonPath,
 				label,
 				session,
 				validate,
+				parse,
+				format,
 				maxRepairAttempts,
 				onRepair: (repair) =>
 					emit({

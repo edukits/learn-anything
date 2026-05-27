@@ -12,21 +12,16 @@ async function tempDir() {
 
 function invalidQuiz() {
 	return {
-		type: 'quiz',
-		slug: 'analysis-chain-builder',
 		title: 'Analysis Chain Builder',
 		description: 'Practice sequencing analysis components.',
-		kind: 'practice',
 		questions: [
 			{
+				skill_slug: 'analysis-chain',
 				question_purpose: 'sequencing',
 				response_type: 'sequencing',
 				difficulty: 'easy',
 				prompt: 'Put the analysis parts in order.',
-				sequence_items: [
-					{ id: 'claim', label: 'Claim' },
-					{ id: 'evidence', label: 'Evidence' }
-				],
+				sequence_items: ['Claim', 'Evidence'],
 				explanation: 'The claim frames the evidence.'
 			}
 		]

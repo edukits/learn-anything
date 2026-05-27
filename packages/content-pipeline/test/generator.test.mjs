@@ -59,44 +59,77 @@ class FakeRunner {
 			return {
 				summary: 'Two items',
 				syllabus: [
-					{ type: 'lesson', module_slug: 'basics', focus: 'Balance equations', goals: 'Balance' },
-					{ type: 'quiz', module_slug: 'basics', focus: 'Equation checks', goals: 'Check' }
+					{
+						type: 'lesson',
+						module_slug: 'basics',
+						focus: 'Balance equations',
+						goals: 'Balance',
+						skills: [{ slug: 'balance', name: 'Balance', device: 'Balance', summary: 'Balance.' }]
+					},
+					{
+						type: 'quiz',
+						module_slug: 'basics',
+						focus: 'Equation checks',
+						goals: 'Check',
+						question_count: 1,
+						skills: [{ slug: 'balance', name: 'Balance', device: 'Balance', summary: 'Balance.' }]
+					}
 				]
 			};
 		}
 		if (systemPromptName === 'LESSON.md') {
 			return {
 				type: 'lesson',
-				slug: 'balance-equations',
 				title: 'Balance Equations',
 				summary: 'Balance equations.',
 				estimated_minutes: 5,
-				skills: [{ slug: 'balance', name: 'Balance', device: 'Balance', summary: 'Balance.' }],
+				skill_slugs: ['balance'],
 				body_markdown: '# Balance\n'
 			};
 		}
 		if (systemPromptName === 'QUIZ.md') {
 			return {
 				type: 'quiz',
-				slug: 'equation-checks',
 				title: 'Equation Checks',
 				description: 'Check equations.',
 				kind: 'practice',
-				skills: [{ slug: 'balance', name: 'Balance', device: 'Balance', summary: 'Balance.' }],
-				questions: []
+				questions: [
+					{
+						skill_slug: 'balance',
+						question_purpose: 'application',
+						response_type: 'multiple_choice',
+						difficulty: 'easy',
+						prompt: 'Solve `x + 3 = 7`.',
+						choices: ['x = 4', 'x = 10'],
+						correct_index: 0,
+						explanation: 'Subtract 3 from both sides.'
+					}
+				]
 			};
 		}
 		return {
 			type: label.includes('1') ? 'lesson' : 'quiz',
-			slug: label.includes('1') ? 'balance-equations' : 'equation-checks',
 			title: label,
 			summary: 'Reviewed.',
 			estimated_minutes: 5,
-			skills: [{ slug: 'balance', name: 'Balance', device: 'Balance', summary: 'Balance.' }],
+			skill_slugs: ['balance'],
 			body_markdown: '# Reviewed\n',
 			description: 'Reviewed.',
 			kind: 'practice',
-			questions: []
+			questions: label.includes('1')
+				? undefined
+				: [
+						{
+							skill_slug: 'balance',
+							question_purpose: 'application',
+							response_type: 'multiple_choice',
+							difficulty: 'easy',
+							prompt: 'Solve `x + 3 = 7`.',
+							choices: ['x = 4', 'x = 10'],
+							correct_index: 0,
+							explanation: 'Subtract 3 from both sides.'
+						}
+					]
 		};
 	}
 }
@@ -157,17 +190,17 @@ test('generateContent resumes valid cached artifacts without calling agents', as
 				type: 'lesson',
 				module_slug: 'basics',
 				focus: 'Balance equations',
-				goals: 'Balance equations'
+				goals: 'Balance equations',
+				skills: [{ slug: 'balance', name: 'Balance', device: 'Balance', summary: 'Balance.' }]
 			}
 		]
 	};
 	const lesson = {
 		type: 'lesson',
-		slug: 'balance-equations',
 		title: 'Balance Equations',
 		summary: 'Balance equations.',
 		estimated_minutes: 5,
-		skills: [{ slug: 'balance', name: 'Balance', device: 'Balance', summary: 'Balance.' }],
+		skill_slugs: ['balance'],
 		body_markdown: '# Balance\n'
 	};
 	await mkdir(join(topicDir, '.content-pipeline', 'modules', '001-basics'), { recursive: true });
@@ -182,12 +215,12 @@ test('generateContent resumes valid cached artifacts without calling agents', as
 		`${JSON.stringify(syllabus, null, 2)}\n`
 	);
 	await writeFile(
-		join(topicDir, '.content-pipeline', 'items', '001-lesson-balance-equations.json'),
-		`${JSON.stringify(lesson, null, 2)}\n`
+		join(topicDir, '.content-pipeline', 'items', '001-lesson-balance-equations.lesson.md'),
+		`---\ntitle: ${lesson.title}\nsummary: ${lesson.summary}\nestimated_minutes: ${lesson.estimated_minutes}\nskill_slugs:\n  - balance\n---\n\n${lesson.body_markdown}`
 	);
 	await writeFile(
-		join(topicDir, '.content-pipeline', 'reviewed', '001-lesson-balance-equations.json'),
-		`${JSON.stringify(lesson, null, 2)}\n`
+		join(topicDir, '.content-pipeline', 'reviewed', '001-lesson-balance-equations.lesson.md'),
+		`---\ntitle: ${lesson.title}\nsummary: ${lesson.summary}\nestimated_minutes: ${lesson.estimated_minutes}\nskill_slugs:\n  - balance\n---\n\n${lesson.body_markdown}`
 	);
 
 	const events = [];
@@ -220,4 +253,106 @@ test('generateContent resumes valid cached artifacts without calling agents', as
 
 	assert.equal(events.some((event) => event.type === 'resume_miss'), false);
 	assert.equal(events.filter((event) => event.type === 'task_complete' && event.resumed).length, 4);
+});
+
+test('generateContent ignores legacy item JSON caches after authoring format migration', async () => {
+	const topicDir = await tempTopic();
+	const modulePlan = {
+		summary: 'One module',
+		modules: [
+			{
+				slug: 'basics',
+				title: 'Basics',
+				description: 'Equation basics',
+				content_responsibility: 'Teach basics'
+			}
+		]
+	};
+	const syllabus = {
+		summary: 'One item',
+		syllabus: [
+			{
+				type: 'lesson',
+				module_slug: 'basics',
+				focus: 'Balance equations',
+				goals: 'Balance equations',
+				skills: [{ slug: 'balance', name: 'Balance', device: 'Balance', summary: 'Balance.' }]
+			}
+		]
+	};
+	const legacyLesson = {
+		type: 'lesson',
+		slug: 'balance-equations',
+		title: 'Balance Equations',
+		summary: 'Balance equations.',
+		estimated_minutes: 5,
+		skills: [{ slug: 'balance', name: 'Balance', device: 'Balance', summary: 'Balance.' }],
+		body_markdown: '# Legacy Balance\n'
+	};
+	await mkdir(join(topicDir, '.content-pipeline', 'modules', '001-basics'), { recursive: true });
+	await mkdir(join(topicDir, '.content-pipeline', 'items'), { recursive: true });
+	await mkdir(join(topicDir, '.content-pipeline', 'reviewed'), { recursive: true });
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'TOPIC_MODULES.json'),
+		`${JSON.stringify(modulePlan, null, 2)}\n`
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'modules', '001-basics', 'SYLLABUS.json'),
+		`${JSON.stringify(syllabus, null, 2)}\n`
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'items', '001-lesson-balance-equations.json'),
+		`${JSON.stringify(legacyLesson, null, 2)}\n`
+	);
+	await writeFile(
+		join(topicDir, '.content-pipeline', 'reviewed', '001-lesson-balance-equations.json'),
+		`${JSON.stringify(legacyLesson, null, 2)}\n`
+	);
+
+	let agentCalls = 0;
+	const events = [];
+	await generateContent(
+		{
+			command: 'generate',
+			topicDir,
+			concurrency: 2,
+			model: defaultGenerationConfig.model,
+			thinkingLevels: defaultGenerationConfig.thinkingLevels
+		},
+		{
+			emit: (event) => events.push(event),
+			loadTopicInput: async () => fakeInput(topicDir),
+			AgentRunner: class {
+				async run() {
+					agentCalls += 1;
+					return {
+						type: 'lesson',
+						title: 'Balance Equations',
+						summary: 'Balance equations.',
+						estimated_minutes: 5,
+						skill_slugs: ['balance'],
+						body_markdown: '# Balance\n'
+					};
+				}
+			},
+			bundleRun: async () => ({
+				report: {
+					valid: true,
+					counts: { lessons: 1, quizzes: 0, questions: 0 },
+					failures: []
+				}
+			}),
+			now: () => new Date('2026-05-26T12:00:00.000Z')
+		}
+	);
+
+	assert.equal(agentCalls, 2);
+	assert.equal(
+		events.some(
+			(event) =>
+				event.type === 'resume_miss' &&
+				event.artifactPath.endsWith('001-lesson-balance-equations.lesson.md')
+		),
+		true
+	);
 });

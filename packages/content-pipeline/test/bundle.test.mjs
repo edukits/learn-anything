@@ -78,32 +78,25 @@ test('bundles reviewed items into valid v1 artifacts', async () => {
 		reviewedItems: [
 			{
 				type: 'lesson',
-				slug: 'inverse-operations',
 				title: 'Use Inverse Operations',
 				summary: 'Undo operations in order.',
 				estimated_minutes: 5,
-				skills: [skill],
+				skill_slugs: ['inverse-operations'],
 				body_markdown: '# Use Inverse Operations\n\nUndo addition before multiplication.'
 			},
 			{
 				type: 'quiz',
-				slug: 'inverse-operations-check',
 				title: 'Inverse Operations Check',
 				description: 'Solve two-step equations.',
-				kind: 'practice',
-				skills: [skill],
 				questions: [
 					{
-						skill,
+						skill_slug: 'inverse-operations',
 						question_purpose: 'application',
 						response_type: 'multiple_choice',
 						difficulty: 'easy',
 						prompt: 'Solve `x + 3 = 7`.',
-						choices: [
-							{ id: 'a', label: 'x = 4' },
-							{ id: 'b', label: 'x = 10' }
-						],
-						correct_choice_id: 'a',
+						choices: ['x = 4', 'x = 10'],
+						correct_index: 0,
 						explanation: 'Subtract 3 from both sides.'
 					}
 				]
@@ -187,11 +180,10 @@ test('bundles legacy reviewed items with a default module', async () => {
 		reviewedItems: [
 			{
 				type: 'lesson',
-				slug: 'read-ratios',
 				title: 'Read Ratios',
 				summary: 'Read simple ratios.',
 				estimated_minutes: 5,
-				skills: [skill],
+				skill_slugs: ['read-ratios'],
 				body_markdown: '# Read Ratios\n\nA ratio compares amounts.'
 			}
 		]
