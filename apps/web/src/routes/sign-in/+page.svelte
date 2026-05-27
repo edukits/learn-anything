@@ -12,11 +12,11 @@
 	<aside class="brand-panel">
 		<div class="brand-atmosphere" aria-hidden="true">
 			<div class="atmosphere-wash"></div>
-			<div class="atmosphere-orb"></div>
 			<div class="atmosphere-stars"></div>
 			<div class="atmosphere-horizon"></div>
 		</div>
 		<div class="brand-content">
+			<div class="atmosphere-orb" aria-hidden="true"></div>
 			<div class="brand-logo">
 				<img src={logoUrl} alt="" aria-hidden="true" decoding="async" />
 			</div>
@@ -184,14 +184,15 @@
 			);
 		border-radius: 50%;
 		filter: blur(18px) saturate(1.44);
-		inline-size: min(54vw, 520px);
-		inset-block-start: 22%;
-		inset-inline-start: 15%;
+		inline-size: clamp(370px, 182%, 680px);
+		inset-block-start: 50%;
+		inset-inline-start: 50%;
 		mask-image: radial-gradient(circle, black 0 42%, rgb(0 0 0 / 0.64) 52%, transparent 72%);
 		mix-blend-mode: screen;
 		opacity: 0.86;
 		position: absolute;
-		transform: translate3d(0, 0, 0) rotate(-9deg);
+		transform: translate(-50%, -50%) rotate(-9deg);
+		z-index: -1;
 	}
 
 	.atmosphere-orb::before {
@@ -255,6 +256,7 @@
 	.brand-content {
 		display: grid;
 		gap: var(--space-6);
+		isolation: isolate;
 		max-inline-size: 380px;
 		position: relative;
 		z-index: 2;
@@ -514,12 +516,6 @@
 			inset-block-end: -28%;
 		}
 
-		.atmosphere-orb {
-			inline-size: min(86vw, 440px);
-			inset-block-start: 15%;
-			inset-inline-start: 12%;
-		}
-
 		.brand-features {
 			display: none;
 		}
@@ -581,12 +577,12 @@
 	@keyframes orb-drift {
 		from {
 			opacity: 0.56;
-			transform: translate3d(-2%, 1%, 0) rotate(-11deg) scale(0.98);
+			transform: translate(-51.5%, -48.5%) rotate(-11deg) scale(0.98);
 		}
 
 		to {
 			opacity: 0.78;
-			transform: translate3d(2%, -1%, 0) rotate(-7deg) scale(1.04);
+			transform: translate(-48.5%, -51.5%) rotate(-7deg) scale(1.04);
 		}
 	}
 
