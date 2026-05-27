@@ -25,8 +25,13 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 			listSubjects(locals.supabase),
 			listPublicTopics(locals.supabase)
 		]);
-	} catch {
+	} catch (error) {
 		// Keep the sitemap reachable during local setup or transient catalogue outages.
+		// eslint-disable-next-line no-console -- This fallback must remain visible in production logs.
+		console.warn(
+			'Unable to load catalogue URLs for sitemap; serving static sitemap fallback.',
+			error
+		);
 	}
 
 	const paths = [
