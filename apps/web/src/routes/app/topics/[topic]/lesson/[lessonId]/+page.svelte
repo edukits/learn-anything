@@ -89,10 +89,6 @@
 		padding: 30px;
 	}
 
-	.lesson {
-		font-size: 18px;
-	}
-
 	.locked {
 		align-items: start;
 	}
@@ -102,33 +98,33 @@
 		margin: 0;
 	}
 
-	.lesson :global(h1) {
-		font-size: 2.5em;
+	.lesson :global(h1:not(.inline-interaction *)) {
+		font-size: 2.8125rem;
 		line-height: 1.2;
 		margin: 0 0 4px 0;
 	}
 
-	.lesson :global(h2) {
-		font-size: 1.875em;
+	.lesson :global(h2:not(.inline-interaction *)) {
+		font-size: 2.109375rem;
 		line-height: 1.3;
 		margin: 1em 0 4px 0;
 	}
 
-	.lesson :global(h3) {
-		font-size: 1.5em;
+	.lesson :global(h3:not(.inline-interaction *)) {
+		font-size: 1.6875rem;
 		line-height: 1.3;
 		margin: 1em 0 1px 0;
 	}
 
-	.lesson :global(h4) {
-		font-size: 1.25em;
+	.lesson :global(h4:not(.inline-interaction *)) {
+		font-size: 1.40625rem;
 		line-height: 1.3;
 		margin: 1em 0 1px 0;
 	}
 
-	.lesson :global(p),
-	.lesson :global(li) {
-		font-size: 1em;
+	.lesson :global(p:not(.inline-interaction *)),
+	.lesson :global(li:not(.inline-interaction *)) {
+		font-size: 1.125rem;
 		line-height: 1.5;
 		margin: 1px 0;
 		padding: 3px 2px;

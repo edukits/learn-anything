@@ -56,13 +56,9 @@
 
 <style>
 	.inline-interaction {
-		background: var(--color-surface);
-		border: 1px solid color-mix(in srgb, var(--color-border), transparent 10%);
-		border-radius: var(--radius-md);
 		display: grid;
 		gap: 16px;
 		margin-block: 10px;
-		padding: 18px;
 	}
 
 	.inline-interaction :global(.assessment) {
