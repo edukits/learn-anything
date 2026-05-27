@@ -170,6 +170,110 @@ test('generateContent emits structured progress and artifact events', async () =
 	assert.equal(events.at(-1).type, 'pipeline_end');
 });
 
+test('generateContent formats quiz drafts for review without derived fields', async () => {
+	const topicDir = await tempTopic();
+	let reviewPrompt = '';
+
+	await generateContent(
+		{
+			command: 'generate',
+			topicDir,
+			concurrency: 1,
+			model: defaultGenerationConfig.model,
+			thinkingLevels: defaultGenerationConfig.thinkingLevels
+		},
+		{
+			loadTopicInput: async () => fakeInput(topicDir),
+			AgentRunner: class {
+				async run({ systemPromptName, prompt }) {
+					if (systemPromptName === 'MODULES.md') {
+						return {
+							summary: 'One module',
+							modules: [
+								{
+									slug: 'basics',
+									title: 'Basics',
+									description: 'Equation basics',
+									content_responsibility: 'Teach basics'
+								}
+							]
+						};
+					}
+					if (systemPromptName === 'SYLLABUS.md') {
+						return {
+							summary: 'One quiz',
+							syllabus: [
+								{
+									type: 'quiz',
+									module_slug: 'basics',
+									focus: 'Equation checks',
+									goals: 'Check',
+									question_count: 1,
+									skills: [{ slug: 'balance', name: 'Balance', device: 'Balance', summary: 'Balance.' }]
+								}
+							]
+						};
+					}
+					if (systemPromptName === 'QUIZ.md') {
+						return {
+							type: 'quiz',
+							kind: 'practice',
+							title: 'Equation Checks',
+							description: 'Check equations.',
+							questions: [
+								{
+									skill_slug: 'balance',
+									question_purpose: 'application',
+									response_type: 'multiple_choice',
+									difficulty: 'easy',
+									prompt: 'Solve `x + 3 = 7`.',
+									choices: ['x = 4', 'x = 10'],
+									correct_index: 0,
+									explanation: 'Subtract 3 from both sides.'
+								}
+							]
+						};
+					}
+					reviewPrompt = prompt;
+					return {
+						type: 'quiz',
+						kind: 'practice',
+						title: 'Equation Checks',
+						description: 'Check equations.',
+						questions: [
+							{
+								skill_slug: 'balance',
+								question_purpose: 'application',
+								response_type: 'multiple_choice',
+								difficulty: 'easy',
+								prompt: 'Solve `x + 3 = 7`.',
+								choices: ['x = 4', 'x = 10'],
+								correct_index: 0,
+								explanation: 'Subtract 3 from both sides.'
+							}
+						]
+					};
+				}
+			},
+			bundleRun: async () => ({
+				report: {
+					valid: true,
+					counts: { lessons: 0, quizzes: 1, questions: 1 },
+					failures: []
+				}
+			}),
+			now: () => new Date('2026-05-26T12:00:00.000Z')
+		}
+	);
+
+	const draftMatch = reviewPrompt.match(/Draft item:\n([\s\S]*?)\n\nTopic directory:/);
+	assert.ok(draftMatch);
+	const draft = JSON.parse(draftMatch[1]);
+	assert.deepEqual(Object.keys(draft), ['title', 'description', 'questions']);
+	assert.equal(draft.title, 'Equation Checks');
+	assert.equal(draft.questions.length, 1);
+});
+
 test('generateContent resumes valid cached artifacts without calling agents', async () => {
 	const topicDir = await tempTopic();
 	const modulePlan = {

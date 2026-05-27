@@ -79,6 +79,17 @@ function formatForPrompt(value) {
 			value.body_markdown
 		].join('\n');
 	}
+	if (value?.type === 'quiz') {
+		return JSON.stringify(
+			{
+				title: value.title,
+				description: value.description,
+				questions: value.questions
+			},
+			null,
+			2
+		);
+	}
 	return JSON.stringify(value, null, 2);
 }
 
