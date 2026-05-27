@@ -14,6 +14,7 @@
 		state?: PathMapItemState;
 		kind?: PathMapItemKind;
 		icon?: PathMapIcon;
+		elementId?: string;
 	};
 </script>
 
@@ -85,13 +86,24 @@
 <section class={['path-map', className]} data-density={density} aria-label={ariaLabel}>
 	{#each items as item, index (item.id)}
 		{@const state = normalizeState(item.state)}
-		<div class="step">
+		<div class="step" id={item.elementId}>
 			{#if isLinked(item)}
-				<a class="node" data-state={state} data-kind={item.kind ?? 'lesson'} href={item.href} aria-current={state === 'active' ? 'step' : undefined}>
+				<a
+					class="node"
+					data-state={state}
+					data-kind={item.kind ?? 'lesson'}
+					href={item.href}
+					aria-current={state === 'active' ? 'step' : undefined}
+				>
 					{@render nodeBody(item)}
 				</a>
 			{:else}
-				<div class="node" data-state={state} data-kind={item.kind ?? 'lesson'} aria-disabled={state === 'locked' ? 'true' : undefined}>
+				<div
+					class="node"
+					data-state={state}
+					data-kind={item.kind ?? 'lesson'}
+					aria-disabled={state === 'locked' ? 'true' : undefined}
+				>
 					{@render nodeBody(item)}
 				</div>
 			{/if}

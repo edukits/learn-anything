@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte';
 	import type { PageProps } from './$types';
 	import { ModuleNumberNav, PageHeader } from '$lib/features/learning';
 	import mountainImage from '$lib/assets/topic-map/mountain-image.jpeg';
@@ -61,14 +62,43 @@
 	let celebrationAchievements = $derived(
 		data.pendingAchievementCelebrations.map(toAchievementCelebrationItem)
 	);
+	let nextPathItemElementId = $derived.by(() => {
+		const nextItem =
+			data.pathProgress.find((item) => item.state === 'active') ??
+			data.pathProgress.find((item) => item.state === 'available');
+
+		return nextItem ? pathItemElementId(nextItem.id) : null;
+	});
+
+	$effect(() => {
+		const elementId = nextPathItemElementId;
+		if (!elementId || window.location.hash) return;
+
+		void centerPathItem(elementId);
+	});
 
 	function moduleAnchor(slug: string) {
 		return `module-${slug}`;
 	}
 
+	function pathItemElementId(id: string) {
+		return `path-item-${id}`;
+	}
+
+	async function centerPathItem(elementId: string) {
+		await tick();
+		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+		document.getElementById(elementId)?.scrollIntoView({
+			block: 'center',
+			inline: 'nearest'
+		});
+	}
+
 	function toPathMapItem(item: (typeof data.pathProgress)[number]): PathMapItem {
 		return {
 			id: item.id,
+			elementId: pathItemElementId(item.id),
 			title: item.title,
 			description: item.item_type === 'lesson' ? item.summary : item.description,
 			meta:
