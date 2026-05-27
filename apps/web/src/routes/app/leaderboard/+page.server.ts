@@ -4,6 +4,7 @@ import {
 	getPublicProfile,
 	getWeeklyLeaderboard
 } from '$lib/features/social/server/index.server';
+import { noindexSeo } from '$lib/seo';
 
 export const load: PageServerLoad = async ({ locals, parent, url }) => {
 	const { user, enrollments } = await parent();
@@ -27,6 +28,7 @@ export const load: PageServerLoad = async ({ locals, parent, url }) => {
 		entries,
 		enrollments: activeEnrollments,
 		membership,
-		profile
+		profile,
+		seo: noindexSeo('Leaderboard', url)
 	};
 };

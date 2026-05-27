@@ -11,8 +11,9 @@ import {
 	getReviewSessionById,
 	getReviewState
 } from '$lib/features/review/server/index.server';
+import { noindexSeo } from '$lib/seo';
 
-export const load: PageServerLoad = async ({ locals, parent }) => {
+export const load: PageServerLoad = async ({ locals, parent, url }) => {
 	const { user, content } = await parent();
 	const { reviewSession, reviewSummary } = await getReviewState(locals.supabase, user.id, content);
 
@@ -21,6 +22,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		topic: content.topic,
 		reviewSession,
 		reviewSummary,
+		seo: noindexSeo(`${content.topic.name} review`, url, content.topic.public_summary),
 		submissionKey: crypto.randomUUID()
 	};
 };

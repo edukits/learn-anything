@@ -2,8 +2,9 @@ import { error, redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 import { getEnrollmentForTopic } from '$lib/features/catalog/server/index.server';
 import { getTopicContentBySlug } from '$lib/features/learning/server/index.server';
+import { noindexSeo } from '$lib/seo';
 
-export const load: LayoutServerLoad = async ({ locals, parent, params }) => {
+export const load: LayoutServerLoad = async ({ locals, parent, params, url }) => {
 	const { user } = await parent();
 	if (!user) {
 		throw redirect(303, '/sign-in');
@@ -22,6 +23,7 @@ export const load: LayoutServerLoad = async ({ locals, parent, params }) => {
 	return {
 		content,
 		user,
+		seo: noindexSeo(content.topic.name, url, content.topic.public_summary),
 		topic: content.topic,
 		enrollment
 	};

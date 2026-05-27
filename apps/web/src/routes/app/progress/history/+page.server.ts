@@ -7,8 +7,9 @@ import {
 	getTopicContentBySlug
 } from '$lib/features/learning/server/index.server';
 import { requireUser } from '$lib/server/auth/requireUser.server';
+import { noindexSeo } from '$lib/seo';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
 	const user = await requireUser(locals);
 	const topicSlug = await getDefaultTopicSlug(locals.supabase, user.id);
 	if (!topicSlug) {
@@ -27,6 +28,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		activityHistory,
 		attempts,
 		release: content.release,
+		seo: noindexSeo('Activity history', url),
 		topic: content.topic
 	};
 };

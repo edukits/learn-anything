@@ -8,8 +8,9 @@ import {
 	requireProtectedTopic,
 	submitDiagnostic
 } from '$lib/features/learning/server/index.server';
+import { noindexSeo } from '$lib/seo';
 
-export const load: PageServerLoad = async ({ locals, parent }) => {
+export const load: PageServerLoad = async ({ locals, parent, url }) => {
 	const { user, content } = await parent();
 	const [questions, latestSummary, availability] = await Promise.all([
 		getDiagnosticQuestions(locals.supabase, content),
@@ -22,6 +23,7 @@ export const load: PageServerLoad = async ({ locals, parent }) => {
 		questions,
 		latestSummary,
 		availability,
+		seo: noindexSeo(`${content.topic.name} diagnostic`, url, content.topic.public_summary),
 		submissionKey: crypto.randomUUID()
 	};
 };

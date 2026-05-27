@@ -8,8 +8,9 @@ import {
 	reportContentIssue,
 	requireProtectedTopic
 } from '$lib/features/learning/server/index.server';
+import { noindexSeo } from '$lib/seo';
 
-export const load: PageServerLoad = async ({ locals, parent, params }) => {
+export const load: PageServerLoad = async ({ locals, parent, params, url }) => {
 	const { user, content } = await parent();
 	const pathProgress = await getPathItemProgress(
 		locals.supabase,
@@ -31,7 +32,12 @@ export const load: PageServerLoad = async ({ locals, parent, params }) => {
 		...content,
 		lesson,
 		itemProgress,
-		locked
+		locked,
+		seo: noindexSeo(
+			lesson?.title ?? itemProgress.title,
+			url,
+			lesson?.summary ?? content.topic.public_summary
+		)
 	};
 };
 

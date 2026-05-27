@@ -12,8 +12,9 @@ import {
 	requireProtectedTopic,
 	submitQuiz
 } from '$lib/features/learning/server/index.server';
+import { noindexSeo } from '$lib/seo';
 
-export const load: PageServerLoad = async ({ locals, parent, params }) => {
+export const load: PageServerLoad = async ({ locals, parent, params, url }) => {
 	const { user, content } = await parent();
 	const pathProgress = await getPathItemProgress(
 		locals.supabase,
@@ -37,6 +38,11 @@ export const load: PageServerLoad = async ({ locals, parent, params }) => {
 		quiz,
 		questions,
 		locked,
+		seo: noindexSeo(
+			quiz?.title ?? itemProgress.title,
+			url,
+			quiz?.description ?? content.topic.public_summary
+		),
 		submissionKey: crypto.randomUUID()
 	};
 };

@@ -1,0 +1,16 @@
+{
+	"name": "Clarifyst",
+	"short_name": "Clarifyst",
+	"description": "Master any topic with structured paths, spaced repetition, and AI-guided practice.",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#f8fafc",
+	"theme_color": "#f8fafc",
+	"icons": [
+		{
+			"src": "/favicon.png",
+			"sizes": "144x144",
+			"type": "image/png"
+		}
+	]
+}

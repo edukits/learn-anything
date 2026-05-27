@@ -10,8 +10,9 @@ import {
 } from '$lib/features/learning/server/index.server';
 import { getReviewSummary } from '$lib/features/review/server/index.server';
 import { requireUser } from '$lib/server/auth/requireUser.server';
+import { noindexSeo } from '$lib/seo';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
 	const user = await requireUser(locals);
 	const topicSlug = await getDefaultTopicSlug(locals.supabase, user.id);
 	if (!topicSlug) {
@@ -41,6 +42,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		pathProgress,
 		reviewSummary,
 		attempts,
-		skillAccuracy
+		skillAccuracy,
+		seo: noindexSeo('Progress', url)
 	};
 };
