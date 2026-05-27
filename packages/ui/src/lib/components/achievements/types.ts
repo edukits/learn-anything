@@ -38,3 +38,11 @@ export type NextAchievementData = Pick<
 	AchievementCardData,
 	'key' | 'name' | 'progressLabel' | 'progressPercent'
 >;
+
+export type StreakWeekDay = {
+	date: string;
+	label: string;
+	ariaLabel: string;
+	completed: boolean;
+	current: boolean;
+};

@@ -28,11 +28,16 @@
 			? 0
 			: Math.round((earnedAchievements.length / data.achievements.length) * 100)
 	);
-	let categories = $derived([...new Set(data.achievements.map((achievement) => achievement.category))]);
+	let categories = $derived([
+		...new Set(data.achievements.map((achievement) => achievement.category))
+	]);
 	let activeCategory = $state<string | null>(null);
 	let categoryTabs = $derived.by((): TabItem[] => [
 		{ value: null, label: 'All' },
-		...categories.map((category) => ({ value: category, label: formatAchievementCategoryLabel(category) }))
+		...categories.map((category) => ({
+			value: category,
+			label: formatAchievementCategoryLabel(category)
+		}))
 	]);
 	let filteredAchievements = $derived(
 		activeCategory
@@ -95,9 +100,7 @@
 		<div class="hero-text">
 			<p class="eyebrow">Achievements &amp; Rewards</p>
 			<h1>Your collection</h1>
-			<p class="hero-subtitle">
-				Track milestones, earn badges, and unlock titles as you learn.
-			</p>
+			<p class="hero-subtitle">Track milestones, earn badges, and unlock titles as you learn.</p>
 		</div>
 		<div class="hero-stats">
 			<div class="stat">
@@ -125,7 +128,10 @@
 			</div>
 			<div class="inventory-grid">
 				{#each data.rewards as reward (reward.id)}
-					<RewardInventoryCard reward={toRewardInventoryCardData(reward)} action={titleRewardAction} />
+					<RewardInventoryCard
+						reward={toRewardInventoryCardData(reward)}
+						action={titleRewardAction}
+					/>
 				{/each}
 			</div>
 			{#if form?.equipError}
@@ -193,7 +199,8 @@
 			transparent 100%
 		);
 		border-radius: 50%;
-		box-shadow: inset 0 0 12px hsl(var(--color-star-h) var(--color-star-s) var(--color-star-l) / 0.08);
+		box-shadow: inset 0 0 12px
+			hsl(var(--color-star-h) var(--color-star-s) var(--color-star-l) / 0.08);
 		content: '';
 		inset: -10px;
 		position: absolute;
@@ -210,8 +217,10 @@
 		border: 1px solid hsl(var(--color-star-h) var(--color-star-s) calc(var(--color-star-l) - 18%));
 		border-radius: 50%;
 		box-shadow:
-			inset 0 2px 3px hsl(var(--color-star-h) var(--color-star-s) calc(var(--color-star-l) + 28%) / 0.55),
-			inset 0 -1px 2px hsl(var(--color-star-h) var(--color-star-s) calc(var(--color-star-l) - 20%) / 0.3),
+			inset 0 2px 3px
+				hsl(var(--color-star-h) var(--color-star-s) calc(var(--color-star-l) + 28%) / 0.55),
+			inset 0 -1px 2px
+				hsl(var(--color-star-h) var(--color-star-s) calc(var(--color-star-l) - 20%) / 0.3),
 			0 2px 8px hsl(var(--color-star-h) var(--color-star-s) var(--color-star-l) / 0.4),
 			0 0 20px hsl(var(--color-star-h) var(--color-star-s) var(--color-star-l) / 0.22);
 		color: #fff;
