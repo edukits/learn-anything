@@ -140,6 +140,23 @@
 		}
 	});
 
+	function normalizeSequenceValues(rawValues: string[]) {
+		const seenValues = new Set<string>();
+		const orderedKnownValues = rawValues.filter((itemValue) => {
+			if (!itemByValue.has(itemValue) || seenValues.has(itemValue)) {
+				return false;
+			}
+
+			seenValues.add(itemValue);
+			return true;
+		});
+		const missingValues = uniqueItems
+			.map((item) => item.value)
+			.filter((itemValue) => !seenValues.has(itemValue));
+
+		return [...orderedKnownValues, ...missingValues];
+	}
+
 	function getItemLabel(item: SequencingItemData) {
 		return item.label ?? item.description ?? item.value;
 	}
@@ -160,8 +177,9 @@
 		const nextValue = [...orderedValues];
 		const [movedValue] = nextValue.splice(fromIndex, 1);
 		nextValue.splice(toIndex, 0, movedValue);
-		value = nextValue;
-		onreorder?.(nextValue);
+		const normalizedValue = normalizeSequenceValues(nextValue);
+		value = normalizedValue;
+		onreorder?.(normalizedValue);
 	}
 
 	function handleSortStop(event: SortableStopEvent) {
@@ -172,9 +190,10 @@
 		const nextValue = Array.from(listElement.querySelectorAll<HTMLElement>('.sequence-item'))
 			.map((element) => element.dataset.value)
 			.filter((itemValue): itemValue is string => Boolean(itemValue));
+		const normalizedValue = normalizeSequenceValues(nextValue);
 
-		value = nextValue;
-		onreorder?.(nextValue);
+		value = normalizedValue;
+		onreorder?.(normalizedValue);
 	}
 
 	function hasCorrectOrder() {

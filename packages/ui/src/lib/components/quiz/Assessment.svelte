@@ -47,7 +47,8 @@
 		NumericAnswerValue,
 		QuizPageLayout,
 		QuizQuestionData,
-		QuizQuestionResult
+		QuizQuestionResult,
+		SequencingSubmitResult
 	} from './types';
 
 	type AssessmentMode = 'quiz' | 'exam';
@@ -332,6 +333,14 @@
 		recordQuestionResult(question);
 	}
 
+	function recordSequencingQuestionResult(
+		question: QuizQuestionData,
+		result: SequencingSubmitResult
+	) {
+		sequenceAnswers[question.id] = result.value;
+		recordQuestionResult(question);
+	}
+
 	function isQuestionFeedbackVisible(question: QuizQuestionData) {
 		if (!question.feedback) {
 			return false;
@@ -525,7 +534,7 @@
 							submitLabel="Submit answer"
 							celebrations={question.response.celebrations ?? celebrations}
 							legend={question.question}
-							onsubmit={() => recordQuestionResult(question)}
+							onsubmit={(result) => recordSequencingQuestionResult(question, result)}
 						/>
 					{:else if question.response.type === 'multiple-select'}
 						<MultipleSelect

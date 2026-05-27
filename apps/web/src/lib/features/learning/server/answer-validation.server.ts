@@ -132,14 +132,16 @@ function validateSequencing(question: AnswerableQuestion, answer: SubmittedAnswe
 		(value): value is string => typeof value === 'string'
 	);
 	const expectedIds = (question.sequence_items ?? []).map((item: SequenceItem) => item.id);
-	const submittedSet = new Set(submittedIds);
 	const expectedSet = new Set(expectedIds);
+	const normalizedSubmittedIds = submittedIds.filter(
+		(itemId, index) => submittedIds.indexOf(itemId) === index
+	);
 	if (
 		submittedIds.length !== answer.answerValue.length ||
-		submittedIds.length !== expectedIds.length ||
-		submittedSet.size !== submittedIds.length ||
+		normalizedSubmittedIds.length !== expectedIds.length ||
 		expectedSet.size !== expectedIds.length ||
-		submittedIds.some((value) => !expectedSet.has(value))
+		submittedIds.some((value) => !expectedSet.has(value)) ||
+		expectedIds.some((value) => !normalizedSubmittedIds.includes(value))
 	) {
 		throw new AnswerValidationError(`Invalid answer for ${question.question_id}.`);
 	}
@@ -147,7 +149,7 @@ function validateSequencing(question: AnswerableQuestion, answer: SubmittedAnswe
 	return {
 		question_id: question.question_id,
 		selected_choice_id: '',
-		answer_value: submittedIds
+		answer_value: normalizedSubmittedIds
 	};
 }
 
