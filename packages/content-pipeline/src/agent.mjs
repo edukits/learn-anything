@@ -173,7 +173,7 @@ export async function readValidatedArtifact({
 			repairAttempts += 1;
 			onRepair({
 				label,
-				kind: 'json',
+				kind: format,
 				attempt: repairAttempts,
 				maxRepairAttempts
 			});
