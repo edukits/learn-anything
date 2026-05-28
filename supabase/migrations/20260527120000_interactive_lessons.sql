@@ -34,8 +34,7 @@ create table public.lesson_interaction_attempts (
 	submission_key text not null,
 	completed_at timestamptz not null default now(),
 	foreign key (lesson_id, lesson_version) references public.lesson_versions(lesson_id, version) on delete restrict,
-	unique (user_id, submission_key),
-	unique (user_id, release_id, lesson_id, lesson_version, interaction_slug)
+	unique (user_id, submission_key)
 );
 
 create table public.lesson_interaction_attempt_answers (

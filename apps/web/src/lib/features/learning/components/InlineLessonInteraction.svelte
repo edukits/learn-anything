@@ -17,6 +17,7 @@
 	let answersPayload = $state('[]');
 	let error = $state('');
 	let locallyCompleted = $state(false);
+	let currentSubmissionKey = $state('');
 	let submitKey = $state(0);
 	let questionIndex = $state(0);
 	let completed = $derived(interaction.completed || locallyCompleted);
@@ -27,6 +28,7 @@
 	function completeInteraction(results: QuizQuestionResult[]) {
 		error = '';
 		answersPayload = buildSubmittedAnswersPayload(interaction.questions, results);
+		currentSubmissionKey = `${interaction.submissionKey}:${crypto.randomUUID()}`;
 		submitKey += 1;
 	}
 
@@ -49,38 +51,38 @@
 </script>
 
 <section class="inline-interaction" data-completed={completed}>
-	{#if completed}
+	<Quiz
+		questions={quizQuestions}
+		title={interaction.title}
+		bind:currentPageIndex={questionIndex}
+		questionsPerPage={1}
+		celebrations={false}
+		class="inline-quiz"
+		oncomplete={completeInteraction}
+	/>
+
+	{#if locallyCompleted}
 		<div class="completed">
 			<CheckCircle size={20} strokeWidth={2.4} aria-hidden="true" />
-			<p>{interaction.title} completed</p>
+			<p>Saved</p>
 		</div>
-	{:else}
-		<Quiz
-			questions={quizQuestions}
-			title={interaction.title}
-			bind:currentPageIndex={questionIndex}
-			questionsPerPage={1}
-			celebrations={false}
-			class="inline-quiz"
-			oncomplete={completeInteraction}
-		/>
-
-		{#if error}
-			<p class="submit-error">{error}</p>
-		{/if}
-
-		<ActionSubmitter
-			action="?/submitInteraction"
-			background
-			{submitKey}
-			fields={{
-				interactionSlug: interaction.slug,
-				answers: answersPayload,
-				submissionKey: interaction.submissionKey
-			}}
-			onresult={handleSubmitResult}
-		/>
 	{/if}
+
+	{#if error}
+		<p class="submit-error">{error}</p>
+	{/if}
+
+	<ActionSubmitter
+		action="?/submitInteraction"
+		background
+		{submitKey}
+		fields={{
+			interactionSlug: interaction.slug,
+			answers: answersPayload,
+			submissionKey: currentSubmissionKey
+		}}
+		onresult={handleSubmitResult}
+	/>
 </section>
 
 <style>

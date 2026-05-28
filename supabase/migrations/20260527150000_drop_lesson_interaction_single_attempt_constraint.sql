@@ -1,0 +1,3 @@
+alter table public.lesson_interaction_attempts
+	drop constraint if exists lesson_interaction_attempts_user_id_release_id_lesson_id_le_key,
+	drop constraint if exists lesson_interaction_attempts_user_id_release_id_lesson_id_lesson_version_interaction_slug_key;
