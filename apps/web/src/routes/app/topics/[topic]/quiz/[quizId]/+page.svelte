@@ -19,7 +19,10 @@
 	let submitKey = $state(0);
 	let currentQuestionIndex = $state(0);
 	let quizQuestions = $derived(
-		buildLearningQuizQuestions(data.questions, { instantFeedback: true })
+		buildLearningQuizQuestions(data.questions, {
+			instantFeedback: true,
+			shuffleSeed: data.submissionKey
+		})
 	);
 	let issueTargets = $derived(
 		data.questions.map((question, index) => ({

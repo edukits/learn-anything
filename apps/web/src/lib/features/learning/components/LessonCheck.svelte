@@ -47,7 +47,12 @@
 
 	const playQuestionResultSound = createQuestionResultSoundPlayer();
 
-	let questions = $derived(buildLearningQuizQuestions(interaction.questions, { instantFeedback: true }));
+	let questions = $derived(
+		buildLearningQuizQuestions(interaction.questions, {
+			instantFeedback: true,
+			shuffleSeed: interaction.choiceShuffleSeed
+		})
+	);
 	let activeQuestion = $derived(questions[questionIndex]);
 	let hasMultipleQuestions = $derived(questions.length > 1);
 

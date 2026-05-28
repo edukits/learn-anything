@@ -130,6 +130,8 @@ export type ResponseType =
 	| 'sequencing'
 	| 'short_answer';
 
+export type ChoiceOrderStrategy = 'shuffle' | 'fixed';
+
 export type QuizQuestionVersion = {
 	question_id: string;
 	version: number;
@@ -140,6 +142,8 @@ export type QuizQuestionVersion = {
 	difficulty: 'easy' | 'medium' | 'hard';
 	prompt: string;
 	choices: Choice[];
+	choice_order_strategy: ChoiceOrderStrategy;
+	fixed_choice_ids: string[];
 	correct_choice_id: string;
 	correct_choice_ids: string[];
 	correct_numeric_value: number | null;
@@ -167,6 +171,7 @@ export type LessonInteraction = {
 	questions: QuizQuestionVersion[];
 	completed: boolean;
 	submissionKey: string;
+	choiceShuffleSeed: string;
 };
 
 export type ContentRelease = {

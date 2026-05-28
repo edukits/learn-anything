@@ -179,10 +179,9 @@ test('bundles reviewed items into valid v1 artifacts', async () => {
 		true
 	);
 
-	const lessonInteractionLinks = (await readFile(
-		join(dir, 'dist', 'lesson-interaction-links.jsonl'),
-		'utf8'
-	))
+	const lessonInteractionLinks = (
+		await readFile(join(dir, 'dist', 'lesson-interaction-links.jsonl'), 'utf8')
+	)
 		.trim()
 		.split('\n')
 		.map((line) => JSON.parse(line));
@@ -240,6 +239,7 @@ test('bundles indexed answer keys using normalized custom choice ids', async () 
 							{ id: 'ten', label: 'x = 10' }
 						],
 						correct_index: 0,
+						choice_order_strategy: 'fixed',
 						explanation: 'Subtract 3 from both sides.'
 					},
 					{
@@ -254,6 +254,7 @@ test('bundles indexed answer keys using normalized custom choice ids', async () 
 							{ id: 'plus-two', label: 'x + 2 = 8' }
 						],
 						correct_indices: [0, 1],
+						fixed_choice_indices: [2],
 						explanation: 'Substitute 4 into each equation.'
 					}
 				]
@@ -267,11 +268,13 @@ test('bundles indexed answer keys using normalized custom choice ids', async () 
 		.split('\n')
 		.map((line) => JSON.parse(line));
 	assert.equal(questions[0].correct_choice_id, 'four');
+	assert.equal(questions[0].choice_order_strategy, 'fixed');
 	assert.deepEqual(questions[0].choices, [
 		{ id: 'four', label: 'x = 4' },
 		{ id: 'ten', label: 'x = 10' }
 	]);
 	assert.deepEqual(questions[1].correct_choice_ids, ['plus-three', 'times-two']);
+	assert.deepEqual(questions[1].fixed_choice_ids, ['plus-two']);
 });
 
 test('bundles legacy reviewed items with a default module', async () => {

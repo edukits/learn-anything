@@ -16,7 +16,12 @@
 	let answersPayload = $state('[]');
 	let submitKey = $state(0);
 	let questions = $derived(data.reviewSession?.questions ?? []);
-	let reviewQuestions = $derived(buildLearningQuizQuestions(questions, { instantFeedback: true }));
+	let reviewQuestions = $derived(
+		buildLearningQuizQuestions(questions, {
+			instantFeedback: true,
+			shuffleSeed: data.submissionKey
+		})
+	);
 	let reviewQuestionSetKey = $derived(
 		questions.map((question) => `${question.question_id}@${question.version}`).join('|')
 	);

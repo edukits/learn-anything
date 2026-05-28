@@ -102,6 +102,7 @@ Rules:
 - Raw HTML is not supported in rendered text fields.
 - Do not use Markdown or LaTeX in skill slugs, answer indexes, accepted answers, or other metadata.
 - Use only the answer-key fields required by the selected `response_type`.
+- For multiple-choice and multiple-select ordering, see Choice Ordering below.
 - `grading_rubric` is optional reviewer guidance only; `short_answer` still requires `accepted_answers`.
 - Do not invent subject ids, topic ids, release ids, or app paths.
 
@@ -166,6 +167,12 @@ Good distractors usually represent:
 Avoid obviously wrong distractors, joke answers, duplicate choices, and choices that are correct under a reasonable interpretation.
 
 Do not use “all of the above” or “none of the above” unless the syllabus explicitly calls for that style.
+
+## Choice Ordering
+
+Choice options for multiple-choice and multiple-select questions shuffle by default. Omit ordering metadata for ordinary choices.
+
+Use `choice_order_strategy: "fixed"` only when all choices require authored order, such as sequences, earlier/later comparisons, or labels like "the first statement". Use `fixed_choice_indices` for position-dependent choices such as "All of the above", "None of the above", "Both A and B", summaries, or choices that refer to other choices; put them last when possible.
 
 ## Explanations
 

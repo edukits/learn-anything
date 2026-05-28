@@ -14,7 +14,9 @@
 	let topicBaseHref = $derived(`/app/topics/${data.topic.slug}`);
 	let answersPayload = $state('[]');
 	let submitKey = $state(0);
-	let diagnosticQuestions = $derived(buildLearningQuizQuestions(data.questions));
+	let diagnosticQuestions = $derived(
+		buildLearningQuizQuestions(data.questions, { shuffleSeed: data.submissionKey })
+	);
 	let diagnosticQuestionSetKey = $derived(
 		data.questions.map((question) => `${question.question_id}@${question.version}`).join('|')
 	);

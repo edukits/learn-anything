@@ -350,7 +350,9 @@ export async function getLesson(client: SupabaseClient, content: TopicContent, l
 
 	const { data, error } = await client
 		.from('lesson_versions')
-		.select('lesson_id,version,title,summary,body_markdown,render_blocks,skill_ids,estimated_minutes')
+		.select(
+			'lesson_id,version,title,summary,body_markdown,render_blocks,skill_ids,estimated_minutes'
+		)
 		.eq('lesson_id', lessonId)
 		.eq('version', lessonItem.item_version)
 		.maybeSingle();
@@ -420,7 +422,7 @@ export async function getLessonInteractions(
 	const { data: questionRows, error: questionError } = await client
 		.from('quiz_question_versions')
 		.select(
-			'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
+			'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,choice_order_strategy,fixed_choice_ids,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
 		)
 		.in('question_id', questionIds)
 		.eq('lifecycle_status', 'active');
@@ -443,6 +445,8 @@ export async function getLessonInteractions(
 			difficulty: question.difficulty,
 			prompt: question.prompt,
 			choices: question.choices,
+			choice_order_strategy: question.choice_order_strategy ?? 'shuffle',
+			fixed_choice_ids: question.fixed_choice_ids ?? [],
 			correct_choice_id: question.correct_choice_id,
 			correct_choice_ids: question.correct_choice_ids ?? [],
 			correct_numeric_value: question.correct_numeric_value,
@@ -481,18 +485,20 @@ export async function getLessonInteractions(
 
 	return Array.from(linksBySlug.entries()).map(([slug, groupedLinks]) => {
 		const firstLink = requireSingle(groupedLinks[0], `lesson interaction ${slug}`);
-		const questions = groupedLinks.toSorted((a, b) => a.ordering - b.ordering).map((link) => {
-			const question = questionByKey.get(versionKey(link.question_id, link.question_version));
-			if (!question) {
-				throw new Error(
-					`Lesson interaction references missing question ${link.question_id}@${link.question_version}.`
-				);
-			}
+		const questions = groupedLinks
+			.toSorted((a, b) => a.ordering - b.ordering)
+			.map((link) => {
+				const question = questionByKey.get(versionKey(link.question_id, link.question_version));
+				if (!question) {
+					throw new Error(
+						`Lesson interaction references missing question ${link.question_id}@${link.question_version}.`
+					);
+				}
 
-			return Object.assign({}, question, {
-				ordering: link.ordering
+				return Object.assign({}, question, {
+					ordering: link.ordering
+				});
 			});
-		});
 
 		return {
 			slug,
@@ -500,7 +506,8 @@ export async function getLessonInteractions(
 			title: lessonInteractionTitle(firstLink.interaction_type),
 			questions,
 			completed: completedSlugs.has(slug),
-			submissionKey: lessonInteractionSubmissionKey(content.release, lesson, slug)
+			submissionKey: lessonInteractionSubmissionKey(content.release, lesson, slug),
+			choiceShuffleSeed: crypto.randomUUID()
 		} satisfies LessonInteraction;
 	});
 }
@@ -554,7 +561,7 @@ async function getQuizQuestionsByLifecycle(
 	let query = client
 		.from('quiz_question_versions')
 		.select(
-			'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
+			'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,choice_order_strategy,fixed_choice_ids,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
 		)
 		.in(
 			'question_id',
@@ -587,6 +594,8 @@ async function getQuizQuestionsByLifecycle(
 			difficulty: question.difficulty,
 			prompt: question.prompt,
 			choices: question.choices,
+			choice_order_strategy: question.choice_order_strategy ?? 'shuffle',
+			fixed_choice_ids: question.fixed_choice_ids ?? [],
 			correct_choice_id: question.correct_choice_id,
 			correct_choice_ids: question.correct_choice_ids ?? [],
 			correct_numeric_value: question.correct_numeric_value,
@@ -623,6 +632,8 @@ async function getQuizQuestionsByLifecycle(
 			difficulty: question.difficulty,
 			prompt: question.prompt,
 			choices: question.choices,
+			choice_order_strategy: question.choice_order_strategy,
+			fixed_choice_ids: question.fixed_choice_ids,
 			correct_choice_id: question.correct_choice_id,
 			correct_choice_ids: question.correct_choice_ids,
 			correct_numeric_value: question.correct_numeric_value,
@@ -666,7 +677,7 @@ export async function getActiveReleaseQuestions(
 			const { data, error } = await client
 				.from('quiz_question_versions')
 				.select(
-					'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
+					'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,choice_order_strategy,fixed_choice_ids,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
 				)
 				.in('question_id', questionIds)
 				.eq('lifecycle_status', 'active');
@@ -688,6 +699,8 @@ export async function getActiveReleaseQuestions(
 			difficulty: question.difficulty,
 			prompt: question.prompt,
 			choices: question.choices,
+			choice_order_strategy: question.choice_order_strategy ?? 'shuffle',
+			fixed_choice_ids: question.fixed_choice_ids ?? [],
 			correct_choice_id: question.correct_choice_id,
 			correct_choice_ids: question.correct_choice_ids ?? [],
 			correct_numeric_value: question.correct_numeric_value,
