@@ -69,9 +69,13 @@ export function toAchievementCelebrationItem(
 	};
 }
 
-export function toRewardInventoryCardData(reward: RewardInventoryRowForUi): RewardInventoryCardData {
+export function toRewardInventoryCardData(
+	reward: RewardInventoryRowForUi,
+	achievementCategory?: string | null
+): RewardInventoryCardData {
 	return {
 		id: reward.id,
+		achievementCategory: normalizeAchievementCategory(achievementCategory ?? 'other'),
 		rewardKind: reward.reward_kind,
 		rewardKey: reward.reward_key,
 		rewardLabel: reward.reward_label,

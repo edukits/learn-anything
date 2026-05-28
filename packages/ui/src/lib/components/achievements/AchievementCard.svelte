@@ -2,7 +2,7 @@
 	import { BadgeCheck, Lock } from '@lucide/svelte';
 	import ProgressBar from '../ProgressBar.svelte';
 	import { clampPercent, formatUiDate } from './format';
-	import { getAchievementCategoryIcon, getRewardKindIcon } from './metadata';
+	import { getAchievementCategoryIcon } from './metadata';
 	import type { AchievementCardData } from './types';
 
 	let {
@@ -18,7 +18,6 @@
 	let earned = $derived(Boolean(achievement.earnedAt));
 	let progressPercent = $derived(clampPercent(achievement.progressPercent));
 	let Icon = $derived(getAchievementCategoryIcon(achievement.category));
-	let RewardIcon = $derived(getRewardKindIcon(achievement.rewardKind));
 </script>
 
 <article class={['achievement-card', className]} class:earned class:locked={!earned}>
@@ -59,7 +58,7 @@
 	<div class="card-footer">
 		{#if achievement.rewardLabel}
 			<span class="reward-pill" class:earned>
-				<RewardIcon size={12} />
+				<Icon size={12} />
 				{achievement.rewardLabel}
 			</span>
 		{/if}

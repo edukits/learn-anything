@@ -3,7 +3,7 @@
 	import { Dialog } from 'bits-ui';
 	import { ChevronLeft, ChevronRight, Sparkles } from '@lucide/svelte';
 	import Button from '../Button.svelte';
-	import { getRewardKindIcon, getRewardKindLabel } from './metadata';
+	import { getAchievementCategoryIcon, getRewardKindLabel } from './metadata';
 	import type { AchievementCelebrationItem } from './types';
 
 	let {
@@ -32,7 +32,7 @@
 	let current = $derived(achievements[currentIndex] ?? null);
 	let isFirst = $derived(currentIndex === 0);
 	let isLast = $derived(currentIndex >= pageCount - 1);
-	let RewardIcon = $derived(current ? getRewardKindIcon(current.rewardKind) : getRewardKindIcon(null));
+	let RewardIcon = $derived(current ? getAchievementCategoryIcon(current.category) : Sparkles);
 	let rewardKindLabel = $derived(current ? getRewardKindLabel(current.rewardKind) : 'Achievement');
 
 	function getOpen() {

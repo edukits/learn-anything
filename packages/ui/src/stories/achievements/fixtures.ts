@@ -32,6 +32,7 @@ export const xpAchievement: AchievementCardData = {
 
 export const titleReward: RewardInventoryCardData = {
 	id: 'reward-title',
+	achievementCategory: 'streak',
 	rewardKind: 'title',
 	rewardKey: 'title_consistent_learner',
 	rewardLabel: 'Consistent Learner',
@@ -41,6 +42,7 @@ export const titleReward: RewardInventoryCardData = {
 
 export const badgeReward: RewardInventoryCardData = {
 	id: 'reward-badge',
+	achievementCategory: 'learning',
 	rewardKind: 'badge',
 	rewardKey: 'badge_first_lesson',
 	rewardLabel: 'First Lesson',

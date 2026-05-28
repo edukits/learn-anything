@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import Button from '../Button.svelte';
 	import { formatUiDate } from './format';
-	import { getRewardKindIcon, getRewardKindLabel } from './metadata';
+	import { getAchievementCategoryIcon, getRewardKindLabel } from './metadata';
 	import type { RewardInventoryCardData } from './types';
 
 	let {
@@ -19,7 +19,7 @@
 		class?: string;
 	} = $props();
 
-	let RewardIcon = $derived(getRewardKindIcon(reward.rewardKind));
+	let RewardIcon = $derived(getAchievementCategoryIcon(reward.achievementCategory));
 	let rewardKindLabel = $derived(getRewardKindLabel(reward.rewardKind));
 	let nextRewardKey = $derived(reward.equipped ? null : reward.rewardKey);
 
