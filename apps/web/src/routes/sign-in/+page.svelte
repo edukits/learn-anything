@@ -29,12 +29,12 @@
 					focusable="false"
 				>
 					<defs>
-						<filter id="logo-sparkle-glow" x="-80%" y="-80%" width="260%" height="260%">
-							<feGaussianBlur stdDeviation="3.4" result="blur" />
+						<filter id="logo-sparkle-glow" x="-95%" y="-95%" width="290%" height="290%">
+							<feGaussianBlur stdDeviation="4.8" result="blur" />
 							<feColorMatrix
 								in="blur"
 								type="matrix"
-								values="0 0 0 0 0.28 0 0 0 0 0.92 0 0 0 0 1 0 0 0 0.95 0"
+								values="0 0 0 0 0.28 0 0 0 0 0.94 0 0 0 0 1 0 0 0 1 0"
 								result="glow"
 							/>
 							<feMerge>
@@ -337,8 +337,8 @@
 
 	.logo-sparkle {
 		animation: sparkle-pulse 9.5s ease-in-out infinite;
-		filter: url('#logo-sparkle-glow') drop-shadow(0 0 7px rgb(91 238 255 / 0.92))
-			drop-shadow(0 0 12px rgb(189 86 255 / 0.54));
+		filter: blur(3px) url('#logo-sparkle-glow') drop-shadow(0 0 9px rgb(91 238 255 / 0.98))
+			drop-shadow(0 0 18px rgb(189 86 255 / 0.68));
 		mix-blend-mode: screen;
 		opacity: 0;
 	}
