@@ -290,3 +290,34 @@ revoke execute on function public.record_learning_answer_outcomes(uuid, text, te
 	from anon, authenticated, public;
 grant execute on function public.record_learning_answer_outcomes(uuid, text, text, text, text, jsonb, numeric)
 	to service_role;
+
+create or replace function public.record_learning_answer_outcomes(
+	p_user_id uuid,
+	p_topic_area_id text,
+	p_release_id text,
+	p_source text,
+	p_source_id text,
+	p_outcomes jsonb
+)
+returns void
+language plpgsql
+security definer
+set search_path = public, app_private
+as $$
+begin
+	perform public.record_learning_answer_outcomes(
+		p_user_id,
+		p_topic_area_id,
+		p_release_id,
+		p_source,
+		p_source_id,
+		p_outcomes,
+		1.0
+	);
+end;
+$$;
+
+revoke execute on function public.record_learning_answer_outcomes(uuid, text, text, text, text, jsonb)
+	from anon, authenticated, public;
+grant execute on function public.record_learning_answer_outcomes(uuid, text, text, text, text, jsonb)
+	to service_role;
