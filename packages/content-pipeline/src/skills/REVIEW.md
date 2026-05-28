@@ -70,7 +70,7 @@ Choice ordering metadata for `multiple_choice` and `multiple_select`:
 - `choice_order_strategy`: optional, only `"shuffle"` or `"fixed"`
 - `fixed_choice_indices`: optional zero-based indexes into `choices`
 
-The app shuffles ordinary choices for each learner attempt. Do not move correct answers manually to make the JSON look random. Preserve or add ordering metadata only for semantic constraints: use `"fixed"` when every choice must remain in order, and use `fixed_choice_indices` for choices such as "All of the above", "None of the above", "Both A and B", summary choices, or choices that explicitly refer to other options. If those choices appear, keep them last when possible and pin their index.
+Choices shuffle by default. Preserve or add ordering metadata only for semantic constraints: use `"fixed"` when all choices require authored order, and use `fixed_choice_indices` for position-dependent choices such as "All of the above", "None of the above", "Both A and B", summaries, or choices that refer to other choices; put them last when possible.
 
 Rendered quiz text fields support Markdown and LaTeX math: `prompt`, `choices`, `sequence_items`, and `explanation`. Preserve or improve Markdown in answer explanations when it clarifies the reasoning, but do not add raw HTML or Markdown to skill slugs, answer-key fields, or accepted answers.
 

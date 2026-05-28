@@ -62,9 +62,7 @@ Rules:
 - Prefer multiple choice, multiple select, sequencing, or numeric for inline interactions.
 - Use short answer only when exact accepted answers are reliable.
 - Explain why the answer is correct and address the likely misconception.
-- Choice options are shuffled by the app by default. Do not place the correct answer first, last, or in a manually balanced position to make the generated JSON look random.
-- For `multiple_choice` and `multiple_select`, omit `choice_order_strategy` unless an exception is needed. If included, use `"shuffle"` by default and `"fixed"` only when every choice must remain in authored order.
-- Use `fixed_choice_indices` only for choices that must keep their authored positions while the rest shuffle. Indexes are zero-based and refer to the `choices` array.
-- Set `choice_order_strategy` to `"fixed"` when choices only make sense in sequence, compare earlier/later options, or rely on labels such as "the first statement" and "the last statement".
-- Use `fixed_choice_indices` for "All of the above", "None of the above", "Both A and B", summary choices, or options that explicitly refer to other choices. Put those choices last when possible.
+- Choice options shuffle by default. Omit ordering metadata for ordinary choices.
+- Use `choice_order_strategy: "fixed"` when choices only make sense in strict sequence, compare earlier/later options, or rely on labels such as "the first statement".
+- Use `fixed_choice_indices` for position-dependent choices such as "All of the above", "None of the above", "Both A and B", summaries, or choices that refer to other choices; put them last when possible.
 - Do not invent subject ids, topic ids, release ids, app paths, IDs, versions, source refs, or choice IDs.
