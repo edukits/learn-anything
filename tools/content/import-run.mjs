@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { access, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { getImportBlockers, loadAndValidateRun, writeValidationReport } from './content-run.mjs';
+import { deleteLessonInteractionLinksForLessons } from './import-utils.mjs';
 import { getTargetSupabaseEnv, loadReleaseEnvironment, parseReleaseArgs } from './release-env.mjs';
 
 let manifestPath;
@@ -447,6 +448,7 @@ await upsert(
 	'quiz_id,quiz_version,question_id,question_version'
 );
 
+await deleteLessonInteractionLinksForLessons(supabase, lessons);
 await upsert(
 	'lesson_interaction_links',
 	lessonInteractionLinks,
