@@ -1,16 +1,19 @@
 <script lang="ts">
 	import {
 		Button,
-		MultipleChoice,
-		MultipleSelect,
-		NumericAnswer,
+		createQuestionResultSoundPlayer,
+		initQuizSounds,
+		QuestionFeedback,
+		QuestionResponse,
 		RichText,
-		SequencingAnswer,
-		ShortAnswer
+		type MathAnswerValue,
+		type NumericAnswerValue,
+		type QuizQuestionData,
+		type QuizQuestionResult
 	} from '@learn-anything/ui';
-	import type { NumericAnswerValue, QuizAnswerValue, QuizQuestionResult } from '@learn-anything/ui';
-	import { CheckCircle, ChevronLeft, ChevronRight, RotateCcw } from '@lucide/svelte';
-	import type { LessonInteraction, QuizQuestionVersion } from '../types';
+	import { ArrowRight, CheckCircle, ChevronLeft, ChevronRight, RotateCcw } from '@lucide/svelte';
+	import { buildLearningQuizQuestions } from '../quiz';
+	import type { LessonInteraction } from '../types';
 
 	type LessonCheckProps = {
 		interaction: LessonInteraction;
@@ -29,165 +32,100 @@
 	}: LessonCheckProps = $props();
 
 	let questionIndex = $state(0);
-	let choiceAnswers = $state<Record<string, string | null>>({});
-	let multipleSelectAnswers = $state<Record<string, string[]>>({});
-	let numericAnswers = $state<Record<string, string>>({});
-	let numericUnits = $state<Record<string, string | null>>({});
-	let shortAnswers = $state<Record<string, string>>({});
-	let sequenceAnswers = $state<Record<string, string[]>>({});
+	let choiceAnswers = $state<Record<string, string | null>>(buildDefaultAnswers(null));
+	let multipleSelectAnswers = $state<Record<string, string[]>>(buildDefaultAnswers([]));
+	let numericAnswers = $state<Record<string, NumericAnswerValue>>(
+		buildDefaultAnswers({ value: '', unit: null })
+	);
+	let mathAnswers = $state<Record<string, MathAnswerValue>>(
+		buildDefaultAnswers({ latex: '', prompts: {} })
+	);
+	let shortAnswers = $state<Record<string, string>>(buildDefaultAnswers(''));
+	let sequenceAnswers = $state<Record<string, string[]>>(buildDefaultAnswers([]));
 	let questionResults = $state<Record<string, QuizQuestionResult>>({});
 	let resetTokens = $state<Record<string, number>>({});
 
-	let activeQuestion = $derived(interaction.questions[questionIndex]);
-	let hasMultipleQuestions = $derived(interaction.questions.length > 1);
+	const playQuestionResultSound = createQuestionResultSoundPlayer();
+
+	let questions = $derived(buildLearningQuizQuestions(interaction.questions, { instantFeedback: true }));
+	let activeQuestion = $derived(questions[questionIndex]);
+	let hasMultipleQuestions = $derived(questions.length > 1);
+
+	initQuizSounds();
+
+	function buildDefaultAnswers<T>(value: T): Record<string, T> {
+		return Object.fromEntries(
+			interaction.questions.map((question) => [question.question_id, structuredClone(value)])
+		);
+	}
+
+	function resetQuestionAnswers(question: QuizQuestionData) {
+		choiceAnswers = {
+			...choiceAnswers,
+			[question.id]: null
+		};
+		multipleSelectAnswers = {
+			...multipleSelectAnswers,
+			[question.id]: []
+		};
+		numericAnswers = {
+			...numericAnswers,
+			[question.id]: { value: '', unit: null }
+		};
+		mathAnswers = {
+			...mathAnswers,
+			[question.id]: { latex: '', prompts: {} }
+		};
+		shortAnswers = {
+			...shortAnswers,
+			[question.id]: ''
+		};
+		sequenceAnswers = {
+			...sequenceAnswers,
+			[question.id]: []
+		};
+	}
 
 	function getQuestionTitle() {
 		return interaction.title.trim() || 'Check';
 	}
 
-	function getAnswerOptions(question: QuizQuestionVersion) {
-		return question.choices.map((choice) => ({
-			value: choice.id,
-			label: choice.label
-		}));
+	function getQuestionResult(question: QuizQuestionData) {
+		return questionResults[question.id];
 	}
 
-	function getSequenceItems(question: QuizQuestionVersion) {
-		return (question.sequence_items ?? []).map((item) => ({
-			value: item.id,
-			label: item.label
-		}));
-	}
-
-	function getInitialSequenceAnswer(question: QuizQuestionVersion) {
-		return (question.sequence_items ?? []).toReversed().map((item) => item.id);
-	}
-
-	function getQuestionResult(question: QuizQuestionVersion) {
-		return questionResults[question.question_id];
-	}
-
-	function isQuestionSubmitted(question: QuizQuestionVersion) {
+	function isQuestionSubmitted(question: QuizQuestionData) {
 		return getQuestionResult(question)?.answered === true;
 	}
 
-	function getQuestionResetKey(question: QuizQuestionVersion) {
-		return `${question.question_id}:${resetTokens[question.question_id] ?? 0}`;
+	function getQuestionResetKey(question: QuizQuestionData) {
+		return `${question.id}:${resetTokens[question.id] ?? 0}`;
 	}
 
-	function getChoiceAnswer(question: QuizQuestionVersion) {
-		return choiceAnswers[question.question_id] ?? null;
-	}
-
-	function getMultipleSelectAnswer(question: QuizQuestionVersion) {
-		return multipleSelectAnswers[question.question_id] ?? [];
-	}
-
-	function getNumericAnswer(question: QuizQuestionVersion) {
-		return numericAnswers[question.question_id] ?? '';
-	}
-
-	function getNumericUnit(question: QuizQuestionVersion) {
-		return numericUnits[question.question_id] ?? null;
-	}
-
-	function getShortAnswer(question: QuizQuestionVersion) {
-		return shortAnswers[question.question_id] ?? '';
-	}
-
-	function getSequenceAnswer(question: QuizQuestionVersion) {
-		return sequenceAnswers[question.question_id] ?? getInitialSequenceAnswer(question);
-	}
-
-	function setChoiceAnswer(question: QuizQuestionVersion, value: string) {
-		choiceAnswers = {
-			...choiceAnswers,
-			[question.question_id]: value
-		};
-	}
-
-	function setMultipleSelectAnswer(question: QuizQuestionVersion, value: string[]) {
-		multipleSelectAnswers = {
-			...multipleSelectAnswers,
-			[question.question_id]: value
-		};
-	}
-
-	function setNumericAnswer(question: QuizQuestionVersion, value: NumericAnswerValue) {
-		numericAnswers = {
-			...numericAnswers,
-			[question.question_id]: value.value
-		};
-		numericUnits = {
-			...numericUnits,
-			[question.question_id]: value.unit ?? null
-		};
-	}
-
-	function setShortAnswer(question: QuizQuestionVersion, value: string) {
-		shortAnswers = {
-			...shortAnswers,
-			[question.question_id]: value
-		};
-	}
-
-	function setSequenceAnswer(question: QuizQuestionVersion, value: string[]) {
-		sequenceAnswers = {
-			...sequenceAnswers,
-			[question.question_id]: value
-		};
-	}
-
-	function recordQuestionResult(
-		question: QuizQuestionVersion,
-		value: QuizAnswerValue,
-		correct: boolean | null
-	) {
+	function recordQuestionResult(result: QuizQuestionResult) {
 		const nextResults = {
 			...questionResults,
-			[question.question_id]: {
-				questionId: question.question_id,
-				value,
-				correct,
-				answered: true
-			}
+			[result.questionId]: result
 		};
 
 		questionResults = nextResults;
+		playQuestionResultSound(result);
 
-		if (!interaction.questions.every((item) => nextResults[item.question_id]?.answered)) {
+		if (!questions.every((question) => nextResults[question.id]?.answered)) {
 			return;
 		}
 
-		oncomplete?.(interaction.questions.map((item) => nextResults[item.question_id]));
+		oncomplete?.(questions.map((question) => nextResults[question.id]));
 	}
 
-	function retryQuestion(question: QuizQuestionVersion) {
-		const {
-			[question.question_id]: _questionResult,
-			...remainingResults
-		} = questionResults;
-		const { [question.question_id]: _choiceAnswer, ...remainingChoiceAnswers } = choiceAnswers;
-		const {
-			[question.question_id]: _multipleSelectAnswer,
-			...remainingMultipleSelectAnswers
-		} = multipleSelectAnswers;
-		const { [question.question_id]: _numericAnswer, ...remainingNumericAnswers } = numericAnswers;
-		const { [question.question_id]: _numericUnit, ...remainingNumericUnits } = numericUnits;
-		const { [question.question_id]: _shortAnswer, ...remainingShortAnswers } = shortAnswers;
-		const { [question.question_id]: _sequenceAnswer, ...remainingSequenceAnswers } =
-			sequenceAnswers;
+	function retryQuestion(question: QuizQuestionData) {
+		const { [question.id]: _questionResult, ...remainingResults } = questionResults;
 
 		questionResults = remainingResults;
-		choiceAnswers = remainingChoiceAnswers;
-		multipleSelectAnswers = remainingMultipleSelectAnswers;
-		numericAnswers = remainingNumericAnswers;
-		numericUnits = remainingNumericUnits;
-		shortAnswers = remainingShortAnswers;
-		sequenceAnswers = remainingSequenceAnswers;
+		resetQuestionAnswers(question);
 		resetTokens = {
 			...resetTokens,
-			[question.question_id]: (resetTokens[question.question_id] ?? 0) + 1
+			[question.id]: (resetTokens[question.id] ?? 0) + 1
 		};
 	}
 
@@ -196,11 +134,21 @@
 	}
 
 	function nextQuestion() {
-		questionIndex = Math.min(interaction.questions.length - 1, questionIndex + 1);
+		questionIndex = Math.min(questions.length - 1, questionIndex + 1);
+	}
+
+	function continueAfterQuestion() {
+		nextQuestion();
 	}
 
 	function goToQuestion(nextIndex: number) {
 		questionIndex = nextIndex;
+	}
+
+	function getFeedbackState(result: QuizQuestionResult) {
+		if (result.correct === true) return 'correct';
+		if (result.correct === false) return 'incorrect';
+		return 'neutral';
 	}
 </script>
 
@@ -234,7 +182,7 @@
 				</button>
 
 				<div class="question-dots">
-					{#each interaction.questions as question, index (question.question_id)}
+					{#each questions as question, index (question.id)}
 						<button
 							type="button"
 							class={[
@@ -252,7 +200,7 @@
 				<button
 					type="button"
 					class="nav-button"
-					disabled={questionIndex === interaction.questions.length - 1}
+					disabled={questionIndex === questions.length - 1}
 					aria-label="Next question"
 					onclick={nextQuestion}
 				>
@@ -268,123 +216,58 @@
 
 		<div class="question-body">
 			<div class="prompt">
-				<RichText content={question.prompt} />
+				<RichText content={question.question} />
 			</div>
 
-			<div class="answer" data-response-type={question.response_type}>
+			<div class="answer" data-response-type={question.response.type ?? 'multiple-choice'}>
 				{#key getQuestionResetKey(question)}
-					{#if question.response_type === 'multiple_choice'}
-						<MultipleChoice
-							options={getAnswerOptions(question)}
-							value={getChoiceAnswer(question)}
-							name={`lesson-check-${question.question_id}`}
-							correctValue={question.correct_choice_id}
-							submitted={isQuestionSubmitted(question)}
-							interactionMode="instant-submit"
-							celebrations={false}
-							onselect={(value) => setChoiceAnswer(question, value)}
-							onsubmit={(submitResult) =>
-								recordQuestionResult(question, submitResult.value, submitResult.correct)}
-						/>
-					{:else if question.response_type === 'multiple_select'}
-						<MultipleSelect
-							options={getAnswerOptions(question)}
-							value={getMultipleSelectAnswer(question)}
-							name={`lesson-check-${question.question_id}`}
-							correctValues={question.correct_choice_ids}
-							submitted={isQuestionSubmitted(question)}
-							showSubmitButton
-							submitLabel="Check"
-							celebrations={false}
-							onselect={(value) => setMultipleSelectAnswer(question, value)}
-							onsubmit={(submitResult) =>
-								recordQuestionResult(question, submitResult.value, submitResult.correct)}
-						/>
-					{:else if question.response_type === 'numeric'}
-						<NumericAnswer
-							value={getNumericAnswer(question)}
-							unit={getNumericUnit(question)}
-							name={`lesson-check-${question.question_id}`}
-							placeholder="Type a number"
-							acceptedValues={typeof question.correct_numeric_value === 'number'
-								? [
-										{
-											value: question.correct_numeric_value,
-											tolerance: {
-												type: 'absolute',
-												value: question.correct_numeric_tolerance ?? 0
-											}
-										}
-									]
-								: null}
-							submitted={isQuestionSubmitted(question)}
-							submitLabel="Check"
-							celebrations={false}
-							oninput={(value) => setNumericAnswer(question, value)}
-							onsubmit={(submitResult) => {
-								const value = {
-									value: submitResult.value,
-									unit: submitResult.unit ?? null
-								};
-								recordQuestionResult(question, value, submitResult.correct);
-							}}
-						/>
-					{:else if question.response_type === 'sequencing'}
-						<SequencingAnswer
-							items={getSequenceItems(question)}
-							value={getSequenceAnswer(question)}
-							name={`lesson-check-${question.question_id}`}
-							correctOrder={(question.sequence_items ?? []).map((item) => item.id)}
-							submitted={isQuestionSubmitted(question)}
-							showSubmitButton
-							submitLabel="Check"
-							celebrations={false}
-							onreorder={(value) => setSequenceAnswer(question, value)}
-							onsubmit={(submitResult) =>
-								recordQuestionResult(question, submitResult.value, submitResult.correct)}
-						/>
-					{:else if question.response_type === 'short_answer'}
-						<ShortAnswer
-							value={getShortAnswer(question)}
-							name={`lesson-check-${question.question_id}`}
-							placeholder="Type your answer"
-							acceptedAnswers={question.accepted_answers}
-							matchMode="normalized"
-							submitted={isQuestionSubmitted(question)}
-							submitLabel="Check"
-							celebrations={false}
-							oninput={(value) => setShortAnswer(question, value)}
-							onsubmit={(submitResult) =>
-								recordQuestionResult(question, submitResult.value, submitResult.correct)}
-						/>
-					{/if}
+					<QuestionResponse
+						{question}
+						bind:multipleChoiceValue={choiceAnswers[question.id]}
+						bind:multipleSelectValue={multipleSelectAnswers[question.id]}
+						bind:shortAnswerValue={shortAnswers[question.id]}
+						bind:numericAnswerValue={numericAnswers[question.id]}
+						bind:mathAnswerValue={mathAnswers[question.id]}
+						bind:sequenceValue={sequenceAnswers[question.id]}
+						submitted={isQuestionSubmitted(question)}
+						name={`lesson-check-${question.id}`}
+						interactionMode="instant-submit"
+						showSubmitButton
+						submitLabel="Check"
+						onsubmit={recordQuestionResult}
+					/>
 				{/key}
 			</div>
 
-			{#if result && question.explanation}
-				<div
-					class={[
-						'feedback',
-						result.correct === true && 'correct',
-						result.correct === false && 'incorrect'
-					]}
-				>
-					<RichText content={question.explanation} />
-				</div>
+			{#if result && question.feedback}
+				<QuestionFeedback content={question.feedback} state={getFeedbackState(result)} />
 			{/if}
 		</div>
 
 		{#if result || error}
 			<footer class="check-footer">
-				{#if result}
-					<Button variant="ghost" size="sm" onclick={() => retryQuestion(question)}>
-						<RotateCcw size={15} strokeWidth={2.4} aria-hidden="true" />
-						Try again
-					</Button>
-				{/if}
+				<div class="check-footer-left">
+					{#if result}
+						<Button
+							variant={result.correct === false ? 'primary' : 'ghost'}
+							size="sm"
+							onclick={() => retryQuestion(question)}
+						>
+							<RotateCcw size={15} strokeWidth={2.4} aria-hidden="true" />
+							Try again
+						</Button>
+					{/if}
 
-				{#if error}
-					<p class="submit-error">{error}</p>
+					{#if error}
+						<p class="submit-error">{error}</p>
+					{/if}
+				</div>
+
+				{#if result.correct === true && questionIndex < questions.length - 1}
+					<Button size="sm" onclick={continueAfterQuestion}>
+						Continue
+						<ArrowRight size={15} strokeWidth={2.4} aria-hidden="true" />
+					</Button>
 				{/if}
 			</footer>
 		{/if}
@@ -539,36 +422,19 @@
 		gap: var(--space-4);
 	}
 
-	.feedback {
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		color: var(--color-text-muted);
-		font-size: 0.9375rem;
-		line-height: 1.55;
-		padding: var(--space-4);
-	}
-
-	.feedback.correct {
-		background: color-mix(in srgb, var(--color-success), var(--color-surface) 92%);
-		border-color: color-mix(in srgb, var(--color-success), var(--color-border) 44%);
-	}
-
-	.feedback.incorrect {
-		background: color-mix(in srgb, var(--color-danger), var(--color-surface) 94%);
-		border-color: color-mix(in srgb, var(--color-danger), var(--color-border) 48%);
-	}
-
-	.feedback :global(p) {
-		margin-block: 0;
-	}
-
 	.check-footer {
 		align-items: center;
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-3);
 		justify-content: space-between;
+	}
+
+	.check-footer-left {
+		align-items: center;
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-3);
 	}
 
 	.submit-error {
