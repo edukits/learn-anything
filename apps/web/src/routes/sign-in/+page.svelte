@@ -319,9 +319,12 @@
 	}
 
 	.logo-sparkle-layer {
+		block-size: calc(100% * 138 / 144);
 		display: block;
 		filter: saturate(1.2);
-		inset: 0;
+		inline-size: 100%;
+		inset-block-start: calc(100% * 3 / 144);
+		inset-inline-start: 0;
 		overflow: visible;
 		pointer-events: none;
 		position: absolute;
