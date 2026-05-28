@@ -30,16 +30,25 @@
 				>
 					<defs>
 						<filter id="logo-sparkle-glow" x="-95%" y="-95%" width="290%" height="290%">
-							<feGaussianBlur stdDeviation="4.8" result="blur" />
+							<feGaussianBlur in="SourceGraphic" stdDeviation="9" result="violet-blur" />
 							<feColorMatrix
-								in="blur"
+								in="violet-blur"
+								type="matrix"
+								values="0 0 0 0 0.74 0 0 0 0 0.34 0 0 0 0 1 0 0 0 0.68 0"
+								result="violet-glow"
+							/>
+							<feGaussianBlur in="SourceGraphic" stdDeviation="4.8" result="cyan-blur" />
+							<feColorMatrix
+								in="cyan-blur"
 								type="matrix"
 								values="0 0 0 0 0.28 0 0 0 0 0.94 0 0 0 0 1 0 0 0 1 0"
-								result="glow"
+								result="cyan-glow"
 							/>
+							<feGaussianBlur in="SourceGraphic" stdDeviation="3" result="soft-source" />
 							<feMerge>
-								<feMergeNode in="glow" />
-								<feMergeNode in="SourceGraphic" />
+								<feMergeNode in="violet-glow" />
+								<feMergeNode in="cyan-glow" />
+								<feMergeNode in="soft-source" />
 							</feMerge>
 						</filter>
 						<radialGradient id="logo-sparkle-core" cx="50%" cy="50%" r="50%">
@@ -337,8 +346,7 @@
 
 	.logo-sparkle {
 		animation: sparkle-pulse 9.5s ease-in-out infinite;
-		filter: blur(3px) url('#logo-sparkle-glow') drop-shadow(0 0 9px rgb(91 238 255 / 0.98))
-			drop-shadow(0 0 18px rgb(189 86 255 / 0.68));
+		filter: url('#logo-sparkle-glow');
 		mix-blend-mode: screen;
 		opacity: 0;
 	}
