@@ -6,19 +6,21 @@
 	import { Button } from '@learn-anything/ui';
 	import { ArrowLeft, Check, Flag, Lock } from '@lucide/svelte';
 	import { SvelteSet } from 'svelte/reactivity';
+	import type { LessonInteraction } from '$lib/features/learning';
 
 	let { data, form }: PageProps = $props();
 	let topicBaseHref = $derived(`/app/topics/${data.topic.slug}`);
 	let RichTextRenderer = $derived(getTopicRenderer(data.topic.slug).RichTextRenderer);
-	let submittedInteractionSlugs = new SvelteSet<string>();
+	let submittedInteractionKeys = new SvelteSet<string>();
 	let allInteractionsCompleted = $derived(
 		data.lessonInteractions.every(
-			(interaction) => interaction.completed || submittedInteractionSlugs.has(interaction.slug)
+			(interaction) =>
+				interaction.completed || submittedInteractionKeys.has(interaction.submissionKey)
 		)
 	);
 
-	function markInteractionCompleted(slug: string) {
-		submittedInteractionSlugs.add(slug);
+	function markInteractionCompleted(interaction: LessonInteraction) {
+		submittedInteractionKeys.add(interaction.submissionKey);
 	}
 </script>
 

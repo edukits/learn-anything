@@ -10,7 +10,7 @@
 	type InteractiveLessonRendererProps = {
 		blocks: LessonRenderBlock[];
 		interactions: LessonInteraction[];
-		oninteractioncompleted?: (slug: string) => void;
+		oninteractioncompleted?: (interaction: LessonInteraction) => void;
 		RichTextRenderer: Component<RichTextRendererProps>;
 	};
 
@@ -37,10 +37,18 @@
 				: block
 		)
 	);
+
+	function blockKey(block: ResolvedLessonBlock, index: number) {
+		if (block.type === 'interaction') {
+			return block.interaction?.submissionKey ?? `interaction:${block.slug}:${index}`;
+		}
+
+		return `markdown:${index}`;
+	}
 </script>
 
 <div class="interactive-lesson">
-	{#each resolvedBlocks as block, index (`${block.type}-${index}`)}
+	{#each resolvedBlocks as block, index (blockKey(block, index))}
 		{#if block.type === 'markdown'}
 			<RichTextRenderer content={block.markdown} />
 		{:else if block.interaction}

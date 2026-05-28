@@ -8,7 +8,7 @@
 
 	type InlineLessonInteractionProps = {
 		interaction: LessonInteraction;
-		oncompleted?: (slug: string) => void;
+		oncompleted?: (interaction: LessonInteraction) => void;
 	};
 
 	let { interaction, oncompleted }: InlineLessonInteractionProps = $props();
@@ -35,7 +35,7 @@
 		if (result.type === 'success') {
 			locallyCompleted = true;
 			error = '';
-			oncompleted?.(interaction.slug);
+			oncompleted?.(interaction);
 			return;
 		}
 
@@ -50,7 +50,7 @@
 </script>
 
 <section class="inline-interaction" data-completed={completed}>
-	{#key interaction.slug}
+	{#key interaction.submissionKey}
 		<LessonCheck
 			{interaction}
 			saved={completed}
