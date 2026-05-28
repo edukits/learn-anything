@@ -244,6 +244,7 @@ export type QuizQuestionResult = {
 	value: QuizAnswerValue;
 	correct: boolean | null;
 	answered: boolean;
+	responseTimeMs?: number;
 };
 
 export type QuizPageLayout = string[][];

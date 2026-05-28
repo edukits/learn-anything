@@ -170,7 +170,7 @@ Do not use “all of the above” or “none of the above” unless the syllabus
 
 ## Choice Ordering
 
-Choice options for multiple-choice and multiple-select questions shuffle by default. Omit ordering metadata for ordinary choices.
+The app shuffles choice options for multiple-choice and multiple-select questions by default. Omit ordering metadata for ordinary choices.
 
 Use `choice_order_strategy: "fixed"` only when all choices require authored order, such as sequences, earlier/later comparisons, or labels like "the first statement". Use `fixed_choice_indices` for position-dependent choices such as "All of the above", "None of the above", "Both A and B", summaries, or choices that refer to other choices; put them last when possible.
 

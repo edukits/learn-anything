@@ -38,13 +38,15 @@ describe('buildValidatedRpcAnswers', () => {
 				{
 					questionId: 'question_sequence_1',
 					selectedChoiceId: '',
-					answerValue: ['second', 'first', 'third']
+					answerValue: ['second', 'first', 'third'],
+					responseTimeMs: 3210
 				}
 			],
 			'quiz'
 		);
 
 		expect(answer.answer_value).toEqual(['second', 'first', 'third']);
+		expect(answer.response_time_ms).toBe(3210);
 	});
 
 	test('normalizes duplicate sequencing ids from drag-sort payloads', () => {

@@ -4,6 +4,7 @@ export type SubmittedAnswer = {
 	questionId: string;
 	selectedChoiceId: string;
 	answerValue: unknown;
+	responseTimeMs?: number;
 };
 
 export type ParsedSubmission =
@@ -21,7 +22,8 @@ export type ParsedSubmission =
 const submittedAnswerSchema = z.object({
 	questionId: z.string().min(1),
 	selectedChoiceId: z.string(),
-	answerValue: z.unknown().optional().default(null)
+	answerValue: z.unknown().optional().default(null),
+	responseTimeMs: z.number().int().nonnegative().max(3_600_000).optional().default(0)
 });
 
 const submittedAnswersSchema = z.array(submittedAnswerSchema);

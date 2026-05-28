@@ -1,6 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import {
-	gradeFromCorrectness,
 	numericGrade,
 	scheduleSpacedRepetitionReview,
 	type SpacedRepetitionLearningState,
@@ -22,6 +21,7 @@ type SpacedRepetitionItemRow = {
 	state: SpacedRepetitionLearningState | null;
 	review_count: number | null;
 	lapse_count: number | null;
+	consecutive_correct_count: number | null;
 	ease_factor: number | string | null;
 	interval_days: number | null;
 	due_at: string;
@@ -85,7 +85,6 @@ export async function recordSpacedRepetitionOutcome(
 	}
 
 	const reviewedAt = params.reviewedAt ?? new Date();
-	const grade = gradeFromCorrectness(params.isCorrect);
 	const existing = await getSpacedRepetitionItem(
 		client,
 		params.userId,
@@ -93,7 +92,16 @@ export async function recordSpacedRepetitionOutcome(
 		params.questionVersion
 	);
 	const previousState = toSchedulingState(existing, reviewedAt);
-	const nextState = scheduleSpacedRepetitionReview(previousState, grade, reviewedAt);
+	const nextState = scheduleSpacedRepetitionReview(
+		previousState,
+		{
+			isCorrect: params.isCorrect,
+			responseTimeMs: params.responseTimeMs ?? 0,
+			difficulty: 'medium'
+		},
+		reviewedAt
+	);
+	const grade = nextState.grade;
 	const itemId = existing?.id ?? crypto.randomUUID();
 
 	const { error: upsertError } = await client.from('spaced_repetition_items').upsert(
@@ -109,6 +117,7 @@ export async function recordSpacedRepetitionOutcome(
 			repetitions: nextState.reviewCount,
 			review_count: nextState.reviewCount,
 			lapse_count: nextState.lapseCount,
+			consecutive_correct_count: nextState.consecutiveCorrectCount,
 			ease_factor: nextState.easeFactor,
 			interval_days: nextState.intervalDays,
 			due_at: nextState.dueAt.toISOString(),
@@ -131,6 +140,9 @@ export async function recordSpacedRepetitionOutcome(
 		grade: numericGrade(grade),
 		grade_label: grade,
 		response_time_ms: params.responseTimeMs ?? 0,
+		is_correct: params.isCorrect,
+		elapsed_days: nextState.elapsedDays,
+		lateness_days: nextState.latenessDays,
 		previous_state: serializeState(previousState),
 		next_state: serializeState(nextState),
 		previous_learning_state: previousState?.learningState ?? 'new',
@@ -182,7 +194,9 @@ async function getSpacedRepetitionItem(
 ): Promise<SpacedRepetitionItemRow | null> {
 	const { data, error } = await client
 		.from('spaced_repetition_items')
-		.select('id,state,review_count,lapse_count,ease_factor,interval_days,due_at,last_reviewed_at')
+		.select(
+			'id,state,review_count,lapse_count,consecutive_correct_count,ease_factor,interval_days,due_at,last_reviewed_at'
+		)
 		.eq('user_id', userId)
 		.eq('question_id', questionId)
 		.eq('question_version', questionVersion)
@@ -205,6 +219,7 @@ function toSchedulingState(
 		learningState: row.state ?? 'new',
 		reviewCount: row.review_count ?? 0,
 		lapseCount: row.lapse_count ?? 0,
+		consecutiveCorrectCount: row.consecutive_correct_count ?? 0,
 		easeFactor: Number(row.ease_factor ?? 2.5),
 		intervalDays: row.interval_days ?? 0,
 		dueAt: row.due_at ? new Date(row.due_at) : fallbackDueAt,
@@ -218,6 +233,7 @@ function serializeState(state: SpacedRepetitionState | null) {
 			learningState: 'new',
 			reviewCount: 0,
 			lapseCount: 0,
+			consecutiveCorrectCount: 0,
 			easeFactor: 2.5,
 			intervalDays: 0,
 			dueAt: null,
@@ -229,6 +245,7 @@ function serializeState(state: SpacedRepetitionState | null) {
 		learningState: state.learningState,
 		reviewCount: state.reviewCount,
 		lapseCount: state.lapseCount,
+		consecutiveCorrectCount: state.consecutiveCorrectCount,
 		easeFactor: state.easeFactor,
 		intervalDays: state.intervalDays,
 		dueAt: state.dueAt.toISOString(),

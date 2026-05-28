@@ -72,6 +72,7 @@
 	let quizComplete = $state(false);
 	let examSubmitted = $state(false);
 	let progressSparkTrigger = $state(0);
+	let questionStartedAt = $state<Record<string, number>>({});
 	// svelte-ignore state_referenced_locally
 	let questionSubmitted = $state<Record<string, boolean>>(buildSubmittedState(questions, false));
 	let results = $state<Record<string, QuizQuestionResult>>({});
@@ -131,6 +132,13 @@
 		}
 	});
 
+	$effect(() => {
+		const startedAt = Date.now();
+		for (const question of currentPage) {
+			questionStartedAt[question.id] ??= startedAt;
+		}
+	});
+
 	initQuizSounds();
 
 	function isQuestionAnswered(question: QuizQuestionData) {
@@ -170,80 +178,80 @@
 			const value = multipleChoiceAnswers[question.id] ?? null;
 			const correctValue = getMultipleChoiceCorrectValue(response);
 
-			return {
+			return withResponseTime(question.id, {
 				questionId: question.id,
 				value,
 				answered: value !== null,
 				correct: correctValue === null ? null : value === correctValue
-			};
+			});
 		}
 
 		if (isImageChoiceResponse(response)) {
 			const value = multipleChoiceAnswers[question.id] ?? null;
 			const correctValue = getImageChoiceCorrectValue(response);
 
-			return {
+			return withResponseTime(question.id, {
 				questionId: question.id,
 				value,
 				answered: value !== null,
 				correct: correctValue === null ? null : value === correctValue
-			};
+			});
 		}
 
 		if (isMultipleSelectResponse(response)) {
 			const value = multipleSelectAnswers[question.id] ?? [];
 			const correctValues = getMultipleSelectCorrectValues(response);
 
-			return {
+			return withResponseTime(question.id, {
 				questionId: question.id,
 				value,
 				answered: value.length > 0,
 				correct: correctValues === null ? null : hasExactSelection(value, correctValues)
-			};
+			});
 		}
 
 		if (isShortAnswerResponse(response)) {
 			const value = shortAnswers[question.id] ?? '';
 
-			return {
+			return withResponseTime(question.id, {
 				questionId: question.id,
 				value,
 				answered: value.trim().length > 0,
 				correct: gradeShortAnswer(response, value).correct
-			};
+			});
 		}
 
 		if (isNumericResponse(response)) {
 			const value = numericAnswers[question.id] ?? { value: '', unit: null };
 			const result = gradeNumeric(response, value);
 
-			return {
+			return withResponseTime(question.id, {
 				questionId: question.id,
 				value,
 				answered: isNumericAnswered(response, value),
 				correct: result.correct
-			};
+			});
 		}
 
 		if (isMathResponse(response)) {
 			const value = mathAnswers[question.id] ?? { latex: '', prompts: {} };
 			const result = gradeMath(response, value);
 
-			return {
+			return withResponseTime(question.id, {
 				questionId: question.id,
 				value,
 				answered: isMathAnswered(value),
 				correct: result.correct
-			};
+			});
 		}
 
 		if (!isSequencingResponse(response)) {
-			return {
+			return withResponseTime(question.id, {
 				questionId: question.id,
 				value: null,
 				answered: false,
 				correct: null
-			};
+			});
 		}
 
 		const value = sequenceAnswers[question.id] ?? response.items.map((item) => item.value);
@@ -253,16 +261,29 @@
 				: value.length === response.correctOrder.length &&
 					value.every((itemValue, index) => itemValue === response.correctOrder?.[index]);
 
-		return {
+		return withResponseTime(question.id, {
 			questionId: question.id,
 			value,
 			answered: value.length > 0,
 			correct
+		});
+	}
+
+	function withResponseTime(
+		questionId: string,
+		result: Omit<QuizQuestionResult, 'responseTimeMs'> | QuizQuestionResult
+	): QuizQuestionResult {
+		const startedAt = questionStartedAt[questionId] ?? Date.now();
+		return {
+			...result,
+			responseTimeMs: Math.max(0, Math.round(Date.now() - startedAt))
 		};
 	}
 
 	function recordQuestionResult(question: QuizQuestionData, submittedResult?: QuizQuestionResult) {
-		const result = submittedResult ?? getQuestionResult(question);
+		const result = submittedResult
+			? withResponseTime(question.id, submittedResult)
+			: getQuestionResult(question);
 		questionSubmitted[question.id] = true;
 		results[question.id] = result;
 		if (hasSingleQuestionPages) {
@@ -328,6 +349,7 @@
 		examSubmitted = false;
 		progressSparkTrigger = 0;
 		questionSubmitted = buildSubmittedState(questions, false);
+		questionStartedAt = {};
 		results = {};
 		multipleChoiceAnswers = buildMultipleChoiceAnswers(questions);
 		multipleSelectAnswers = buildMultipleSelectAnswers(questions);
@@ -427,7 +449,10 @@
 					/>
 
 					{#if question.feedback && isQuestionFeedbackVisible(question)}
-						<QuestionFeedback content={question.feedback} state={getQuestionFeedbackState(question)} />
+						<QuestionFeedback
+							content={question.feedback}
+							state={getQuestionFeedbackState(question)}
+						/>
 					{/if}
 				</Question>
 			{/each}
