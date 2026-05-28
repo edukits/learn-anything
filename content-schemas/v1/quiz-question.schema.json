@@ -53,6 +53,18 @@
 				"additionalProperties": false
 			}
 		},
+		"choice_order_strategy": {
+			"enum": ["shuffle", "fixed"],
+			"default": "shuffle",
+			"description": "Controls learner-facing choice ordering. Use shuffle by default; use fixed only when the authored order is meaningful."
+		},
+		"fixed_choice_ids": {
+			"type": "array",
+			"default": [],
+			"uniqueItems": true,
+			"description": "Choice ids that must remain in their authored positions while other choices are shuffled.",
+			"items": { "type": "string", "minLength": 1 }
+		},
 		"correct_choice_id": { "type": "string", "minLength": 1 },
 		"correct_choice_ids": {
 			"type": "array",

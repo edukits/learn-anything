@@ -45,22 +45,28 @@ Supported `response_type` values:
 Response formats:
 
 - `multiple_choice`: include `choices` as an array of strings and `correct_index` as the zero-based index of the correct choice.
+  Optionally include `choice_order_strategy` and `fixed_choice_indices` when order matters.
 
 ```json
 {
 	"response_type": "multiple_choice",
 	"choices": ["Choice A", "Choice B"],
-	"correct_index": 0
+	"correct_index": 0,
+	"choice_order_strategy": "shuffle",
+	"fixed_choice_indices": []
 }
 ```
 
 - `multiple_select`: include `choices` as an array of strings and `correct_indices` as zero-based indexes of all correct choices.
+  Optionally include `choice_order_strategy` and `fixed_choice_indices` when order matters.
 
 ```json
 {
 	"response_type": "multiple_select",
 	"choices": ["Choice A", "Choice B", "Choice C"],
-	"correct_indices": [0, 1]
+	"correct_indices": [0, 1],
+	"choice_order_strategy": "shuffle",
+	"fixed_choice_indices": []
 }
 ```
 
@@ -102,6 +108,9 @@ Rules:
 - Raw HTML is not supported in rendered text fields.
 - Do not use Markdown or LaTeX in skill slugs, answer indexes, accepted answers, or other metadata.
 - Use only the answer-key fields required by the selected `response_type`.
+- Choice options are shuffled by the app by default. Do not place the correct answer first, last, or in a manually balanced position to make the generated JSON look random.
+- For `multiple_choice` and `multiple_select`, omit `choice_order_strategy` unless an exception is needed. If included, use `"shuffle"` by default and `"fixed"` only when every choice must remain in authored order.
+- Use `fixed_choice_indices` only for choices that must keep their authored positions while the rest shuffle. Indexes are zero-based and refer to the `choices` array.
 - `grading_rubric` is optional reviewer guidance only; `short_answer` still requires `accepted_answers`.
 - Do not invent subject ids, topic ids, release ids, or app paths.
 
@@ -166,6 +175,18 @@ Good distractors usually represent:
 Avoid obviously wrong distractors, joke answers, duplicate choices, and choices that are correct under a reasonable interpretation.
 
 Do not use “all of the above” or “none of the above” unless the syllabus explicitly calls for that style.
+
+## Choice Ordering
+
+The app randomizes multiple-choice and multiple-select options for each learner attempt. Generated content should focus on clear choices and correct answer keys, not on making answer positions look random.
+
+Use ordering metadata only for real semantic constraints:
+
+- Leave ordering metadata out for ordinary independent answer choices.
+- Set `choice_order_strategy` to `"fixed"` when choices only make sense in sequence, compare earlier/later options, or rely on labels such as "the first statement" and "the last statement".
+- Use `fixed_choice_indices` for choices that must stay in authored positions while other choices can shuffle, especially "All of the above", "None of the above", "Both A and B", summary choices, or options that explicitly refer to other choices.
+- If you use "All of the above" or "None of the above", put it last and include its index in `fixed_choice_indices`.
+- Do not use ordering metadata to hide that the correct answer is often first; runtime shuffling handles that.
 
 ## Explanations
 

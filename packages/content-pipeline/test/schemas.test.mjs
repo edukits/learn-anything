@@ -155,6 +155,48 @@ test('simplified quiz schema rejects invalid answer indexes and duplicate multi-
 	assert.equal(duplicateSelect.success, false);
 });
 
+test('simplified quiz schema validates choice ordering metadata', () => {
+	const valid = validateWithSchema(schemaForItemType('quiz'))({
+		title: 'Equation Checks',
+		description: 'Check equations.',
+		questions: [
+			{
+				skill_slug: 'inverse-operations',
+				question_purpose: 'application',
+				response_type: 'multiple_choice',
+				difficulty: 'easy',
+				prompt: 'Which statement is always true?',
+				choices: ['Statement A', 'Statement B', 'All of the above'],
+				correct_index: 2,
+				choice_order_strategy: 'shuffle',
+				fixed_choice_indices: [2],
+				explanation: 'The summary choice stays last while other choices can shuffle.'
+			}
+		]
+	});
+	assert.equal(valid.success, true);
+
+	const invalid = validateWithSchema(schemaForItemType('quiz'))({
+		title: 'Equation Checks',
+		description: 'Check equations.',
+		questions: [
+			{
+				skill_slug: 'inverse-operations',
+				question_purpose: 'application',
+				response_type: 'multiple_choice',
+				difficulty: 'easy',
+				prompt: 'Which statement is always true?',
+				choices: ['Statement A', 'Statement B'],
+				correct_index: 1,
+				fixed_choice_indices: [2],
+				explanation: 'The fixed index is outside the choices array.'
+			}
+		]
+	});
+	assert.equal(invalid.success, false);
+	assert.match(invalid.error, /fixed_choice_indices/);
+});
+
 test('context validation rejects unknown skill slugs and question count mismatch', () => {
 	const quiz = {
 		title: 'Equation Checks',

@@ -121,7 +121,9 @@ const multipleChoiceQuestionSchema = baseQuestionSchema
 	.extend({
 		response_type: z.literal('multiple_choice'),
 		choices: z.array(renderedMarkdownSchema).min(2),
-		correct_index: z.number().int().nonnegative()
+		correct_index: z.number().int().nonnegative(),
+		choice_order_strategy: z.enum(['shuffle', 'fixed']).optional(),
+		fixed_choice_indices: z.array(z.number().int().nonnegative()).optional()
 	})
 	.strict();
 
@@ -129,7 +131,9 @@ const multipleSelectQuestionSchema = baseQuestionSchema
 	.extend({
 		response_type: z.literal('multiple_select'),
 		choices: z.array(renderedMarkdownSchema).min(2),
-		correct_indices: z.array(z.number().int().nonnegative()).min(2)
+		correct_indices: z.array(z.number().int().nonnegative()).min(2),
+		choice_order_strategy: z.enum(['shuffle', 'fixed']).optional(),
+		fixed_choice_indices: z.array(z.number().int().nonnegative()).optional()
 	})
 	.strict();
 
@@ -163,7 +167,10 @@ const questionSchema = z
 		shortAnswerQuestionSchema
 	])
 	.superRefine((question, context) => {
-		if (question.response_type === 'multiple_choice' && question.correct_index >= question.choices.length) {
+		if (
+			question.response_type === 'multiple_choice' &&
+			question.correct_index >= question.choices.length
+		) {
 			context.addIssue({
 				code: 'custom',
 				message: `correct_index ${question.correct_index} is outside choices range`,
@@ -188,6 +195,30 @@ const questionSchema = z
 					});
 				}
 				seen.add(correctIndex);
+			}
+		}
+		if (
+			(question.response_type === 'multiple_choice' ||
+				question.response_type === 'multiple_select') &&
+			question.fixed_choice_indices
+		) {
+			const seen = new Set();
+			for (const [index, fixedIndex] of question.fixed_choice_indices.entries()) {
+				if (fixedIndex >= question.choices.length) {
+					context.addIssue({
+						code: 'custom',
+						message: `fixed_choice_indices[${index}] ${fixedIndex} is outside choices range`,
+						path: ['fixed_choice_indices', index]
+					});
+				}
+				if (seen.has(fixedIndex)) {
+					context.addIssue({
+						code: 'custom',
+						message: `fixed_choice_indices contains duplicate index ${fixedIndex}`,
+						path: ['fixed_choice_indices', index]
+					});
+				}
+				seen.add(fixedIndex);
 			}
 		}
 	});
@@ -266,7 +297,11 @@ export function parseLessonMarkdown(content, path = 'lesson.md') {
 	const { frontmatter, body } = extractFrontmatter(content, path);
 	const document = parseDocument(frontmatter);
 	if (document.errors.length > 0) {
-		throw new JsonReadError(path, document.errors.map((error) => error.message).join('\n'), 'parse');
+		throw new JsonReadError(
+			path,
+			document.errors.map((error) => error.message).join('\n'),
+			'parse'
+		);
 	}
 	const metadata = lessonFrontmatterSchema.safeParse(document.toJSON());
 	if (!metadata.success) {
@@ -315,7 +350,11 @@ export function validateAuthoringItemContext({ itemType, syllabusItem, module, m
 		if (value.type !== itemType) {
 			failures.push(`Expected item type ${itemType}, received ${value.type}.`);
 		}
-		if (expectedModuleSlug && syllabusItem.module_slug && syllabusItem.module_slug !== expectedModuleSlug) {
+		if (
+			expectedModuleSlug &&
+			syllabusItem.module_slug &&
+			syllabusItem.module_slug !== expectedModuleSlug
+		) {
 			failures.push(
 				`Syllabus item module_slug ${syllabusItem.module_slug} does not match module ${expectedModuleSlug}.`
 			);

@@ -1,10 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import { buildLearningQuizQuestions } from './quiz';
+import { buildLearningQuizQuestions, buildSubmittedAnswersPayload } from './quiz';
 import type { LearningQuizQuestion } from './quiz';
 
 function buildQuestion(overrides: Partial<LearningQuizQuestion> = {}): LearningQuizQuestion {
 	return {
 		question_id: 'question_1',
+		version: 1,
 		skill_label: 'Metaphor',
 		question_purpose: 'recognition',
 		response_type: 'multiple_choice',
@@ -25,6 +26,26 @@ function buildQuestion(overrides: Partial<LearningQuizQuestion> = {}): LearningQ
 		explanation: '  Use **retrieval practice**: answer from memory before checking notes.  ',
 		...overrides
 	};
+}
+
+function buildFourChoiceQuestion(overrides: Partial<LearningQuizQuestion> = {}) {
+	return buildQuestion({
+		choices: [
+			{ id: 'a', label: 'Choice A' },
+			{ id: 'b', label: 'Choice B' },
+			{ id: 'c', label: 'Choice C' },
+			{ id: 'd', label: 'Choice D' }
+		],
+		correct_choice_id: 'c',
+		correct_choice_ids: ['b', 'c'],
+		...overrides
+	});
+}
+
+function optionValues(question: ReturnType<typeof buildLearningQuizQuestions>[number]) {
+	return 'options' in question.response
+		? question.response.options.map((option) => option.value)
+		: [];
 }
 
 describe('buildLearningQuizQuestions', () => {
@@ -68,6 +89,86 @@ describe('buildLearningQuizQuestions', () => {
 			type: 'multiple-select',
 			correctValues: ['a', 'b']
 		});
+	});
+
+	test('shuffles choice options deterministically without changing answer keys', () => {
+		const sourceQuestion = buildFourChoiceQuestion();
+		const [firstQuestion] = buildLearningQuizQuestions([sourceQuestion], {
+			instantFeedback: true,
+			shuffleSeed: 'seed-a'
+		});
+		const [secondQuestion] = buildLearningQuizQuestions([sourceQuestion], {
+			instantFeedback: true,
+			shuffleSeed: 'seed-a'
+		});
+
+		expect(optionValues(firstQuestion)).toEqual(['c', 'a', 'b', 'd']);
+		expect(optionValues(secondQuestion)).toEqual(optionValues(firstQuestion));
+		expect(firstQuestion.response).toMatchObject({
+			type: 'multiple-choice',
+			correctValue: 'c'
+		});
+	});
+
+	test('uses different choice orders for different shuffle seeds', () => {
+		const sourceQuestion = buildFourChoiceQuestion();
+		const [firstQuestion] = buildLearningQuizQuestions([sourceQuestion], {
+			shuffleSeed: 'seed-a'
+		});
+		const [secondQuestion] = buildLearningQuizQuestions([sourceQuestion], {
+			shuffleSeed: 'seed-b'
+		});
+
+		expect(optionValues(firstQuestion)).toEqual(['c', 'a', 'b', 'd']);
+		expect(optionValues(secondQuestion)).toEqual(['d', 'a', 'c', 'b']);
+	});
+
+	test('preserves authored choice order when the strategy is fixed', () => {
+		const [question] = buildLearningQuizQuestions(
+			[
+				buildFourChoiceQuestion({
+					choice_order_strategy: 'fixed'
+				})
+			],
+			{ shuffleSeed: 'seed-a' }
+		);
+
+		expect(optionValues(question)).toEqual(['a', 'b', 'c', 'd']);
+	});
+
+	test('keeps fixed choices in authored positions while shuffling the rest', () => {
+		const [question] = buildLearningQuizQuestions(
+			[
+				buildFourChoiceQuestion({
+					fixed_choice_ids: ['d']
+				})
+			],
+			{ shuffleSeed: 'seed-b' }
+		);
+
+		expect(optionValues(question)).toEqual(['a', 'c', 'b', 'd']);
+	});
+
+	test('serializes submitted choice ids independently of display order', () => {
+		const payload = buildSubmittedAnswersPayload(
+			[buildFourChoiceQuestion()],
+			[
+				{
+					questionId: 'question_1',
+					value: 'c',
+					correct: true,
+					answered: true
+				}
+			]
+		);
+
+		expect(JSON.parse(payload)).toEqual([
+			{
+				questionId: 'question_1',
+				selectedChoiceId: 'c',
+				answerValue: 'c'
+			}
+		]);
 	});
 
 	test('maps numeric answers to absolute accepted values for instant feedback', () => {

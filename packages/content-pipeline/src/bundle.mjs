@@ -169,7 +169,9 @@ function lessonRecord({ item, index, topic, runId, sourceRefs, skillLookup }) {
 		title: one(item.title, item.focus ?? 'Lesson'),
 		summary: one(item.summary, item.goals ?? item.focus ?? 'Lesson summary'),
 		body_markdown: one(item.body_markdown, item.body ?? ''),
-		render_blocks: item.render_blocks ?? [{ type: 'markdown', markdown: one(item.body_markdown, item.body ?? '') }],
+		render_blocks: item.render_blocks ?? [
+			{ type: 'markdown', markdown: one(item.body_markdown, item.body ?? '') }
+		],
 		skill_ids,
 		estimated_minutes: Number.isInteger(item.estimated_minutes) ? item.estimated_minutes : 5,
 		sort_order: index + 1
@@ -215,9 +217,12 @@ function normalizeQuestion({
 		difficulty: question.difficulty ?? 'medium',
 		prompt: question.prompt,
 		choices,
+		choice_order_strategy: question.choice_order_strategy,
+		fixed_choice_ids:
+			question.fixed_choice_ids ??
+			question.fixed_choice_indices?.map((fixedIndex) => choiceIdAtIndex(choices, fixedIndex)),
 		correct_choice_id:
-			question.correct_choice_id ??
-			choiceIdAtIndex(choices, question.correct_index),
+			question.correct_choice_id ?? choiceIdAtIndex(choices, question.correct_index),
 		correct_choice_ids:
 			question.correct_choice_ids ??
 			question.correct_indices?.map((correctIndex) => choiceIdAtIndex(choices, correctIndex)),

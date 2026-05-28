@@ -1,12 +1,14 @@
 import type { QuizQuestionData, QuizQuestionResult } from '@learn-anything/ui';
-import type { QuestionPurpose, ResponseType } from './types';
+import type { ChoiceOrderStrategy, QuestionPurpose, ResponseType } from './types';
 
 type BuildLearningQuizQuestionsOptions = {
 	instantFeedback?: boolean;
+	shuffleSeed?: string;
 };
 
 export type LearningQuizQuestion = {
 	question_id: string;
+	version?: number;
 	skill_label: string;
 	question_purpose: QuestionPurpose;
 	response_type: ResponseType;
@@ -15,6 +17,8 @@ export type LearningQuizQuestion = {
 		id: string;
 		label: string;
 	}[];
+	choice_order_strategy?: ChoiceOrderStrategy;
+	fixed_choice_ids?: string[];
 	correct_choice_id?: string;
 	correct_choice_ids?: string[];
 	correct_numeric_value?: number | null;
@@ -67,7 +71,7 @@ function buildQuestionResponse(
 		case 'multiple_choice':
 			return {
 				type: 'multiple-choice',
-				options: question.choices.map((choice) => ({
+				options: getOrderedChoices(question, options).map((choice) => ({
 					value: choice.id,
 					label: choice.label
 				})),
@@ -76,7 +80,7 @@ function buildQuestionResponse(
 		case 'multiple_select':
 			return {
 				type: 'multiple-select',
-				options: question.choices.map((choice) => ({
+				options: getOrderedChoices(question, options).map((choice) => ({
 					value: choice.id,
 					label: choice.label
 				})),
@@ -127,6 +131,73 @@ function buildQuestionResponse(
 			throw new Error(`Unsupported response type: ${exhaustive}`);
 		}
 	}
+}
+
+function getOrderedChoices(
+	question: LearningQuizQuestion,
+	options: BuildLearningQuizQuestionsOptions
+) {
+	if (
+		!options.shuffleSeed ||
+		question.choice_order_strategy === 'fixed' ||
+		question.choices.length < 2
+	) {
+		return question.choices;
+	}
+
+	const fixedChoiceIds = new Set(question.fixed_choice_ids ?? []);
+	if (fixedChoiceIds.size === question.choices.length) {
+		return question.choices;
+	}
+
+	const shuffledChoices = seededShuffle(
+		question.choices.filter((choice) => !fixedChoiceIds.has(choice.id)),
+		`${options.shuffleSeed}:${question.question_id}@${question.version ?? 0}`
+	);
+	let shuffledIndex = 0;
+
+	return question.choices.map((choice) => {
+		if (fixedChoiceIds.has(choice.id)) {
+			return choice;
+		}
+
+		const shuffledChoice = shuffledChoices[shuffledIndex];
+		shuffledIndex += 1;
+		return shuffledChoice;
+	});
+}
+
+function seededShuffle<T>(items: T[], seedText: string): T[] {
+	const shuffled = [...items];
+	const random = createSeededRandom(hashString(seedText));
+
+	for (let index = shuffled.length - 1; index > 0; index -= 1) {
+		const swapIndex = Math.floor(random() * (index + 1));
+		[shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+	}
+
+	return shuffled;
+}
+
+function hashString(value: string) {
+	let hash = 0x811c9dc5;
+
+	for (let index = 0; index < value.length; index += 1) {
+		hash ^= value.charCodeAt(index);
+		hash = Math.imul(hash, 0x01000193);
+	}
+
+	return hash >>> 0;
+}
+
+function createSeededRandom(seed: number) {
+	return () => {
+		seed += 0x6d2b79f5;
+		let value = seed;
+		value = Math.imul(value ^ (value >>> 15), value | 1);
+		value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+		return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+	};
 }
 
 function getQuestionFeedback(

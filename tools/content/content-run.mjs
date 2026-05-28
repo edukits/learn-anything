@@ -85,16 +85,18 @@ const lessonSchema = z.object({
 	title: z.string().min(1),
 	summary: z.string().min(1),
 	body_markdown: z.string().min(1),
-	render_blocks: z.array(
-		z.discriminatedUnion('type', [
-			z.object({ type: z.literal('markdown'), markdown: z.string().min(1) }),
-			z.object({
-				type: z.literal('interaction'),
-				slug: z.string().min(1),
-				interaction_type: z.enum(['concept_check', 'scenario_choice', 'mini_practice'])
-			})
-		])
-	).min(1),
+	render_blocks: z
+		.array(
+			z.discriminatedUnion('type', [
+				z.object({ type: z.literal('markdown'), markdown: z.string().min(1) }),
+				z.object({
+					type: z.literal('interaction'),
+					slug: z.string().min(1),
+					interaction_type: z.enum(['concept_check', 'scenario_choice', 'mini_practice'])
+				})
+			])
+		)
+		.min(1),
 	skill_ids: z.array(z.string().min(1)).min(1),
 	estimated_minutes: z.number().int().positive(),
 	sort_order: z.number().int().positive()
@@ -124,6 +126,7 @@ const choiceSchema = z.object({
 	label: renderedMarkdownSchema
 });
 
+const choiceOrderStrategySchema = z.enum(['shuffle', 'fixed']);
 const questionPurposeSchema = z.enum(['recognition', 'application']);
 const responseTypeSchema = z.enum([
 	'multiple_choice',
@@ -161,6 +164,8 @@ const questionSchema = z
 		difficulty: z.enum(['easy', 'medium', 'hard']),
 		prompt: renderedMarkdownSchema,
 		choices: z.array(choiceSchema).optional(),
+		choice_order_strategy: choiceOrderStrategySchema.optional(),
+		fixed_choice_ids: z.array(z.string().min(1)).optional(),
 		correct_choice_id: z.string().min(1).optional(),
 		correct_choice_ids: z.array(z.string().min(1)).optional(),
 		correct_numeric_answer: numericAnswerSchema.optional(),
@@ -172,6 +177,25 @@ const questionSchema = z
 	.superRefine((question, context) => {
 		const choices = question.choices ?? [];
 		const choiceIds = new Set(choices.map((choice) => choice.id));
+
+		const fixedChoiceIds = new Set();
+		for (const [index, choiceId] of (question.fixed_choice_ids ?? []).entries()) {
+			if (!choiceIds.has(choiceId)) {
+				context.addIssue({
+					code: 'custom',
+					message: `fixed_choice_ids contains ${choiceId}, which is not present in choices`,
+					path: ['fixed_choice_ids', index]
+				});
+			}
+			if (fixedChoiceIds.has(choiceId)) {
+				context.addIssue({
+					code: 'custom',
+					message: `fixed_choice_ids contains duplicate id ${choiceId}`,
+					path: ['fixed_choice_ids', index]
+				});
+			}
+			fixedChoiceIds.add(choiceId);
+		}
 
 		if (question.response_type === 'multiple_choice') {
 			if (choices.length < 2) {
@@ -604,6 +628,13 @@ export async function loadAndValidateRun(manifestPath, options = {}) {
 				`Question ${question.id}@${question.version} has a correct_choice_id not present in choices`
 			);
 		}
+		for (const fixedChoiceId of question.fixed_choice_ids ?? []) {
+			if (!choiceIds.has(fixedChoiceId)) {
+				failures.push(
+					`Question ${question.id}@${question.version} has a fixed_choice_ids value not present in choices: ${fixedChoiceId}`
+				);
+			}
+		}
 		if (!has(skillMap, question.skill_id, 1)) {
 			failures.push(
 				`Question ${question.id}@${question.version} references missing skill ${question.skill_id}@1`
@@ -694,7 +725,9 @@ export async function loadAndValidateRun(manifestPath, options = {}) {
 	}
 
 	for (const lesson of lessons) {
-		const renderedInteractionBlocks = lesson.render_blocks.filter((block) => block.type === 'interaction');
+		const renderedInteractionBlocks = lesson.render_blocks.filter(
+			(block) => block.type === 'interaction'
+		);
 		if (!renderedInteractionBlocks.length) {
 			failures.push(`Lesson ${keyFor(lesson)} has no interaction render blocks`);
 		}
@@ -710,7 +743,8 @@ export async function loadAndValidateRun(manifestPath, options = {}) {
 			}
 			const count = lessonInteractionQuestionCounts.get(interactionKey) ?? 0;
 			if (
-				(block.interaction_type === 'concept_check' || block.interaction_type === 'scenario_choice') &&
+				(block.interaction_type === 'concept_check' ||
+					block.interaction_type === 'scenario_choice') &&
 				count !== 1
 			) {
 				failures.push(`Lesson interaction ${interactionKey} requires 1 linked question`);
@@ -720,7 +754,8 @@ export async function loadAndValidateRun(manifestPath, options = {}) {
 			}
 		}
 		for (const link of lessonInteractionLinks.filter(
-			(candidate) => candidate.lesson_id === lesson.id && candidate.lesson_version === lesson.version
+			(candidate) =>
+				candidate.lesson_id === lesson.id && candidate.lesson_version === lesson.version
 		)) {
 			if (!seenInteractionSlugs.has(link.interaction_slug)) {
 				failures.push(
@@ -888,6 +923,7 @@ export async function loadAndValidateRun(manifestPath, options = {}) {
 	checks.push('Records match v1 schemas');
 	checks.push('Stable ids and versions are unique');
 	checks.push('Question answer keys point to declared choices');
+	checks.push('Question choice ordering metadata points to declared choices');
 	checks.push('Quiz-to-question references are complete and ordered');
 	checks.push('Lesson interaction references are complete and ordered');
 	checks.push(

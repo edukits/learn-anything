@@ -13,6 +13,8 @@ function buildSequencingQuestion(): QuizQuestionVersion {
 		difficulty: 'medium',
 		prompt: 'Put the steps in order.',
 		choices: [],
+		choice_order_strategy: 'shuffle',
+		fixed_choice_ids: [],
 		correct_choice_id: '',
 		correct_choice_ids: [],
 		correct_numeric_value: null,
