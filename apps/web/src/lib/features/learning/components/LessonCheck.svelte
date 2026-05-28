@@ -263,7 +263,7 @@
 					{/if}
 				</div>
 
-				{#if result.correct === true && questionIndex < questions.length - 1}
+				{#if result && result.correct === true && questionIndex < questions.length - 1}
 					<Button size="sm" onclick={continueAfterQuestion}>
 						Continue
 						<ArrowRight size={15} strokeWidth={2.4} aria-hidden="true" />
