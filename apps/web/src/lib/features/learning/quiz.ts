@@ -52,12 +52,14 @@ export function buildSubmittedAnswersPayload(
 
 	return JSON.stringify(
 		questions.map((question) => {
-			const value = resultByQuestionId.get(question.question_id)?.value;
+			const result = resultByQuestionId.get(question.question_id);
+			const value = result?.value;
 
 			return {
 				questionId: question.question_id,
 				selectedChoiceId: typeof value === 'string' ? value : '',
-				answerValue: value
+				answerValue: value,
+				responseTimeMs: result?.responseTimeMs ?? 0
 			};
 		})
 	);

@@ -62,7 +62,7 @@ Rules:
 - Prefer multiple choice, multiple select, sequencing, or numeric for inline interactions.
 - Use short answer only when exact accepted answers are reliable.
 - Explain why the answer is correct and address the likely misconception.
-- Choice options shuffle by default. Omit ordering metadata for ordinary choices.
+- The app shuffles choice options by default. Omit ordering metadata for ordinary choices.
 - Use `choice_order_strategy: "fixed"` when choices only make sense in strict sequence, compare earlier/later options, or rely on labels such as "the first statement".
 - Use `fixed_choice_indices` for position-dependent choices such as "All of the above", "None of the above", "Both A and B", summaries, or choices that refer to other choices; put them last when possible.
 - Do not invent subject ids, topic ids, release ids, app paths, IDs, versions, source refs, or choice IDs.

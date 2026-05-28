@@ -8,6 +8,7 @@ export type RpcAnswer = {
 	device?: string;
 	selected_choice_id: string;
 	answer_value: unknown;
+	response_time_ms: number;
 };
 
 export class AnswerValidationError extends Error {
@@ -18,6 +19,7 @@ export class AnswerValidationError extends Error {
 }
 
 type AnswerableQuestion = PracticeQuizQuestion | QuizQuestionVersion;
+type ValidatedAnswer = Omit<RpcAnswer, 'response_time_ms'>;
 
 export function buildValidatedRpcAnswers(
 	questions: AnswerableQuestion[],
@@ -37,7 +39,10 @@ export function buildValidatedRpcAnswers(
 			throw new AnswerValidationError(`Missing answer for ${question.question_id}.`);
 		}
 
-		const answer = validateSubmittedAnswer(question, submittedAnswer);
+		const answer = {
+			...validateSubmittedAnswer(question, submittedAnswer),
+			response_time_ms: submittedAnswer.responseTimeMs ?? 0
+		};
 		if (options.includeQuestionMetadata) {
 			return {
 				...answer,
@@ -51,7 +56,10 @@ export function buildValidatedRpcAnswers(
 	});
 }
 
-function validateSubmittedAnswer(question: AnswerableQuestion, answer: SubmittedAnswer): RpcAnswer {
+function validateSubmittedAnswer(
+	question: AnswerableQuestion,
+	answer: SubmittedAnswer
+): ValidatedAnswer {
 	switch (question.response_type) {
 		case 'multiple_choice':
 			return validateSingleChoice(question, answer);
@@ -70,7 +78,10 @@ function validateSubmittedAnswer(question: AnswerableQuestion, answer: Submitted
 	}
 }
 
-function validateSingleChoice(question: AnswerableQuestion, answer: SubmittedAnswer): RpcAnswer {
+function validateSingleChoice(
+	question: AnswerableQuestion,
+	answer: SubmittedAnswer
+): ValidatedAnswer {
 	const choiceIds = new Set(question.choices.map((choice) => choice.id));
 	const selectedChoiceId = answer.selectedChoiceId;
 
@@ -85,7 +96,10 @@ function validateSingleChoice(question: AnswerableQuestion, answer: SubmittedAns
 	};
 }
 
-function validateMultipleSelect(question: AnswerableQuestion, answer: SubmittedAnswer): RpcAnswer {
+function validateMultipleSelect(
+	question: AnswerableQuestion,
+	answer: SubmittedAnswer
+): ValidatedAnswer {
 	if (!Array.isArray(answer.answerValue) || answer.answerValue.length === 0) {
 		throw new AnswerValidationError(`Invalid answer for ${question.question_id}.`);
 	}
@@ -110,7 +124,7 @@ function validateMultipleSelect(question: AnswerableQuestion, answer: SubmittedA
 	};
 }
 
-function validateNumeric(question: AnswerableQuestion, answer: SubmittedAnswer): RpcAnswer {
+function validateNumeric(question: AnswerableQuestion, answer: SubmittedAnswer): ValidatedAnswer {
 	const value = extractNumericValue(answer.answerValue);
 	if (value === null) {
 		throw new AnswerValidationError(`Invalid answer for ${question.question_id}.`);
@@ -123,7 +137,10 @@ function validateNumeric(question: AnswerableQuestion, answer: SubmittedAnswer):
 	};
 }
 
-function validateSequencing(question: AnswerableQuestion, answer: SubmittedAnswer): RpcAnswer {
+function validateSequencing(
+	question: AnswerableQuestion,
+	answer: SubmittedAnswer
+): ValidatedAnswer {
 	if (!Array.isArray(answer.answerValue) || answer.answerValue.length === 0) {
 		throw new AnswerValidationError(`Invalid answer for ${question.question_id}.`);
 	}
@@ -153,7 +170,10 @@ function validateSequencing(question: AnswerableQuestion, answer: SubmittedAnswe
 	};
 }
 
-function validateShortAnswer(question: AnswerableQuestion, answer: SubmittedAnswer): RpcAnswer {
+function validateShortAnswer(
+	question: AnswerableQuestion,
+	answer: SubmittedAnswer
+): ValidatedAnswer {
 	if (typeof answer.answerValue !== 'string' || answer.answerValue.trim().length === 0) {
 		throw new AnswerValidationError(`Invalid answer for ${question.question_id}.`);
 	}

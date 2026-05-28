@@ -157,7 +157,8 @@ describe('buildLearningQuizQuestions', () => {
 					questionId: 'question_1',
 					value: 'c',
 					correct: true,
-					answered: true
+					answered: true,
+					responseTimeMs: 1234
 				}
 			]
 		);
@@ -166,7 +167,8 @@ describe('buildLearningQuizQuestions', () => {
 			{
 				questionId: 'question_1',
 				selectedChoiceId: 'c',
-				answerValue: 'c'
+				answerValue: 'c',
+				responseTimeMs: 1234
 			}
 		]);
 	});

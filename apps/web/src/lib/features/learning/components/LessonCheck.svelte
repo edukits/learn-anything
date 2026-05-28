@@ -43,6 +43,7 @@
 	let shortAnswers = $state<Record<string, string>>(buildDefaultAnswers(''));
 	let sequenceAnswers = $state<Record<string, string[]>>(buildDefaultAnswers([]));
 	let questionResults = $state<Record<string, QuizQuestionResult>>({});
+	let questionStartedAt = $state<Record<string, number>>({});
 	let resetTokens = $state<Record<string, number>>({});
 
 	const playQuestionResultSound = createQuestionResultSoundPlayer();
@@ -57,6 +58,11 @@
 	let hasMultipleQuestions = $derived(questions.length > 1);
 
 	initQuizSounds();
+
+	$effect(() => {
+		if (!activeQuestion) return;
+		questionStartedAt[activeQuestion.id] ??= Date.now();
+	});
 
 	function buildDefaultAnswers<T>(value: T): Record<string, T> {
 		return Object.fromEntries(
@@ -108,13 +114,18 @@
 	}
 
 	function recordQuestionResult(result: QuizQuestionResult) {
+		const startedAt = questionStartedAt[result.questionId] ?? Date.now();
+		const timedResult = {
+			...result,
+			responseTimeMs: Math.max(0, Math.round(Date.now() - startedAt))
+		};
 		const nextResults = {
 			...questionResults,
-			[result.questionId]: result
+			[result.questionId]: timedResult
 		};
 
 		questionResults = nextResults;
-		playQuestionResultSound(result);
+		playQuestionResultSound(timedResult);
 
 		if (!questions.every((question) => nextResults[question.id]?.answered)) {
 			return;
@@ -125,8 +136,10 @@
 
 	function retryQuestion(question: QuizQuestionData) {
 		const { [question.id]: _questionResult, ...remainingResults } = questionResults;
+		const { [question.id]: _startedAt, ...remainingStartedAt } = questionStartedAt;
 
 		questionResults = remainingResults;
+		questionStartedAt = remainingStartedAt;
 		resetQuestionAnswers(question);
 		resetTokens = {
 			...resetTokens,
