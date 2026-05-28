@@ -1,6 +1,7 @@
 import { error as kitError, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import {
+	LearnerMutationError,
 	completeLesson,
 	getLesson,
 	getLessonInteractions,
@@ -135,9 +136,11 @@ export const actions: Actions = {
 				submissionKey: submission.submissionKey
 			});
 		} catch (error) {
-			return fail(500, {
-				error: error instanceof Error ? error.message : 'Unable to submit lesson interaction.'
-			});
+			if (error instanceof LearnerMutationError) {
+				return fail(error.status, { error: error.message });
+			}
+
+			return fail(500, { error: 'Unable to submit lesson interaction.' });
 		}
 
 		return { interactionSubmitted: interactionSlug };
