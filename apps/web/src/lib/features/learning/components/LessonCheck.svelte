@@ -276,14 +276,13 @@
 
 <style>
 	.lesson-check {
-		background: var(--color-surface-raised);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
-		box-shadow: 0 1px 0 rgb(255 255 255 / 0.68) inset;
 		display: grid;
-		gap: var(--space-5);
+		gap: var(--space-4);
 		margin-block: var(--space-4);
-		padding: var(--space-5);
+		margin-inline: calc(-1 * var(--space-6));
+		padding: var(--space-6);
 	}
 
 	.check-header {
