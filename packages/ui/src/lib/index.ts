@@ -50,11 +50,14 @@ export { default as MultipleChoiceOption } from './components/quiz/MultipleChoic
 export { default as MultipleSelect } from './components/quiz/MultipleSelect.svelte';
 export { default as NumericAnswer } from './components/quiz/NumericAnswer.svelte';
 export { default as PathMap } from './components/PathMap.svelte';
+export { default as QuestionFeedback } from './components/quiz/QuestionFeedback.svelte';
+export { default as QuestionResponse } from './components/quiz/QuestionResponse.svelte';
 export { default as Question } from './components/quiz/Question.svelte';
 export { default as Quiz } from './components/quiz/Quiz.svelte';
 export { default as RichText } from './components/quiz/RichText.svelte';
 export { default as SequencingAnswer } from './components/quiz/SequencingAnswer.svelte';
 export { default as ShortAnswer } from './components/quiz/ShortAnswer.svelte';
+export { createQuestionResultSoundPlayer, initQuizSounds } from './components/quiz/sound';
 export type { SelectOption } from './components/Select.svelte';
 export type {
 	ImageChoiceOptionData,

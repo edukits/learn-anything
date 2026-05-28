@@ -1,12 +1,16 @@
 import { error as kitError, fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import {
+	LearnerMutationError,
 	completeLesson,
 	getLesson,
+	getLessonInteractions,
 	getPathItemProgress,
+	parseSubmittedAnswers,
 	parseIssueReportForm,
 	reportContentIssue,
-	requireProtectedTopic
+	requireProtectedTopic,
+	submitLessonInteraction
 } from '$lib/features/learning/server/index.server';
 import { noindexSeo } from '$lib/seo';
 
@@ -18,19 +22,21 @@ export const load: PageServerLoad = async ({ locals, parent, params, url }) => {
 		content.release.id,
 		content.pathItems
 	);
-	const itemProgress = pathProgress.find(
-		(item) => item.item_type === 'lesson' && item.item_id === params.lessonId
-	);
+	const itemProgress = findLessonPathItemProgress(pathProgress, params.lessonId);
 	if (!itemProgress) {
 		kitError(404, 'Lesson not found in the current topic path.');
 	}
 
 	const locked = itemProgress.state === 'locked';
 	const lesson = locked ? null : await getLesson(locals.supabase, content, params.lessonId);
+	const lessonInteractions = lesson
+		? await getLessonInteractions(locals.supabase, content, lesson, user.id)
+		: [];
 
 	return {
 		...content,
 		lesson,
+		lessonInteractions,
 		itemProgress,
 		locked,
 		seo: noindexSeo(
@@ -50,9 +56,7 @@ export const actions: Actions = {
 			content.release.id,
 			content.pathItems
 		);
-		const itemProgress = pathProgress.find(
-			(item) => item.item_type === 'lesson' && item.item_id === params.lessonId
-		);
+		const itemProgress = findLessonPathItemProgress(pathProgress, params.lessonId);
 		if (!itemProgress) {
 			kitError(404, 'Lesson not found in the current topic path.');
 		}
@@ -61,6 +65,18 @@ export const actions: Actions = {
 		}
 
 		const lesson = await getLesson(locals.supabase, content, params.lessonId);
+		const lessonInteractions = await getLessonInteractions(
+			locals.supabase,
+			content,
+			lesson,
+			user.id
+		);
+		const incompleteInteraction = lessonInteractions.find((interaction) => !interaction.completed);
+		if (incompleteInteraction) {
+			return fail(400, {
+				error: 'Complete the lesson checks before marking this lesson complete.'
+			});
+		}
 
 		try {
 			await completeLesson(
@@ -77,6 +93,63 @@ export const actions: Actions = {
 		}
 
 		throw redirect(303, `/app/topics/${params.topic}`);
+	},
+	submitInteraction: async ({ request, locals, params }) => {
+		const { user, content } = await requireProtectedTopic(locals, params.topic);
+		const pathProgress = await getPathItemProgress(
+			locals.supabase,
+			user.id,
+			content.release.id,
+			content.pathItems
+		);
+		const itemProgress = findLessonPathItemProgress(pathProgress, params.lessonId);
+		if (!itemProgress) {
+			kitError(404, 'Lesson not found in the current topic path.');
+		}
+		if (itemProgress.state === 'locked') {
+			return fail(403, {
+				error: 'Complete the previous path item before submitting lesson checks.'
+			});
+		}
+
+		const formData = await request.formData();
+		const interactionSlug = String(formData.get('interactionSlug') ?? '');
+		const submission = parseSubmittedAnswers(formData);
+		if (!submission.success) {
+			return fail(submission.status, { error: submission.error });
+		}
+
+		try {
+			const lesson = await getLesson(locals.supabase, content, params.lessonId);
+			const lessonInteractions = await getLessonInteractions(
+				locals.supabase,
+				content,
+				lesson,
+				user.id
+			);
+			const interaction = lessonInteractions.find((item) => item.slug === interactionSlug);
+			if (!interaction) {
+				return fail(404, { error: 'Lesson interaction not found.' });
+			}
+
+			await submitLessonInteraction(locals.supabaseService, {
+				userId: user.id,
+				topicId: content.topic.topic_area_id,
+				release: content.release,
+				lesson,
+				interaction,
+				answers: submission.answers,
+				submissionKey: submission.submissionKey
+			});
+		} catch (error) {
+			if (error instanceof LearnerMutationError) {
+				return fail(error.status, { error: error.message });
+			}
+
+			return fail(500, { error: 'Unable to submit lesson interaction.' });
+		}
+
+		return { interactionSubmitted: interactionSlug };
 	},
 	reportIssue: async ({ request, locals, params }) => {
 		const { user, content } = await requireProtectedTopic(locals, params.topic);
@@ -104,3 +177,9 @@ export const actions: Actions = {
 		return { issueReported: true };
 	}
 };
+
+type LessonPathProgress = Awaited<ReturnType<typeof getPathItemProgress>>;
+
+function findLessonPathItemProgress(pathProgress: LessonPathProgress, lessonId: string) {
+	return pathProgress.find((item) => item.item_type === 'lesson' && item.item_id === lessonId);
+}

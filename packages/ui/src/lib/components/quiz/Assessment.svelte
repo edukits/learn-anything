@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { CheckCircle, RotateCcw } from '@lucide/svelte';
-	import { tiks } from '@rexa-developer/tiks';
 	import Button from '../Button.svelte';
 	import ProgressBar from '../ProgressBar.svelte';
 	import {
@@ -14,10 +13,8 @@
 		buildSubmittedState,
 		gradeMath,
 		getImageChoiceCorrectValue,
-		getImageOptionDisplayData,
 		getMultipleChoiceCorrectValue,
 		getMultipleSelectCorrectValues,
-		getOptionDisplayData,
 		gradeNumeric,
 		gradeShortAnswer,
 		hasExactSelection,
@@ -32,28 +29,19 @@
 		isShortAnswerResponse,
 		type QuestionsPerPage
 	} from './assessment';
-	import ImageChoice from './ImageChoice.svelte';
-	import MultipleChoice from './MultipleChoice.svelte';
-	import MultipleSelect from './MultipleSelect.svelte';
-	import MathAnswer from './MathAnswer.svelte';
-	import NumericAnswer from './NumericAnswer.svelte';
 	import Question from './Question.svelte';
-	import RichText from './RichText.svelte';
-	import SequencingAnswer from './SequencingAnswer.svelte';
-	import ShortAnswer from './ShortAnswer.svelte';
+	import QuestionFeedback from './QuestionFeedback.svelte';
+	import QuestionResponse from './QuestionResponse.svelte';
+	import { createQuestionResultSoundPlayer, initQuizSounds } from './sound';
 	import type {
-		MathAnswerSubmitResult,
 		MathAnswerValue,
 		NumericAnswerValue,
 		QuizPageLayout,
 		QuizQuestionData,
-		QuizQuestionResult,
-		SequencingSubmitResult
+		QuizQuestionResult
 	} from './types';
 
 	type AssessmentMode = 'quiz' | 'exam';
-	const FIRST_QUIZ_SOUND_DELAY_MS = 80;
-
 	type AssessmentProps = {
 		mode: AssessmentMode;
 		questions: QuizQuestionData[];
@@ -80,8 +68,7 @@
 		oncomplete
 	}: AssessmentProps = $props();
 
-	let quizSoundsInitialized = false;
-	let questionResultSoundPlayed = false;
+	const playQuestionResultSound = createQuestionResultSoundPlayer();
 	let quizComplete = $state(false);
 	let examSubmitted = $state(false);
 	let progressSparkTrigger = $state(0);
@@ -145,15 +132,6 @@
 	});
 
 	initQuizSounds();
-
-	function initQuizSounds() {
-		if (typeof window === 'undefined' || quizSoundsInitialized) {
-			return;
-		}
-
-		tiks.init();
-		quizSoundsInitialized = true;
-	}
 
 	function isQuestionAnswered(question: QuizQuestionData) {
 		const response = question.response;
@@ -283,11 +261,13 @@
 		};
 	}
 
-	function recordQuestionResult(question: QuizQuestionData) {
-		const result = getQuestionResult(question);
+	function recordQuestionResult(question: QuizQuestionData, submittedResult?: QuizQuestionResult) {
+		const result = submittedResult ?? getQuestionResult(question);
 		questionSubmitted[question.id] = true;
 		results[question.id] = result;
-		playQuestionResultSound(result);
+		if (hasSingleQuestionPages) {
+			playQuestionResultSound(result);
+		}
 		if (
 			mode === 'quiz' &&
 			result.correct === true &&
@@ -296,49 +276,6 @@
 			progressSparkTrigger += 1;
 		}
 		onquestionresult?.(result);
-	}
-
-	function playQuestionResultSound(result: QuizQuestionResult) {
-		if (!hasSingleQuestionPages) {
-			return;
-		}
-
-		const playSound =
-			result.correct === true
-				? () => tiks.success()
-				: result.correct === false
-					? () => tiks.error()
-					: null;
-
-		if (!playSound) {
-			return;
-		}
-
-		initQuizSounds();
-
-		if (!questionResultSoundPlayed) {
-			questionResultSoundPlayed = true;
-			window.setTimeout(playSound, FIRST_QUIZ_SOUND_DELAY_MS);
-			return;
-		}
-
-		playSound();
-	}
-
-	function recordMathQuestionResult(question: QuizQuestionData, result: MathAnswerSubmitResult) {
-		mathAnswers[question.id] = {
-			latex: result.latex,
-			prompts: result.prompts
-		};
-		recordQuestionResult(question);
-	}
-
-	function recordSequencingQuestionResult(
-		question: QuizQuestionData,
-		result: SequencingSubmitResult
-	) {
-		sequenceAnswers[question.id] = result.value;
-		recordQuestionResult(question);
 	}
 
 	function isQuestionFeedbackVisible(question: QuizQuestionData) {
@@ -467,139 +404,30 @@
 					description={question.description}
 					class="assessment-question"
 				>
-					{#if question.response.type === 'numeric'}
-						<NumericAnswer
-							bind:value={numericAnswers[question.id].value}
-							bind:unit={numericAnswers[question.id].unit}
-							submitted={mode === 'exam' ? examSubmitted : questionSubmitted[question.id]}
-							name={`${mode}-${question.id}`}
-							label={question.question}
-							placeholder={question.response.placeholder}
-							disabled={examSubmitted}
-							unitConfig={question.response.unitConfig}
-							acceptedValues={question.response.acceptedValues ?? null}
-							grader={question.response.grader}
-							showSubmitButton={mode === 'quiz'}
-							submitLabel="Submit answer"
-							celebrations={question.response.celebrations ?? celebrations}
-							onsubmit={() => recordQuestionResult(question)}
-						/>
-					{:else if question.response.type === 'math'}
-						<MathAnswer
-							bind:value={mathAnswers[question.id].latex}
-							submitted={mode === 'exam' ? examSubmitted : questionSubmitted[question.id]}
-							name={`${mode}-${question.id}`}
-							label={question.question}
-							placeholder={question.response.placeholder}
-							mathPlaceholder={question.response.mathPlaceholder}
-							disabled={examSubmitted}
-							template={question.response.template}
-							acceptedValues={question.response.acceptedValues ?? null}
-							matchMode={question.response.matchMode ?? 'normalized'}
-							grader={question.response.grader}
-							showSubmitButton={mode === 'quiz'}
-							submitLabel="Submit answer"
-							celebrations={question.response.celebrations ?? celebrations}
-							oninput={(answer) => {
-								mathAnswers[question.id] = answer;
-							}}
-							onsubmit={(result) => recordMathQuestionResult(question, result)}
-						/>
-					{:else if question.response.type === 'short-answer'}
-						<ShortAnswer
-							bind:value={shortAnswers[question.id]}
-							submitted={mode === 'exam' ? examSubmitted : questionSubmitted[question.id]}
-							name={`${mode}-${question.id}`}
-							label={question.question}
-							placeholder={question.response.placeholder}
-							disabled={examSubmitted}
-							acceptedAnswers={question.response.acceptedAnswers ?? null}
-							matchMode={question.response.matchMode ?? 'normalized'}
-							normalizer={question.response.normalizer}
-							grader={question.response.grader}
-							showSubmitButton={mode === 'quiz'}
-							submitLabel="Submit answer"
-							celebrations={question.response.celebrations ?? celebrations}
-							onsubmit={() => recordQuestionResult(question)}
-						/>
-					{:else if question.response.type === 'sequencing'}
-						<SequencingAnswer
-							bind:value={sequenceAnswers[question.id]}
-							submitted={mode === 'exam' ? examSubmitted : questionSubmitted[question.id]}
-							items={question.response.items}
-							name={`${mode}-${question.id}`}
-							disabled={examSubmitted}
-							correctOrder={question.response.correctOrder ?? null}
-							showSubmitButton={mode === 'quiz'}
-							submitLabel="Submit answer"
-							celebrations={question.response.celebrations ?? celebrations}
-							legend={question.question}
-							onsubmit={(result) => recordSequencingQuestionResult(question, result)}
-						/>
-					{:else if question.response.type === 'multiple-select'}
-						<MultipleSelect
-							bind:value={multipleSelectAnswers[question.id]}
-							submitted={mode === 'exam' ? examSubmitted : questionSubmitted[question.id]}
-							options={getMultipleSelectCorrectValues(question.response) === null
-								? question.response.options
-								: getOptionDisplayData(question.response.options)}
-							name={`${mode}-${question.id}`}
-							disabled={examSubmitted}
-							correctValues={getMultipleSelectCorrectValues(question.response)}
-							showSubmitButton={mode === 'quiz'}
-							submitLabel="Submit answer"
-							celebrations={question.response.celebrations ?? celebrations}
-							legend={question.question}
-							onsubmit={() => recordQuestionResult(question)}
-						/>
-					{:else if question.response.type === 'image-choice'}
-						<ImageChoice
-							bind:value={multipleChoiceAnswers[question.id]}
-							submitted={mode === 'exam' ? examSubmitted : questionSubmitted[question.id]}
-							options={getImageChoiceCorrectValue(question.response) === null
-								? question.response.options
-								: getImageOptionDisplayData(question.response.options)}
-							name={`${mode}-${question.id}`}
-							disabled={examSubmitted}
-							interactionMode={mode === 'quiz'
+					<QuestionResponse
+						{question}
+						bind:multipleChoiceValue={multipleChoiceAnswers[question.id]}
+						bind:multipleSelectValue={multipleSelectAnswers[question.id]}
+						bind:shortAnswerValue={shortAnswers[question.id]}
+						bind:numericAnswerValue={numericAnswers[question.id]}
+						bind:mathAnswerValue={mathAnswers[question.id]}
+						bind:sequenceValue={sequenceAnswers[question.id]}
+						submitted={mode === 'exam' ? examSubmitted : questionSubmitted[question.id]}
+						name={`${mode}-${question.id}`}
+						disabled={examSubmitted}
+						interactionMode={mode === 'quiz'
+							? question.response.type === 'image-choice'
 								? (question.response.interactionMode ?? 'instant-submit')
-								: 'submit'}
-							correctValue={getImageChoiceCorrectValue(question.response)}
-							showSubmitButton={mode === 'quiz' && question.response.interactionMode === 'submit'}
-							submitLabel="Submit answer"
-							celebrations={question.response.celebrations ?? celebrations}
-							legend={question.question}
-							maxColumns={question.response.maxColumns ?? 4}
-							minColumnWidth={question.response.minColumnWidth ?? '9rem'}
-							onsubmit={() => recordQuestionResult(question)}
-						/>
-					{:else}
-						<MultipleChoice
-							bind:value={multipleChoiceAnswers[question.id]}
-							submitted={mode === 'exam' ? examSubmitted : questionSubmitted[question.id]}
-							options={getMultipleChoiceCorrectValue(question.response) === null
-								? question.response.options
-								: getOptionDisplayData(question.response.options)}
-							name={`${mode}-${question.id}`}
-							disabled={examSubmitted}
-							interactionMode={mode === 'quiz' ? 'instant-submit' : 'submit'}
-							correctValue={getMultipleChoiceCorrectValue(question.response)}
-							showSubmitButton={false}
-							celebrations={question.response.celebrations ?? celebrations}
-							legend={question.question}
-							onsubmit={() => recordQuestionResult(question)}
-						/>
-					{/if}
+								: 'instant-submit'
+							: 'submit'}
+						showSubmitButton={mode === 'quiz' && question.response.type !== 'multiple-choice'}
+						submitLabel="Submit answer"
+						{celebrations}
+						onsubmit={(result) => recordQuestionResult(question, result)}
+					/>
 
 					{#if question.feedback && isQuestionFeedbackVisible(question)}
-						<div class={['question-feedback', `feedback-${getQuestionFeedbackState(question)}`]}>
-							{#if getQuestionFeedbackState(question) === 'correct'}
-								<CheckCircle size={20} strokeWidth={2.4} />
-							{:else}
-								<span class="feedback-marker" aria-hidden="true"></span>
-							{/if}
-							<RichText content={question.feedback} class="feedback-content" />
-						</div>
+						<QuestionFeedback content={question.feedback} state={getQuestionFeedbackState(question)} />
 					{/if}
 				</Question>
 			{/each}
@@ -737,45 +565,6 @@
 		border-block-start: 1px solid color-mix(in srgb, var(--color-border), transparent 16%);
 		margin-block-start: var(--space-6);
 		padding-block-start: var(--space-6);
-	}
-
-	.question-feedback {
-		align-items: start;
-		background: color-mix(in srgb, var(--feedback-accent), transparent 92%);
-		border: 1px solid color-mix(in srgb, var(--feedback-accent), transparent 62%);
-		border-radius: var(--radius-md);
-		color: var(--color-text);
-		display: grid;
-		gap: var(--space-3);
-		grid-template-columns: auto 1fr;
-		margin-block-start: var(--space-4);
-		padding: var(--space-4);
-	}
-
-	.question-feedback :global(svg) {
-		color: var(--feedback-accent);
-	}
-
-	.question-feedback :global(.feedback-content) {
-		min-inline-size: 0;
-	}
-
-	.feedback-correct {
-		--feedback-accent: var(--color-success);
-	}
-
-	.feedback-incorrect,
-	.feedback-neutral {
-		--feedback-accent: var(--color-accent);
-	}
-
-	.feedback-marker {
-		background: var(--feedback-accent);
-		border-radius: 999px;
-		block-size: 0.5rem;
-		display: inline-block;
-		inline-size: 0.5rem;
-		margin-block-start: 0.45rem;
 	}
 
 	.assessment-actions {

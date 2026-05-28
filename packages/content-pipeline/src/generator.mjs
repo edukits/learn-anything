@@ -1,5 +1,5 @@
-import { mkdir } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { access, mkdir, writeFile } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
 import { AgentRunner, buildSourceContext, readValidatedArtifact } from './agent.mjs';
 import { bundleRun } from './bundle.mjs';
 import { thinkingLevelForStage } from './config.mjs';
@@ -7,7 +7,9 @@ import { runLimited } from './concurrency.mjs';
 import { loadTopicInput } from './input.mjs';
 import {
 	parseLessonMarkdown,
+	parseLessonInteractionsJson,
 	validateItemForContext,
+	validateLessonInteractionsForContext,
 	validateModulePlan,
 	validateSyllabusForModule
 } from './schemas.mjs';
@@ -22,6 +24,11 @@ function itemPathFor(item, index, dir) {
 	const slug = slugify(item.slug ?? item.focus ?? `${item.type}-${index + 1}`);
 	const extension = item.type === 'lesson' ? 'lesson.md' : 'quiz.json';
 	return `${dir}/${String(index + 1).padStart(3, '0')}-${item.type}-${slug}.${extension}`;
+}
+
+function lessonInteractionPathFor(item, index, dir) {
+	const slug = slugify(item.slug ?? item.focus ?? `lesson-${index + 1}`);
+	return `${dir}/${String(index + 1).padStart(3, '0')}-lesson-${slug}.lesson-interactions.json`;
 }
 
 function modulePathSegment(module, index) {
@@ -106,6 +113,28 @@ function outputInstructionFor(item, outputPath) {
 		return `Write only a Markdown lesson with YAML frontmatter to ${outputPath}.`;
 	}
 	return `Write only valid simplified quiz JSON to ${outputPath}.`;
+}
+
+function lessonInteractionInstructionFor(outputPath) {
+	return `Write only valid lesson interaction sidecar JSON to ${outputPath}.`;
+}
+
+function lessonInteractionSidecarFor(value) {
+	return value?.interactions ? { interactions: value.interactions } : value;
+}
+
+async function fileExists(path) {
+	try {
+		await access(path);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+async function writeMarkdownLessonArtifact(path, value) {
+	await mkdir(dirname(path), { recursive: true });
+	await writeFile(path, `${formatForPrompt(value)}\n`);
 }
 
 function artifactEvent({ emit, input, label, stage, kind, path, count, status }) {
@@ -246,6 +275,48 @@ async function runResumableTask({ resume, ...options }) {
 		}
 	}
 	return runAgentTask(options);
+}
+
+async function writeValidatedTaskArtifact({
+	emit,
+	stage,
+	taskId,
+	label,
+	expectedJsonPath,
+	value,
+	validate,
+	input,
+	artifactKind,
+	artifactLabel,
+	status = 'generated',
+	writeArtifact = writeJson
+}) {
+	if (!value) {
+		return { hit: false };
+	}
+	const validation = validate ? await validate(value) : { success: true, data: value };
+	if (!validation.success) {
+		return { hit: false, error: validation.error };
+	}
+	const absolutePath = resolve(input.topicDir, expectedJsonPath);
+	await writeArtifact(absolutePath, value);
+	emit({
+		type: 'task_complete',
+		taskId,
+		stage,
+		label,
+		artifactPath: absolutePath
+	});
+	artifactEvent({
+		emit,
+		input,
+		label: artifactLabel ?? label,
+		stage,
+		kind: artifactKind ?? 'json',
+		path: expectedJsonPath,
+		status
+	});
+	return { hit: true, value: validation.data };
 }
 
 function queueTasks(emit, stage, tasks) {
@@ -458,7 +529,96 @@ export async function generateContent(options, dependencies = {}) {
 		total: syllabus.syllabus.length
 	});
 
-	emit({ type: 'stage_start', stage: 'review', total: draftItems.length });
+	const lessonDraftEntries = draftItems
+		.map((draft, index) => ({ draft, index }))
+		.filter(({ draft }) => draft.type === 'lesson');
+	emit({ type: 'stage_start', stage: 'interactions', total: lessonDraftEntries.length });
+	queueTasks(
+		emit,
+		'interactions',
+		lessonDraftEntries.map(({ index }) => ({
+			taskId: `interactions-${index + 1}`,
+			label: `interactions ${index + 1}`,
+			artifactPath: resolve(
+				input.topicDir,
+				lessonInteractionPathFor(syllabus.syllabus[index], index, '.content-pipeline/items')
+			)
+		}))
+	);
+	const draftLessonInteractions = await runLimited(
+		lessonDraftEntries,
+		options.concurrency,
+		async ({ draft, index }) => {
+			const outputPath = lessonInteractionPathFor(
+				syllabus.syllabus[index],
+				index,
+				'.content-pipeline/items'
+			);
+			const module = moduleForItem(modulePlan, syllabus.syllabus[index]);
+			const moduleSyllabus = moduleSyllabi[modulePlan.modules.indexOf(module)];
+			return {
+				index,
+				value: await runResumableTask({
+					resume,
+					runner,
+					emit,
+					input,
+					stage: 'interactions',
+					taskId: `interactions-${index + 1}`,
+					label: `interactions ${index + 1}`,
+					systemPromptName: 'INTERACTIONS.md',
+					expectedJsonPath: outputPath,
+					artifactKind: 'lesson-interactions',
+					artifactLabel: syllabus.syllabus[index].focus ?? `interactions ${index + 1}`,
+					thinkingLevel: thinkingLevelForStage(options, 'quiz'),
+					format: 'json',
+					parse: parseLessonInteractionsJson,
+					validate: validateLessonInteractionsForContext({
+						lesson: draft,
+						syllabusItem: syllabus.syllabus[index],
+						moduleSyllabus
+					}),
+					prompt: [
+						`Generate inline lesson interactions for syllabus item ${index + 1}.`,
+						lessonInteractionInstructionFor(outputPath),
+						'Every interaction slug must match a directive in the lesson Markdown.',
+						'',
+						'Topic metadata:',
+						topicContext,
+						'',
+						'Module metadata:',
+						JSON.stringify(module, null, 2),
+						'',
+						'Module syllabus:',
+						JSON.stringify(moduleSyllabus, null, 2),
+						'',
+						'Syllabus item:',
+						JSON.stringify(syllabus.syllabus[index], null, 2),
+						'',
+						'Lesson Markdown:',
+						formatForPrompt(draft),
+						'',
+						sourceContext
+					].join('\n')
+				})
+			};
+		}
+	);
+	emit({
+		type: 'stage_end',
+		stage: 'interactions',
+		completed: draftLessonInteractions.length,
+		total: lessonDraftEntries.length
+	});
+	const draftInteractionByIndex = new Map(
+		draftLessonInteractions.map(({ index, value }) => [index, value])
+	);
+
+	emit({
+		type: 'stage_start',
+		stage: 'review',
+		total: draftItems.length + lessonDraftEntries.length
+	});
 	queueTasks(
 		emit,
 		'review',
@@ -473,16 +633,28 @@ export async function generateContent(options, dependencies = {}) {
 	);
 	const reviewedItems = await runLimited(draftItems, options.concurrency, async (draft, index) => {
 		const outputPath = itemPathFor(syllabus.syllabus[index], index, '.content-pipeline/reviewed');
+		const absoluteOutputPath = resolve(input.topicDir, outputPath);
 		const module = moduleForItem(modulePlan, syllabus.syllabus[index]);
 		const moduleSyllabus = moduleSyllabi[modulePlan.modules.indexOf(module)];
-		const validateItem = validateItemForContext({
+		const draftInteractionSidecar = lessonInteractionSidecarFor(draftInteractionByIndex.get(index));
+		const validateBaseItem = validateItemForContext({
 			itemType: syllabus.syllabus[index].type,
 			syllabusItem: syllabus.syllabus[index],
 			module,
 			moduleSyllabus
 		});
-		return runResumableTask({
-			resume,
+		const validateItem = (value) => {
+			const itemResult = validateBaseItem(value);
+			if (!itemResult.success || itemResult.data.type !== 'lesson' || !draftInteractionSidecar) {
+				return itemResult;
+			}
+			return validateLessonInteractionsForContext({
+				lesson: itemResult.data,
+				syllabusItem: syllabus.syllabus[index],
+				moduleSyllabus
+			})(draftInteractionSidecar);
+		};
+		const taskOptions = {
 			runner,
 			emit,
 			input,
@@ -516,12 +688,162 @@ export async function generateContent(options, dependencies = {}) {
 				'',
 				'Draft item:',
 				formatForPrompt(draft),
+				...(draft.type === 'lesson'
+					? [
+							'',
+							'Draft lesson interaction sidecar:',
+							JSON.stringify(draftInteractionSidecar, null, 2)
+						]
+					: []),
 				'',
 				sourceContext
 			].join('\n')
-		});
+		};
+		if (resume) {
+			const hadReviewedCache = await fileExists(absoluteOutputPath);
+			const cached = await readCachedTask(taskOptions);
+			if (cached.hit) {
+				return cached.value;
+			}
+			if (hadReviewedCache && draft.type === 'lesson') {
+				const reused = await writeValidatedTaskArtifact({
+					...taskOptions,
+					value: draft,
+					writeArtifact: writeMarkdownLessonArtifact
+				});
+				if (reused.hit) {
+					return reused.value;
+				}
+			}
+		}
+		try {
+			return await runAgentTask(taskOptions);
+		} catch (error) {
+			if (draft.type === 'lesson') {
+				emit({
+					type: 'warning',
+					message: `Falling back to draft lesson for review ${index + 1}; review agent failed. ${
+						error instanceof Error ? error.message : String(error)
+					}`
+				});
+				const reused = await writeValidatedTaskArtifact({
+					...taskOptions,
+					value: draft,
+					writeArtifact: writeMarkdownLessonArtifact
+				});
+				if (reused.hit) {
+					return reused.value;
+				}
+			}
+			throw error;
+		}
 	});
-	emit({ type: 'stage_end', stage: 'review', completed: reviewedItems.length, total: draftItems.length });
+	const reviewedLessonEntries = reviewedItems
+		.map((reviewed, index) => ({ reviewed, index }))
+		.filter(({ reviewed }) => reviewed.type === 'lesson');
+	queueTasks(
+		emit,
+		'review',
+		reviewedLessonEntries.map(({ index }) => ({
+			taskId: `review-interactions-${index + 1}`,
+			label: `review interactions ${index + 1}`,
+			artifactPath: resolve(
+				input.topicDir,
+				lessonInteractionPathFor(syllabus.syllabus[index], index, '.content-pipeline/reviewed')
+			)
+		}))
+	);
+	const reviewedLessonInteractions = await runLimited(
+		reviewedLessonEntries,
+		options.concurrency,
+		async ({ reviewed, index }) => {
+			const outputPath = lessonInteractionPathFor(
+				syllabus.syllabus[index],
+				index,
+				'.content-pipeline/reviewed'
+			);
+			const module = moduleForItem(modulePlan, syllabus.syllabus[index]);
+			const moduleSyllabus = moduleSyllabi[modulePlan.modules.indexOf(module)];
+			const draftInteractionSidecar = lessonInteractionSidecarFor(
+				draftInteractionByIndex.get(index)
+			);
+			const validate = validateLessonInteractionsForContext({
+				lesson: reviewed,
+				syllabusItem: syllabus.syllabus[index],
+				moduleSyllabus
+			});
+			const taskOptions = {
+				runner,
+				emit,
+				input,
+				stage: 'review',
+				taskId: `review-interactions-${index + 1}`,
+				label: `review interactions ${index + 1}`,
+				systemPromptName: 'INTERACTIONS.md',
+				expectedJsonPath: outputPath,
+				artifactKind: 'reviewed-lesson-interactions',
+				artifactLabel: syllabus.syllabus[index].focus ?? `review interactions ${index + 1}`,
+				thinkingLevel: thinkingLevelForStage(options, 'review'),
+				format: 'json',
+				parse: parseLessonInteractionsJson,
+				validate,
+				prompt: [
+					`Review and correct inline lesson interactions for syllabus item ${index + 1}.`,
+					lessonInteractionInstructionFor(outputPath),
+					'Keep interaction slugs aligned with directives in the reviewed lesson Markdown.',
+					'',
+					'Topic metadata:',
+					topicContext,
+					'',
+					'Module metadata:',
+					JSON.stringify(module, null, 2),
+					'',
+					'Module syllabus:',
+					JSON.stringify(moduleSyllabus, null, 2),
+					'',
+					'Syllabus item:',
+					JSON.stringify(syllabus.syllabus[index], null, 2),
+					'',
+					'Reviewed lesson Markdown:',
+					formatForPrompt(reviewed),
+					'',
+					'Draft lesson interaction sidecar:',
+					JSON.stringify(draftInteractionSidecar, null, 2),
+					'',
+					sourceContext
+				].join('\n')
+			};
+			if (resume) {
+				const cached = await readCachedTask(taskOptions);
+				if (cached.hit) {
+					return { index, value: cached.value };
+				}
+			}
+			const reused = await writeValidatedTaskArtifact({
+				...taskOptions,
+				value: draftInteractionSidecar
+			});
+			if (reused.hit) {
+				return { index, value: reused.value };
+			}
+			return {
+				index,
+				value: await runAgentTask(taskOptions)
+			};
+		}
+	);
+	const reviewedInteractionByIndex = new Map(
+		reviewedLessonInteractions.map(({ index, value }) => [index, value])
+	);
+	const reviewedItemsWithInteractions = reviewedItems.map((item, index) =>
+		item.type === 'lesson' ? reviewedInteractionByIndex.get(index) ?? item : item
+	);
+	emit({
+		type: 'stage_end',
+		stage: 'review',
+		completed: reviewedItems.length + reviewedLessonInteractions.length,
+		total: draftItems.length + lessonDraftEntries.length
+	});
 
 	const runId = runIdFor(input, now());
 	const runJsonPath = resolve(pipelineDir, 'run.json');
@@ -549,7 +871,7 @@ export async function generateContent(options, dependencies = {}) {
 		input,
 		modules: modulePlan,
 		syllabus,
-		reviewedItems,
+		reviewedItems: reviewedItemsWithInteractions,
 		outDir: distDir,
 		runId
 	});

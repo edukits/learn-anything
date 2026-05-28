@@ -89,6 +89,8 @@ export function buildMultipleChoiceAnswers(
 	for (const question of questionData) {
 		if (isMultipleChoiceResponse(question.response) || isImageChoiceResponse(question.response)) {
 			answers[question.id] = question.response.value ?? null;
+		} else {
+			answers[question.id] = null;
 		}
 	}
 
@@ -103,6 +105,8 @@ export function buildMultipleSelectAnswers(
 	for (const question of questionData) {
 		if (isMultipleSelectResponse(question.response)) {
 			answers[question.id] = question.response.value ?? [];
+		} else {
+			answers[question.id] = [];
 		}
 	}
 
@@ -115,6 +119,8 @@ export function buildShortAnswers(questionData: QuizQuestionData[]): Record<stri
 	for (const question of questionData) {
 		if (isShortAnswerResponse(question.response)) {
 			answers[question.id] = question.response.value ?? '';
+		} else {
+			answers[question.id] = '';
 		}
 	}
 
@@ -132,6 +138,11 @@ export function buildNumericAnswers(
 				value: question.response.value ?? '',
 				unit: getInitialNumericUnit(question.response)
 			};
+		} else {
+			answers[question.id] = {
+				value: '',
+				unit: null
+			};
 		}
 	}
 
@@ -147,6 +158,11 @@ export function buildMathAnswers(questionData: QuizQuestionData[]): Record<strin
 				latex: question.response.value ?? question.response.template ?? '',
 				prompts: buildEmptyMathPrompts(question.response.value ?? question.response.template)
 			};
+		} else {
+			answers[question.id] = {
+				latex: '',
+				prompts: {}
+			};
 		}
 	}
 
@@ -160,6 +176,8 @@ export function buildSequenceAnswers(questionData: QuizQuestionData[]): Record<s
 		if (isSequencingResponse(question.response)) {
 			answers[question.id] =
 				question.response.value ?? question.response.items.map((item) => item.value);
+		} else {
+			answers[question.id] = [];
 		}
 	}
 

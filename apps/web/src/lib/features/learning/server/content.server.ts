@@ -6,6 +6,7 @@ import {
 import { groupPathModules } from '$lib/features/learning/modules';
 import type {
 	ContentRelease,
+	LessonInteraction,
 	LearningPathItem,
 	LearningPathVersion,
 	LessonVersion,
@@ -17,6 +18,8 @@ import type {
 	TopicContent,
 	TopicModuleVersion
 } from '../types';
+
+const RELEASE_ITEMS_PAGE_SIZE = 1_000;
 
 function requireSingle<T>(value: T | null | undefined, label: string): T {
 	if (!value) {
@@ -51,16 +54,42 @@ export async function getReleaseItems(
 	client: SupabaseClient,
 	releaseId: string
 ): Promise<ReleaseItem[]> {
-	const { data, error } = await client
-		.from('content_release_items')
-		.select('content_type,content_id,content_version')
-		.eq('release_id', releaseId);
+	const fetchReleaseItemsPage = async (offset: number, includeCount = false) => {
+		const { data, error, count } = await client
+			.from('content_release_items')
+			.select(
+				'content_type,content_id,content_version',
+				includeCount ? { count: 'exact' } : undefined
+			)
+			.eq('release_id', releaseId)
+			.order('content_type')
+			.order('content_id')
+			.order('content_version')
+			.range(offset, offset + RELEASE_ITEMS_PAGE_SIZE - 1);
 
-	if (error) {
-		throw new Error(error.message);
+		if (error) {
+			throw new Error(error.message);
+		}
+
+		return { count, rows: (data ?? []) as ReleaseItem[] };
+	};
+
+	const firstPage = await fetchReleaseItemsPage(0, true);
+	const totalCount = firstPage.count ?? firstPage.rows.length;
+	const remainingOffsets = Array.from(
+		{ length: Math.ceil(totalCount / RELEASE_ITEMS_PAGE_SIZE) - 1 },
+		(_, index) => (index + 1) * RELEASE_ITEMS_PAGE_SIZE
+	);
+
+	if (!remainingOffsets.length) {
+		return firstPage.rows;
 	}
 
-	return data ?? [];
+	const remainingPages = await Promise.all(
+		remainingOffsets.map((offset) => fetchReleaseItemsPage(offset))
+	);
+
+	return [firstPage.rows, ...remainingPages.map((page) => page.rows)].flat();
 }
 
 function getItemsByType(items: ReleaseItem[], contentType: string) {
@@ -321,7 +350,7 @@ export async function getLesson(client: SupabaseClient, content: TopicContent, l
 
 	const { data, error } = await client
 		.from('lesson_versions')
-		.select('lesson_id,version,title,summary,body_markdown,skill_ids,estimated_minutes')
+		.select('lesson_id,version,title,summary,body_markdown,render_blocks,skill_ids,estimated_minutes')
 		.eq('lesson_id', lessonId)
 		.eq('version', lessonItem.item_version)
 		.maybeSingle();
@@ -329,6 +358,151 @@ export async function getLesson(client: SupabaseClient, content: TopicContent, l
 	if (error) throw new Error(error.message);
 
 	return requireSingle(data, `lesson ${lessonId}`) as LessonVersion;
+}
+
+type LessonInteractionLink = {
+	lesson_id: string;
+	lesson_version: number;
+	interaction_slug: string;
+	interaction_type: LessonInteraction['interaction_type'];
+	question_id: string;
+	question_version: number;
+	ordering: number;
+};
+
+function lessonInteractionTitle(interactionType: LessonInteraction['interaction_type']) {
+	switch (interactionType) {
+		case 'concept_check':
+			return 'Concept check';
+		case 'scenario_choice':
+			return 'Scenario';
+		case 'mini_practice':
+			return 'Practice';
+		default: {
+			const exhaustive: never = interactionType;
+			return exhaustive;
+		}
+	}
+}
+
+function lessonInteractionSubmissionKey(
+	release: ContentRelease,
+	lesson: LessonVersion,
+	interactionSlug: string
+) {
+	return `lesson-interaction:${release.id}:${lesson.lesson_id}@${lesson.version}:${interactionSlug}`;
+}
+
+export async function getLessonInteractions(
+	client: SupabaseClient,
+	content: TopicContent,
+	lesson: LessonVersion,
+	userId: string
+): Promise<LessonInteraction[]> {
+	const { data: links, error: linksError } = await client
+		.from('lesson_interaction_links')
+		.select(
+			'lesson_id,lesson_version,interaction_slug,interaction_type,question_id,question_version,ordering'
+		)
+		.eq('lesson_id', lesson.lesson_id)
+		.eq('lesson_version', lesson.version)
+		.order('interaction_slug')
+		.order('ordering');
+
+	if (linksError) throw new Error(linksError.message);
+
+	const interactionLinks = (links ?? []) as LessonInteractionLink[];
+	if (!interactionLinks.length) {
+		return [];
+	}
+
+	const questionIds = [...new Set(interactionLinks.map((link) => link.question_id))];
+	const { data: questionRows, error: questionError } = await client
+		.from('quiz_question_versions')
+		.select(
+			'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
+		)
+		.in('question_id', questionIds)
+		.eq('lifecycle_status', 'active');
+
+	if (questionError) throw new Error(questionError.message);
+
+	const releaseQuestionItems = interactionLinks.map((link) => ({
+		content_type: 'quiz_question',
+		content_id: link.question_id,
+		content_version: link.question_version
+	}));
+	const releaseQuestions = filterReleaseVersions(
+		(questionRows ?? []).map((question) => ({
+			question_id: question.question_id,
+			version: question.version,
+			skill_id: question.skill_id,
+			skill_label: question.device,
+			question_purpose: question.question_purpose,
+			response_type: question.response_type,
+			difficulty: question.difficulty,
+			prompt: question.prompt,
+			choices: question.choices,
+			correct_choice_id: question.correct_choice_id,
+			correct_choice_ids: question.correct_choice_ids ?? [],
+			correct_numeric_value: question.correct_numeric_value,
+			correct_numeric_tolerance: question.correct_numeric_tolerance ?? 0,
+			sequence_items: question.sequence_items ?? [],
+			accepted_answers: question.accepted_answers ?? [],
+			explanation: question.explanation
+		})) as Omit<QuizQuestionVersion, 'ordering'>[] | null,
+		releaseQuestionItems,
+		(question) => question.question_id
+	);
+	const questionByKey = new Map(
+		releaseQuestions.map((question) => [
+			versionKey(question.question_id, question.version),
+			question
+		])
+	);
+
+	const { data: attempts, error: attemptsError } = await client
+		.from('lesson_interaction_attempts')
+		.select('interaction_slug')
+		.eq('user_id', userId)
+		.eq('release_id', content.release.id)
+		.eq('lesson_id', lesson.lesson_id)
+		.eq('lesson_version', lesson.version);
+
+	if (attemptsError) throw new Error(attemptsError.message);
+
+	const completedSlugs = new Set((attempts ?? []).map((attempt) => attempt.interaction_slug));
+	const linksBySlug = new Map<string, LessonInteractionLink[]>();
+	for (const link of interactionLinks) {
+		const groupedLinks = linksBySlug.get(link.interaction_slug) ?? [];
+		groupedLinks.push(link);
+		linksBySlug.set(link.interaction_slug, groupedLinks);
+	}
+
+	return Array.from(linksBySlug.entries()).map(([slug, groupedLinks]) => {
+		const firstLink = requireSingle(groupedLinks[0], `lesson interaction ${slug}`);
+		const questions = groupedLinks.toSorted((a, b) => a.ordering - b.ordering).map((link) => {
+			const question = questionByKey.get(versionKey(link.question_id, link.question_version));
+			if (!question) {
+				throw new Error(
+					`Lesson interaction references missing question ${link.question_id}@${link.question_version}.`
+				);
+			}
+
+			return Object.assign({}, question, {
+				ordering: link.ordering
+			});
+		});
+
+		return {
+			slug,
+			interaction_type: firstLink.interaction_type,
+			title: lessonInteractionTitle(firstLink.interaction_type),
+			questions,
+			completed: completedSlugs.has(slug),
+			submissionKey: lessonInteractionSubmissionKey(content.release, lesson, slug)
+		} satisfies LessonInteraction;
+	});
 }
 
 export async function getQuiz(client: SupabaseClient, content: TopicContent, quizId: string) {

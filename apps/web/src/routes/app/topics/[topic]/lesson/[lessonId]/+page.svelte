@@ -1,14 +1,27 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import { getTopicRenderer } from '$lib/features/topic-renderers';
-	import { ContentIssueReportForm } from '$lib/features/learning';
+	import { ContentIssueReportForm, InteractiveLessonRenderer } from '$lib/features/learning';
 	import { Popover } from 'bits-ui';
 	import { Button } from '@learn-anything/ui';
 	import { ArrowLeft, Check, Flag, Lock } from '@lucide/svelte';
+	import { SvelteSet } from 'svelte/reactivity';
+	import type { LessonInteraction } from '$lib/features/learning';
 
 	let { data, form }: PageProps = $props();
 	let topicBaseHref = $derived(`/app/topics/${data.topic.slug}`);
 	let RichTextRenderer = $derived(getTopicRenderer(data.topic.slug).RichTextRenderer);
+	let submittedInteractionKeys = new SvelteSet<string>();
+	let allInteractionsCompleted = $derived(
+		data.lessonInteractions.every(
+			(interaction) =>
+				interaction.completed || submittedInteractionKeys.has(interaction.submissionKey)
+		)
+	);
+
+	function markInteractionCompleted(interaction: LessonInteraction) {
+		submittedInteractionKeys.add(interaction.submissionKey);
+	}
 </script>
 
 <main class="page lesson-page">
@@ -25,7 +38,12 @@
 	{:else}
 		<article class="lesson">
 			<p class="eyebrow">Lesson</p>
-			<RichTextRenderer content={data.lesson.body_markdown} />
+			<InteractiveLessonRenderer
+				blocks={data.lesson.render_blocks}
+				interactions={data.lessonInteractions}
+				oninteractioncompleted={markInteractionCompleted}
+				{RichTextRenderer}
+			/>
 
 			{#if form?.error}
 				<p class="message error">{form.error}</p>
@@ -58,7 +76,7 @@
 				</div>
 
 				<form method="POST" action="?/complete">
-					<Button type="submit">
+					<Button type="submit" disabled={!allInteractionsCompleted}>
 						<Check size={16} strokeWidth={2.5} aria-hidden="true" />
 						{data.itemProgress?.state === 'completed' ? 'Continue to map' : 'Mark complete'}
 					</Button>
@@ -82,10 +100,6 @@
 		padding: 30px;
 	}
 
-	.lesson {
-		font-size: 18px;
-	}
-
 	.locked {
 		align-items: start;
 	}
@@ -95,33 +109,33 @@
 		margin: 0;
 	}
 
-	.lesson :global(h1) {
-		font-size: 2.5em;
+	.lesson :global(h1:not(.inline-interaction *)) {
+		font-size: 2.8125rem;
 		line-height: 1.2;
 		margin: 0 0 4px 0;
 	}
 
-	.lesson :global(h2) {
-		font-size: 1.875em;
+	.lesson :global(h2:not(.inline-interaction *)) {
+		font-size: 2.109375rem;
 		line-height: 1.3;
 		margin: 1em 0 4px 0;
 	}
 
-	.lesson :global(h3) {
-		font-size: 1.5em;
+	.lesson :global(h3:not(.inline-interaction *)) {
+		font-size: 1.6875rem;
 		line-height: 1.3;
 		margin: 1em 0 1px 0;
 	}
 
-	.lesson :global(h4) {
-		font-size: 1.25em;
+	.lesson :global(h4:not(.inline-interaction *)) {
+		font-size: 1.40625rem;
 		line-height: 1.3;
 		margin: 1em 0 1px 0;
 	}
 
-	.lesson :global(p),
-	.lesson :global(li) {
-		font-size: 1em;
+	.lesson :global(p:not(.inline-interaction *)),
+	.lesson :global(li:not(.inline-interaction *)) {
+		font-size: 1.125rem;
 		line-height: 1.5;
 		margin: 1px 0;
 		padding: 3px 2px;
@@ -154,7 +168,9 @@
 		justify-content: center;
 		min-block-size: 2.5rem;
 		min-inline-size: 2.5rem;
-		transition: color 120ms ease-out, border-color 120ms ease-out;
+		transition:
+			color 120ms ease-out,
+			border-color 120ms ease-out;
 	}
 
 	:global(.report-trigger:hover) {

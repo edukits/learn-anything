@@ -1,0 +1,25 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://clarifyst.local/content-schemas/v1/lesson-interaction-link.schema.json",
+	"title": "Lesson interaction link",
+	"type": "object",
+	"required": [
+		"lesson_id",
+		"lesson_version",
+		"interaction_slug",
+		"interaction_type",
+		"question_id",
+		"question_version",
+		"ordering"
+	],
+	"properties": {
+		"lesson_id": { "type": "string", "minLength": 1 },
+		"lesson_version": { "type": "integer", "minimum": 1 },
+		"interaction_slug": { "type": "string", "minLength": 1 },
+		"interaction_type": { "enum": ["concept_check", "scenario_choice", "mini_practice"] },
+		"question_id": { "type": "string", "minLength": 1 },
+		"question_version": { "type": "integer", "minimum": 1 },
+		"ordering": { "type": "integer", "minimum": 1 }
+	},
+	"additionalProperties": false
+}

@@ -33,6 +33,10 @@ skill_slugs:
 ...
 ```
 
+Lesson interaction directives are structural, not prose. Preserve every draft directive exactly,
+including directive name and slug, such as `::concept-check{slug="stable-slug"}`. Do not remove,
+rename, or invent lesson interaction directives while reviewing the lesson text.
+
 For quizzes, return:
 
 ```json

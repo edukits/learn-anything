@@ -9,6 +9,47 @@ async function tempDir() {
 	return mkdtemp(join(tmpdir(), 'content-pipeline-bundle-'));
 }
 
+function conceptCheckQuestion(skillSlug, prompt = 'What should you undo first?') {
+	return {
+		skill_slug: skillSlug,
+		question_purpose: 'recognition',
+		response_type: 'multiple_choice',
+		difficulty: 'easy',
+		prompt,
+		choices: ['Undo addition', 'Multiply first'],
+		correct_index: 0,
+		explanation: 'Use the inverse operation that isolates the variable.'
+	};
+}
+
+function interactiveLesson({
+	title,
+	summary,
+	skillSlug,
+	body = 'Core idea.',
+	interactionSlug = 'core-check'
+}) {
+	return {
+		type: 'lesson',
+		title,
+		summary,
+		estimated_minutes: 5,
+		skill_slugs: [skillSlug],
+		body_markdown: `# ${title}\n\n${body}\n\n::concept-check{slug="${interactionSlug}"}`,
+		render_blocks: [
+			{ type: 'markdown', markdown: `# ${title}\n\n${body}` },
+			{ type: 'interaction', slug: interactionSlug, interaction_type: 'concept_check' }
+		],
+		interactions: [
+			{
+				slug: interactionSlug,
+				type: 'concept_check',
+				questions: [conceptCheckQuestion(skillSlug)]
+			}
+		]
+	};
+}
+
 test('bundles reviewed items into valid v1 artifacts', async () => {
 	const dir = await tempDir();
 	const input = {
@@ -77,12 +118,13 @@ test('bundles reviewed items into valid v1 artifacts', async () => {
 		now: new Date('2026-05-22T12:00:00.000Z'),
 		reviewedItems: [
 			{
-				type: 'lesson',
-				title: 'Use Inverse Operations',
-				summary: 'Undo operations in order.',
-				estimated_minutes: 5,
-				skill_slugs: ['inverse-operations'],
-				body_markdown: '# Use Inverse Operations\n\nUndo addition before multiplication.'
+				...interactiveLesson({
+					title: 'Use Inverse Operations',
+					summary: 'Undo operations in order.',
+					skillSlug: 'inverse-operations',
+					body: 'Undo addition before multiplication.',
+					interactionSlug: 'undo-addition-check'
+				})
 			},
 			{
 				type: 'quiz',
@@ -108,7 +150,7 @@ test('bundles reviewed items into valid v1 artifacts', async () => {
 	assert.equal(run.report.counts.topic_modules, 1);
 	assert.equal(run.report.counts.lessons, 1);
 	assert.equal(run.report.counts.quizzes, 1);
-	assert.equal(run.report.counts.questions, 1);
+	assert.equal(run.report.counts.questions, 2);
 
 	const manifest = JSON.parse(await readFile(join(dir, 'dist', 'manifest.json'), 'utf8'));
 	assert.equal(manifest.subject_area_id, 'subject_math');
@@ -136,6 +178,16 @@ test('bundles reviewed items into valid v1 artifacts', async () => {
 		release.items.some((item) => item.content_type === 'topic_module'),
 		true
 	);
+
+	const lessonInteractionLinks = (await readFile(
+		join(dir, 'dist', 'lesson-interaction-links.jsonl'),
+		'utf8'
+	))
+		.trim()
+		.split('\n')
+		.map((line) => JSON.parse(line));
+	assert.equal(lessonInteractionLinks.length, 1);
+	assert.equal(lessonInteractionLinks[0].interaction_slug, 'undo-addition-check');
 });
 
 test('bundles indexed answer keys using normalized custom choice ids', async () => {
@@ -263,12 +315,13 @@ test('bundles legacy reviewed items with a default module', async () => {
 		now: new Date('2026-05-22T12:00:00.000Z'),
 		reviewedItems: [
 			{
-				type: 'lesson',
-				title: 'Read Ratios',
-				summary: 'Read simple ratios.',
-				estimated_minutes: 5,
-				skill_slugs: ['read-ratios'],
-				body_markdown: '# Read Ratios\n\nA ratio compares amounts.'
+				...interactiveLesson({
+					title: 'Read Ratios',
+					summary: 'Read simple ratios.',
+					skillSlug: 'read-ratios',
+					body: 'A ratio compares amounts.',
+					interactionSlug: 'ratio-check'
+				})
 			}
 		]
 	});

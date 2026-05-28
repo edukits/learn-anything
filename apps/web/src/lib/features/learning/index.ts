@@ -1,6 +1,7 @@
 export { default as ActionSubmitter } from './components/ActionSubmitter.svelte';
 export { default as ContentIssueReportForm } from './components/ContentIssueReportForm.svelte';
 export { default as FocusedQuizLayout } from './components/FocusedQuizLayout.svelte';
+export { default as InteractiveLessonRenderer } from './components/InteractiveLessonRenderer.svelte';
 export { default as MetricGrid } from './components/MetricGrid.svelte';
 export { default as ModuleNumberNav } from './components/ModuleNumberNav.svelte';
 export { default as PageHeader } from './components/PageHeader.svelte';
@@ -12,6 +13,9 @@ export type {
 	LearningPathItem,
 	LearningPathModule,
 	LearningPathItemProgress,
+	LessonInteraction,
+	LessonInteractionType,
+	LessonRenderBlock,
 	LessonVersion,
 	MetricItem,
 	PracticeQuizQuestion,

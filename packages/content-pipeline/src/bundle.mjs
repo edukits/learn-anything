@@ -39,6 +39,14 @@ function normalizeSkills(topicSlug, reviewedItems, syllabus) {
 						? { slug: question.skill_slug, name: question.skill_slug.replaceAll('-', ' ') }
 						: null
 				)
+				.filter(Boolean),
+			...(item.interactions ?? [])
+				.flatMap((interaction) => interaction.questions ?? [])
+				.map((question) =>
+					question.skill_slug
+						? { slug: question.skill_slug, name: question.skill_slug.replaceAll('-', ' ') }
+						: null
+				)
 				.filter(Boolean)
 		];
 		for (const candidate of candidates) {
@@ -161,6 +169,7 @@ function lessonRecord({ item, index, topic, runId, sourceRefs, skillLookup }) {
 		title: one(item.title, item.focus ?? 'Lesson'),
 		summary: one(item.summary, item.goals ?? item.focus ?? 'Lesson summary'),
 		body_markdown: one(item.body_markdown, item.body ?? ''),
+		render_blocks: item.render_blocks ?? [{ type: 'markdown', markdown: one(item.body_markdown, item.body ?? '') }],
 		skill_ids,
 		estimated_minutes: Number.isInteger(item.estimated_minutes) ? item.estimated_minutes : 5,
 		sort_order: index + 1
@@ -249,6 +258,12 @@ function validateReviewedItems(items) {
 		if (item.type === 'lesson' && !item.body_markdown) {
 			throw new Error(`Lesson item ${index + 1} is missing body_markdown.`);
 		}
+		if (item.type === 'lesson' && !(item.render_blocks?.length > 0)) {
+			throw new Error(`Lesson item ${index + 1} is missing render_blocks.`);
+		}
+		if (item.type === 'lesson' && !(item.interactions?.length > 0)) {
+			throw new Error(`Lesson item ${index + 1} is missing inline interactions.`);
+		}
 		if (item.type === 'quiz' && !(item.questions?.length > 0)) {
 			throw new Error(`Quiz item ${index + 1} must contain at least one question.`);
 		}
@@ -280,6 +295,7 @@ export async function bundleRun({
 	const quizzes = [];
 	const questions = [];
 	const links = [];
+	const lessonInteractionLinks = [];
 	const pathItems = [];
 
 	for (const [index, item] of reviewedItems.entries()) {
@@ -300,6 +316,32 @@ export async function bundleRun({
 				ordering: index + 1,
 				required: true
 			});
+			for (const interaction of item.interactions ?? []) {
+				for (const [questionIndex, question] of interaction.questions.entries()) {
+					const record = normalizeQuestion({
+						question,
+						quiz: {
+							slug: `${lesson.slug}-${interaction.slug}`,
+							title: `${lesson.title} ${interaction.slug}`
+						},
+						questionIndex,
+						topic,
+						runId,
+						sourceRefs,
+						skillLookup: skills
+					});
+					questions.push(record);
+					lessonInteractionLinks.push({
+						lesson_id: lesson.id,
+						lesson_version: 1,
+						interaction_slug: interaction.slug,
+						interaction_type: interaction.type,
+						question_id: record.id,
+						question_version: 1,
+						ordering: questionIndex + 1
+					});
+				}
+			}
 			continue;
 		}
 
@@ -396,6 +438,7 @@ export async function bundleRun({
 		quizzes,
 		questions,
 		quiz_question_links: links,
+		lesson_interaction_links: lessonInteractionLinks,
 		learning_paths: [
 			{
 				...versionedBase(learningPathId, runId, sourceRefs),

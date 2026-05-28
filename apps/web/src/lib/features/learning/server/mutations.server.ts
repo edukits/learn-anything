@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
 	ContentRelease,
+	LessonInteraction,
 	LessonVersion,
 	PracticeQuizQuestion,
 	QuizQuestionVersion,
@@ -28,6 +29,16 @@ type SubmitQuizParams = {
 type SubmitQuizResult = {
 	attemptId: string;
 	xpAwarded: number;
+};
+
+type SubmitLessonInteractionParams = {
+	userId: string;
+	topicId: string;
+	release: ContentRelease;
+	lesson: LessonVersion;
+	interaction: LessonInteraction;
+	answers: SubmittedAnswer[];
+	submissionKey: string;
 };
 
 type CompleteReviewSessionParams = {
@@ -122,6 +133,59 @@ export async function submitQuiz(
 	return {
 		attemptId: result.attempt_id,
 		xpAwarded: result.xp_awarded ?? 0
+	};
+}
+
+export async function submitLessonInteraction(
+	client: SupabaseClient,
+	{
+		userId,
+		topicId,
+		release,
+		lesson,
+		interaction,
+		answers,
+		submissionKey
+	}: SubmitLessonInteractionParams
+): Promise<{ attemptId: string }> {
+	if (!submissionKey) {
+		throw new LearnerMutationError('Missing interaction submission key.');
+	}
+
+	let rpcAnswers: RpcAnswer[];
+	try {
+		rpcAnswers = buildValidatedRpcAnswers(interaction.questions, answers, 'lesson interaction', {
+			includeQuestionMetadata: true
+		});
+	} catch (error) {
+		if (error instanceof AnswerValidationError) {
+			throw new LearnerMutationError(error.message);
+		}
+		throw error;
+	}
+
+	const { data, error } = await client.rpc('submit_lesson_interaction_answer', {
+		p_user_id: userId,
+		p_topic_area_id: topicId,
+		p_release_id: release.id,
+		p_lesson_id: lesson.lesson_id,
+		p_lesson_version: lesson.version,
+		p_interaction_slug: interaction.slug,
+		p_answers: rpcAnswers,
+		p_submission_key: submissionKey
+	});
+
+	if (error) {
+		throw new LearnerMutationError(error.message, 500);
+	}
+
+	const [result] = data ?? [];
+	if (!result?.attempt_id) {
+		throw new LearnerMutationError('Lesson interaction submission did not return an attempt.', 500);
+	}
+
+	return {
+		attemptId: result.attempt_id
 	};
 }
 

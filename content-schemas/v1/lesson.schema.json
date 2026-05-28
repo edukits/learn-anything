@@ -3,7 +3,7 @@
 	"$id": "https://clarifyst.local/content-schemas/v1/lesson.schema.json",
 	"title": "Lesson",
 	"type": "object",
-	"required": ["id", "version", "topic_area_id", "slug", "title", "summary", "body_markdown", "skill_ids", "estimated_minutes", "sort_order", "content_run_id", "schema_version", "source_refs"],
+	"required": ["id", "version", "topic_area_id", "slug", "title", "summary", "body_markdown", "render_blocks", "skill_ids", "estimated_minutes", "sort_order", "content_run_id", "schema_version", "source_refs"],
 	"properties": {
 		"id": { "type": "string", "minLength": 1 },
 		"version": { "type": "integer", "minimum": 1 },
@@ -12,6 +12,35 @@
 		"title": { "type": "string", "minLength": 1 },
 		"summary": { "type": "string", "minLength": 1 },
 		"body_markdown": { "type": "string", "minLength": 1 },
+		"render_blocks": {
+			"type": "array",
+			"minItems": 1,
+			"items": {
+				"oneOf": [
+					{
+						"type": "object",
+						"required": ["type", "markdown"],
+						"properties": {
+							"type": { "const": "markdown" },
+							"markdown": { "type": "string", "minLength": 1 }
+						},
+						"additionalProperties": false
+					},
+					{
+						"type": "object",
+						"required": ["type", "slug", "interaction_type"],
+						"properties": {
+							"type": { "const": "interaction" },
+							"slug": { "type": "string", "minLength": 1 },
+							"interaction_type": {
+								"enum": ["concept_check", "scenario_choice", "mini_practice"]
+							}
+						},
+						"additionalProperties": false
+					}
+				]
+			}
+		},
 		"skill_ids": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
 		"estimated_minutes": { "type": "integer", "minimum": 1 },
 		"sort_order": { "type": "integer", "minimum": 1 },

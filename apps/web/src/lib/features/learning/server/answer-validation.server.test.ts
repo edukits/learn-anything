@@ -61,6 +61,25 @@ describe('buildValidatedRpcAnswers', () => {
 		expect(answer.answer_value).toEqual(['second', 'first', 'third']);
 	});
 
+	test('includes question metadata for RPCs that require versioned question joins', () => {
+		const [answer] = buildValidatedRpcAnswers(
+			[buildSequencingQuestion()],
+			[
+				{
+					questionId: 'question_sequence_1',
+					selectedChoiceId: '',
+					answerValue: ['first', 'second', 'third']
+				}
+			],
+			'lesson interaction',
+			{ includeQuestionMetadata: true }
+		);
+
+		expect(answer.question_version).toBe(1);
+		expect(answer.skill_id).toBe('skill_1');
+		expect(answer.device).toBe('Sequencing');
+	});
+
 	test('rejects a sequencing answer that is missing an expected id', () => {
 		expect(() =>
 			buildValidatedRpcAnswers(

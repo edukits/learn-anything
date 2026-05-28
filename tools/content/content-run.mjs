@@ -85,6 +85,16 @@ const lessonSchema = z.object({
 	title: z.string().min(1),
 	summary: z.string().min(1),
 	body_markdown: z.string().min(1),
+	render_blocks: z.array(
+		z.discriminatedUnion('type', [
+			z.object({ type: z.literal('markdown'), markdown: z.string().min(1) }),
+			z.object({
+				type: z.literal('interaction'),
+				slug: z.string().min(1),
+				interaction_type: z.enum(['concept_check', 'scenario_choice', 'mini_practice'])
+			})
+		])
+	).min(1),
 	skill_ids: z.array(z.string().min(1)).min(1),
 	estimated_minutes: z.number().int().positive(),
 	sort_order: z.number().int().positive()
@@ -242,6 +252,16 @@ const quizQuestionLinkSchema = z.object({
 	weight: z.number().positive()
 });
 
+const lessonInteractionLinkSchema = z.object({
+	lesson_id: z.string().min(1),
+	lesson_version: z.number().int().positive(),
+	interaction_slug: z.string().min(1),
+	interaction_type: z.enum(['concept_check', 'scenario_choice', 'mini_practice']),
+	question_id: z.string().min(1),
+	question_version: z.number().int().positive(),
+	ordering: z.number().int().positive()
+});
+
 const learningPathItemSchema = z
 	.object({
 		item_type: z.enum(['lesson', 'quiz']),
@@ -335,6 +355,7 @@ const artifactSchemas = {
 	quizzes: quizSchema,
 	questions: questionSchema,
 	quiz_question_links: quizQuestionLinkSchema,
+	lesson_interaction_links: lessonInteractionLinkSchema,
 	learning_paths: learningPathSchema,
 	releases: releaseSchema,
 	topic_discovery_metadata: topicDiscoverySchema,
@@ -497,6 +518,7 @@ export async function loadAndValidateRun(manifestPath, options = {}) {
 	const quizzes = artifacts.quizzes ?? [];
 	const questions = artifacts.questions ?? [];
 	const links = artifacts.quiz_question_links ?? [];
+	const lessonInteractionLinks = artifacts.lesson_interaction_links ?? [];
 	const learningPaths = artifacts.learning_paths ?? [];
 	const releases = artifacts.releases ?? [];
 	const topicDiscoveryMetadata = artifacts.topic_discovery_metadata ?? [];
@@ -644,6 +666,66 @@ export async function loadAndValidateRun(manifestPath, options = {}) {
 		for (let ordering = 1; ordering <= quiz.question_count; ordering += 1) {
 			if (!orderSet.has(ordering)) {
 				failures.push(`Quiz ${keyFor(quiz)} is missing question ordering ${ordering}`);
+			}
+		}
+	}
+
+	const lessonInteractionOrderBySlug = new Map();
+	const lessonInteractionQuestionCounts = new Map();
+	for (const link of lessonInteractionLinks) {
+		if (!has(lessonMap, link.lesson_id, link.lesson_version)) {
+			failures.push(
+				`Lesson interaction link references missing lesson ${link.lesson_id}@${link.lesson_version}`
+			);
+		}
+		if (!has(questionMap, link.question_id, link.question_version)) {
+			failures.push(
+				`Lesson interaction link references missing question ${link.question_id}@${link.question_version}`
+			);
+		}
+		const key = `${link.lesson_id}@${link.lesson_version}:${link.interaction_slug}`;
+		const orderSet = lessonInteractionOrderBySlug.get(key) ?? new Set();
+		if (orderSet.has(link.ordering)) {
+			failures.push(`Lesson interaction ${key} has duplicate ordering ${link.ordering}`);
+		}
+		orderSet.add(link.ordering);
+		lessonInteractionOrderBySlug.set(key, orderSet);
+		lessonInteractionQuestionCounts.set(key, (lessonInteractionQuestionCounts.get(key) ?? 0) + 1);
+	}
+
+	for (const lesson of lessons) {
+		const renderedInteractionBlocks = lesson.render_blocks.filter((block) => block.type === 'interaction');
+		if (!renderedInteractionBlocks.length) {
+			failures.push(`Lesson ${keyFor(lesson)} has no interaction render blocks`);
+		}
+		const seenInteractionSlugs = new Set();
+		for (const block of renderedInteractionBlocks) {
+			const interactionKey = `${lesson.id}@${lesson.version}:${block.slug}`;
+			if (seenInteractionSlugs.has(block.slug)) {
+				failures.push(`Lesson ${keyFor(lesson)} repeats interaction slug ${block.slug}`);
+			}
+			seenInteractionSlugs.add(block.slug);
+			if (!lessonInteractionQuestionCounts.has(interactionKey)) {
+				failures.push(`Lesson ${keyFor(lesson)} interaction ${block.slug} has no link rows`);
+			}
+			const count = lessonInteractionQuestionCounts.get(interactionKey) ?? 0;
+			if (
+				(block.interaction_type === 'concept_check' || block.interaction_type === 'scenario_choice') &&
+				count !== 1
+			) {
+				failures.push(`Lesson interaction ${interactionKey} requires 1 linked question`);
+			}
+			if (block.interaction_type === 'mini_practice' && (count < 2 || count > 3)) {
+				failures.push(`Lesson interaction ${interactionKey} requires 2-3 linked questions`);
+			}
+		}
+		for (const link of lessonInteractionLinks.filter(
+			(candidate) => candidate.lesson_id === lesson.id && candidate.lesson_version === lesson.version
+		)) {
+			if (!seenInteractionSlugs.has(link.interaction_slug)) {
+				failures.push(
+					`Lesson interaction link ${lesson.id}@${lesson.version}:${link.interaction_slug} is not present in render_blocks`
+				);
 			}
 		}
 	}
@@ -807,6 +889,7 @@ export async function loadAndValidateRun(manifestPath, options = {}) {
 	checks.push('Stable ids and versions are unique');
 	checks.push('Question answer keys point to declared choices');
 	checks.push('Quiz-to-question references are complete and ordered');
+	checks.push('Lesson interaction references are complete and ordered');
 	checks.push(
 		'Module records and module-linked path items are consistent when modules are present'
 	);
