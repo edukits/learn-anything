@@ -22,6 +22,9 @@
 	let RewardIcon = $derived(getRewardKindIcon(reward.rewardKind));
 	let rewardKindLabel = $derived(getRewardKindLabel(reward.rewardKind));
 	let nextRewardKey = $derived(reward.equipped ? null : reward.rewardKey);
+
+	const hexId = Math.random().toString(36).slice(2, 8);
+	const HEX = 'M16.4 3.5Q19 2 21.6 3.5L33.72 10.5Q36.32 12 36.32 15L36.32 29Q36.32 32 33.72 33.5L21.6 40.5Q19 42 16.4 40.5L4.28 33.5Q1.68 32 1.68 29L1.68 15Q1.68 12 4.28 10.5Z';
 </script>
 
 <article class={['reward-card', className]} class:equipped={reward.equipped}>
@@ -30,6 +33,28 @@
 		class:is-badge={reward.rewardKind === 'badge'}
 		class:is-title={reward.rewardKind === 'title'}
 	>
+		<svg class="hex-bg" viewBox="0 0 38 44" aria-hidden="true">
+			<defs>
+				<linearGradient id="hfill-{hexId}" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="var(--hex-c1)" />
+					<stop offset="50%" stop-color="var(--hex-c2)" />
+					<stop offset="100%" stop-color="var(--hex-c3)" />
+				</linearGradient>
+				<linearGradient id="hshade-{hexId}" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="white" stop-opacity="0.28" />
+					<stop offset="44%" stop-color="white" stop-opacity="0.06" />
+					<stop offset="50%" stop-color="white" stop-opacity="0" />
+					<stop offset="100%" stop-color="black" stop-opacity="0.1" />
+				</linearGradient>
+				<linearGradient id="hinset-{hexId}" x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color="white" stop-opacity="0.5" />
+					<stop offset="35%" stop-color="white" stop-opacity="0" />
+				</linearGradient>
+			</defs>
+			<path d={HEX} fill="url(#hfill-{hexId})" stroke="var(--hex-stroke)" stroke-width="1" />
+			<path d={HEX} fill="url(#hshade-{hexId})" />
+			<path d={HEX} fill="url(#hinset-{hexId})" />
+		</svg>
 		<RewardIcon size={22} />
 	</div>
 	<div class="reward-details">
@@ -83,49 +108,41 @@
 
 	.reward-icon {
 		align-items: center;
-		border-radius: var(--radius-md);
 		color: #fff;
 		display: grid;
-		block-size: 40px;
-		inline-size: 40px;
+		block-size: 50px;
+		inline-size: 100%;
 		justify-items: center;
 		position: relative;
 	}
 
-	.reward-icon::after {
-		background: linear-gradient(
-			to bottom,
-			hsl(0 0% 100% / 0.28) 0%,
-			hsl(0 0% 100% / 0.06) 44%,
-			transparent 50%,
-			hsl(0 0% 0% / 0.1) 100%
-		);
-		border-radius: inherit;
-		content: '';
+	.hex-bg {
+		block-size: 100%;
+		inline-size: 100%;
 		inset: 0;
-		pointer-events: none;
 		position: absolute;
 	}
 
+	.reward-icon :global(svg ~ *) {
+		position: relative;
+	}
+
 	.reward-icon.is-badge {
-		background: linear-gradient(
-			to bottom,
-			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) + 10%)),
-			hsl(var(--color-accent-h) var(--color-accent-s) var(--color-accent-l)),
-			hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 14%))
-		);
-		border: 1px solid hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 22%));
-		box-shadow:
-			inset 0 1px 2px hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) + 24%) / 0.5),
-			0 1px 4px hsl(var(--color-accent-h) var(--color-accent-s) var(--color-accent-l) / 0.3);
+		--hex-c1: hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) + 10%));
+		--hex-c2: hsl(var(--color-accent-h) var(--color-accent-s) var(--color-accent-l));
+		--hex-c3: hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 14%));
+		--hex-stroke: hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 22%));
+		filter:
+			drop-shadow(0 1px 4px hsl(var(--color-accent-h) var(--color-accent-s) var(--color-accent-l) / 0.3));
 	}
 
 	.reward-icon.is-title {
-		background: linear-gradient(to bottom, hsl(280 80% 62%), hsl(280 80% 50%), hsl(280 80% 38%));
-		border: 1px solid hsl(280 80% 30%);
-		box-shadow:
-			inset 0 1px 2px hsl(280 80% 72% / 0.5),
-			0 1px 4px hsl(280 80% 50% / 0.3);
+		--hex-c1: hsl(280 80% 62%);
+		--hex-c2: hsl(280 80% 50%);
+		--hex-c3: hsl(280 80% 38%);
+		--hex-stroke: hsl(280 80% 30%);
+		filter:
+			drop-shadow(0 1px 4px hsl(280 80% 50% / 0.3));
 	}
 
 	.reward-details {
