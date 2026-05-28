@@ -154,11 +154,9 @@ export async function submitLessonInteraction(
 
 	let rpcAnswers: RpcAnswer[];
 	try {
-		rpcAnswers = buildValidatedRpcAnswers(
-			interaction.questions,
-			answers,
-			'lesson interaction'
-		);
+		rpcAnswers = buildValidatedRpcAnswers(interaction.questions, answers, 'lesson interaction', {
+			includeQuestionMetadata: true
+		});
 	} catch (error) {
 		if (error instanceof AnswerValidationError) {
 			throw new LearnerMutationError(error.message);

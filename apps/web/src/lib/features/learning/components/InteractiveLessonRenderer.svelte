@@ -10,6 +10,7 @@
 	type InteractiveLessonRendererProps = {
 		blocks: LessonRenderBlock[];
 		interactions: LessonInteraction[];
+		oninteractioncompleted?: (slug: string) => void;
 		RichTextRenderer: Component<RichTextRendererProps>;
 	};
 
@@ -19,7 +20,12 @@
 				interaction: LessonInteraction | undefined;
 		  });
 
-	let { blocks, interactions, RichTextRenderer }: InteractiveLessonRendererProps = $props();
+	let {
+		blocks,
+		interactions,
+		oninteractioncompleted,
+		RichTextRenderer
+	}: InteractiveLessonRendererProps = $props();
 
 	let interactionBySlug = $derived(
 		new Map(interactions.map((interaction) => [interaction.slug, interaction]))
@@ -38,7 +44,10 @@
 		{#if block.type === 'markdown'}
 			<RichTextRenderer content={block.markdown} />
 		{:else if block.interaction}
-			<InlineLessonInteraction interaction={block.interaction} />
+			<InlineLessonInteraction
+				interaction={block.interaction}
+				oncompleted={oninteractioncompleted}
+			/>
 		{/if}
 	{/each}
 </div>

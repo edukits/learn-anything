@@ -3,30 +3,53 @@
 	import { buildLearningQuizQuestions, buildSubmittedAnswersPayload } from '../quiz';
 	import { Quiz } from '@learn-anything/ui';
 	import type { QuizQuestionResult } from '@learn-anything/ui';
+	import type { ActionResult } from '@sveltejs/kit';
 	import { CheckCircle } from '@lucide/svelte';
 	import type { LessonInteraction } from '../types';
 
 	type InlineLessonInteractionProps = {
 		interaction: LessonInteraction;
+		oncompleted?: (slug: string) => void;
 	};
 
-	let { interaction }: InlineLessonInteractionProps = $props();
+	let { interaction, oncompleted }: InlineLessonInteractionProps = $props();
 
 	let answersPayload = $state('[]');
+	let error = $state('');
+	let locallyCompleted = $state(false);
 	let submitKey = $state(0);
 	let questionIndex = $state(0);
+	let completed = $derived(interaction.completed || locallyCompleted);
 	let quizQuestions = $derived(
 		buildLearningQuizQuestions(interaction.questions, { instantFeedback: true })
 	);
 
 	function completeInteraction(results: QuizQuestionResult[]) {
+		error = '';
 		answersPayload = buildSubmittedAnswersPayload(interaction.questions, results);
 		submitKey += 1;
 	}
+
+	function handleSubmitResult(result: ActionResult) {
+		if (result.type === 'success') {
+			locallyCompleted = true;
+			error = '';
+			oncompleted?.(interaction.slug);
+			return;
+		}
+
+		if (result.type === 'failure') {
+			error =
+				typeof result.data?.error === 'string' ? result.data.error : 'Unable to submit this check.';
+			return;
+		}
+
+		error = 'Unable to submit this check.';
+	}
 </script>
 
-<section class="inline-interaction" data-completed={interaction.completed}>
-	{#if interaction.completed}
+<section class="inline-interaction" data-completed={completed}>
+	{#if completed}
 		<div class="completed">
 			<CheckCircle size={20} strokeWidth={2.4} aria-hidden="true" />
 			<p>{interaction.title} completed</p>
@@ -42,14 +65,20 @@
 			oncomplete={completeInteraction}
 		/>
 
+		{#if error}
+			<p class="submit-error">{error}</p>
+		{/if}
+
 		<ActionSubmitter
 			action="?/submitInteraction"
+			background
 			{submitKey}
 			fields={{
 				interactionSlug: interaction.slug,
 				answers: answersPayload,
 				submissionKey: interaction.submissionKey
 			}}
+			onresult={handleSubmitResult}
 		/>
 	{/if}
 </section>
@@ -99,6 +128,13 @@
 
 	.completed p {
 		color: var(--color-text);
+		font-size: 0.95rem;
+		font-weight: 700;
+		margin: 0;
+	}
+
+	.submit-error {
+		color: var(--color-danger, #b91c1c);
 		font-size: 0.95rem;
 		font-weight: 700;
 		margin: 0;

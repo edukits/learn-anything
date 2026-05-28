@@ -5,10 +5,21 @@
 	import { Popover } from 'bits-ui';
 	import { Button } from '@learn-anything/ui';
 	import { ArrowLeft, Check, Flag, Lock } from '@lucide/svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	let { data, form }: PageProps = $props();
 	let topicBaseHref = $derived(`/app/topics/${data.topic.slug}`);
 	let RichTextRenderer = $derived(getTopicRenderer(data.topic.slug).RichTextRenderer);
+	let submittedInteractionSlugs = new SvelteSet<string>();
+	let allInteractionsCompleted = $derived(
+		data.lessonInteractions.every(
+			(interaction) => interaction.completed || submittedInteractionSlugs.has(interaction.slug)
+		)
+	);
+
+	function markInteractionCompleted(slug: string) {
+		submittedInteractionSlugs.add(slug);
+	}
 </script>
 
 <main class="page lesson-page">
@@ -28,6 +39,7 @@
 			<InteractiveLessonRenderer
 				blocks={data.lesson.render_blocks}
 				interactions={data.lessonInteractions}
+				oninteractioncompleted={markInteractionCompleted}
 				{RichTextRenderer}
 			/>
 
@@ -62,10 +74,7 @@
 				</div>
 
 				<form method="POST" action="?/complete">
-					<Button
-						type="submit"
-						disabled={data.lessonInteractions.some((interaction) => !interaction.completed)}
-					>
+					<Button type="submit" disabled={!allInteractionsCompleted}>
 						<Check size={16} strokeWidth={2.5} aria-hidden="true" />
 						{data.itemProgress?.state === 'completed' ? 'Continue to map' : 'Mark complete'}
 					</Button>
