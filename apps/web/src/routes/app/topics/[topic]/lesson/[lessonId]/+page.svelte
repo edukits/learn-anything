@@ -133,6 +133,11 @@
 		margin: 1em 0 1px 0;
 	}
 
+	.lesson :global(.rich-text:not(.inline-interaction *)) {
+		font-size: 1.125rem;
+		line-height: 1.5;
+	}
+
 	.lesson :global(p:not(.inline-interaction *)),
 	.lesson :global(li:not(.inline-interaction *)) {
 		font-size: 1.125rem;
