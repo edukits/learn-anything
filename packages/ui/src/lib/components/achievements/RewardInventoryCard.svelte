@@ -69,9 +69,9 @@
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
-		display: grid;
+		display: flex;
+		flex-direction: column;
 		gap: 12px;
-		grid-template-columns: auto 1fr auto auto;
 		padding: 14px 16px;
 		transition: border-color 0.15s;
 	}
@@ -129,7 +129,9 @@
 	}
 
 	.reward-details {
-		display: grid;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 		gap: 2px;
 		min-inline-size: 0;
 	}
