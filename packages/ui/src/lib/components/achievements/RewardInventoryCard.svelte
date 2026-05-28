@@ -51,6 +51,11 @@
 					<stop offset="35%" stop-color="white" stop-opacity="0" />
 				</linearGradient>
 			</defs>
+			<path
+				class="hex-outline"
+				d={HEX}
+				transform="translate(19 22) scale(1.12) translate(-19 -22)"
+			/>
 			<path d={HEX} fill="url(#hfill-{hexId})" stroke="var(--hex-stroke)" stroke-width="1" />
 			<path d={HEX} fill="url(#hshade-{hexId})" />
 			<path d={HEX} fill="url(#hinset-{hexId})" />
@@ -121,6 +126,13 @@
 		inline-size: 100%;
 		inset: 0;
 		position: absolute;
+		overflow: visible;
+	}
+
+	.hex-outline {
+		fill: none;
+		stroke: color-mix(in srgb, var(--hex-c1), white 55%);
+		stroke-width: 1.4;
 	}
 
 	.reward-icon :global(svg ~ *) {
