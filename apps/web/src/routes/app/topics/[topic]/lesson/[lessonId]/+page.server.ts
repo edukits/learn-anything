@@ -20,9 +20,7 @@ export const load: PageServerLoad = async ({ locals, parent, params }) => {
 		content.release.id,
 		content.pathItems
 	);
-	const itemProgress = pathProgress.find(
-		(item) => item.item_type === 'lesson' && item.item_id === params.lessonId
-	);
+	const itemProgress = findLessonPathItemProgress(pathProgress, params.lessonId);
 	if (!itemProgress) {
 		kitError(404, 'Lesson not found in the current topic path.');
 	}
@@ -51,9 +49,7 @@ export const actions: Actions = {
 			content.release.id,
 			content.pathItems
 		);
-		const itemProgress = pathProgress.find(
-			(item) => item.item_type === 'lesson' && item.item_id === params.lessonId
-		);
+		const itemProgress = findLessonPathItemProgress(pathProgress, params.lessonId);
 		if (!itemProgress) {
 			kitError(404, 'Lesson not found in the current topic path.');
 		}
@@ -62,7 +58,12 @@ export const actions: Actions = {
 		}
 
 		const lesson = await getLesson(locals.supabase, content, params.lessonId);
-		const lessonInteractions = await getLessonInteractions(locals.supabase, content, lesson, user.id);
+		const lessonInteractions = await getLessonInteractions(
+			locals.supabase,
+			content,
+			lesson,
+			user.id
+		);
 		const incompleteInteraction = lessonInteractions.find((interaction) => !interaction.completed);
 		if (incompleteInteraction) {
 			return fail(400, {
@@ -88,6 +89,22 @@ export const actions: Actions = {
 	},
 	submitInteraction: async ({ request, locals, params }) => {
 		const { user, content } = await requireProtectedTopic(locals, params.topic);
+		const pathProgress = await getPathItemProgress(
+			locals.supabase,
+			user.id,
+			content.release.id,
+			content.pathItems
+		);
+		const itemProgress = findLessonPathItemProgress(pathProgress, params.lessonId);
+		if (!itemProgress) {
+			kitError(404, 'Lesson not found in the current topic path.');
+		}
+		if (itemProgress.state === 'locked') {
+			return fail(403, {
+				error: 'Complete the previous path item before submitting lesson checks.'
+			});
+		}
+
 		const formData = await request.formData();
 		const interactionSlug = String(formData.get('interactionSlug') ?? '');
 		const submission = parseSubmittedAnswers(formData);
@@ -151,3 +168,9 @@ export const actions: Actions = {
 		return { issueReported: true };
 	}
 };
+
+type LessonPathProgress = Awaited<ReturnType<typeof getPathItemProgress>>;
+
+function findLessonPathItemProgress(pathProgress: LessonPathProgress, lessonId: string) {
+	return pathProgress.find((item) => item.item_type === 'lesson' && item.item_id === lessonId);
+}
