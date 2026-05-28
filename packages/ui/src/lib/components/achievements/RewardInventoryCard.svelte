@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { Sparkle } from '@lucide/svelte';
 	import Button from '../Button.svelte';
 	import { formatUiDate } from './format';
 	import { getAchievementCategoryIcon, getRewardKindLabel } from './metadata';
@@ -22,18 +23,22 @@
 	let RewardIcon = $derived(getAchievementCategoryIcon(reward.achievementCategory));
 	let rewardKindLabel = $derived(getRewardKindLabel(reward.rewardKind));
 	let nextRewardKey = $derived(reward.equipped ? null : reward.rewardKey);
+	let showEquip = $derived(reward.rewardKind === 'title' && (Boolean(action) || Boolean(onEquip)));
 
 	const hexId = Math.random().toString(36).slice(2, 8);
-	const HEX = 'M16.4 3.5Q19 2 21.6 3.5L33.72 10.5Q36.32 12 36.32 15L36.32 29Q36.32 32 33.72 33.5L21.6 40.5Q19 42 16.4 40.5L4.28 33.5Q1.68 32 1.68 29L1.68 15Q1.68 12 4.28 10.5Z';
+	const HEX =
+		'M17 4.68L27 4.68Q32 4.68 34.5 9.01L39.5 17.67Q42 22 39.5 26.33L34.5 34.99Q32 39.32 27 39.32L17 39.32Q12 39.32 9.5 34.99L4.5 26.33Q2 22 4.5 17.67L9.5 9.01Q12 4.68 17 4.68Z';
 </script>
 
-<article class={['reward-card', className]} class:equipped={reward.equipped}>
-	<div
-		class="reward-icon"
-		class:is-badge={reward.rewardKind === 'badge'}
-		class:is-title={reward.rewardKind === 'title'}
-	>
-		<svg class="hex-bg" viewBox="0 0 38 44" aria-hidden="true">
+<article
+	class={['reward-card', `kind-${reward.rewardKind}`, className]}
+	class:equipped={reward.equipped}
+>
+	<div class="reward-icon">
+		<span class="sparkle sparkle-1" aria-hidden="true"><Sparkle size={14} fill="currentColor" stroke="none" /></span>
+		<span class="sparkle sparkle-2" aria-hidden="true"><Sparkle size={10} fill="currentColor" stroke="none" /></span>
+		<span class="sparkle sparkle-3" aria-hidden="true"><Sparkle size={12} fill="currentColor" stroke="none" /></span>
+		<svg class="hex-bg" viewBox="0 0 44 44" aria-hidden="true">
 			<defs>
 				<linearGradient id="hfill-{hexId}" x1="0" y1="0" x2="0" y2="1">
 					<stop offset="0%" stop-color="var(--hex-c1)" />
@@ -41,39 +46,42 @@
 					<stop offset="100%" stop-color="var(--hex-c3)" />
 				</linearGradient>
 				<linearGradient id="hshade-{hexId}" x1="0" y1="0" x2="0" y2="1">
-					<stop offset="0%" stop-color="white" stop-opacity="0.28" />
-					<stop offset="44%" stop-color="white" stop-opacity="0.06" />
+					<stop offset="0%" stop-color="white" stop-opacity="0.32" />
+					<stop offset="44%" stop-color="white" stop-opacity="0.07" />
 					<stop offset="50%" stop-color="white" stop-opacity="0" />
-					<stop offset="100%" stop-color="black" stop-opacity="0.1" />
+					<stop offset="100%" stop-color="black" stop-opacity="0.12" />
 				</linearGradient>
 				<linearGradient id="hinset-{hexId}" x1="0" y1="0" x2="0" y2="1">
-					<stop offset="0%" stop-color="white" stop-opacity="0.5" />
+					<stop offset="0%" stop-color="white" stop-opacity="0.55" />
 					<stop offset="35%" stop-color="white" stop-opacity="0" />
 				</linearGradient>
 			</defs>
 			<path
 				class="hex-outline"
 				d={HEX}
-				transform="translate(19 22) scale(1.12) translate(-19 -22)"
+				transform="translate(22 22) scale(1.1) translate(-22 -22)"
 			/>
 			<path d={HEX} fill="url(#hfill-{hexId})" stroke="var(--hex-stroke)" stroke-width="1" />
 			<path d={HEX} fill="url(#hshade-{hexId})" />
 			<path d={HEX} fill="url(#hinset-{hexId})" />
 		</svg>
-		<RewardIcon size={22} />
+		<RewardIcon size={26} />
 	</div>
-	<div class="reward-details">
-		<strong>{reward.rewardLabel}</strong>
-		<span class="reward-meta">
-			{rewardKindLabel}
-			{#if reward.equipped}
-				<span class="equipped-pill">Equipped</span>
-			{/if}
-		</span>
-	</div>
-	<time class="reward-date">{formatDate(reward.earnedAt)}</time>
-	<div class="reward-action">
-		{#if reward.rewardKind === 'title'}
+
+	<strong class="reward-name">{reward.rewardLabel}</strong>
+
+	<span class="reward-pill">
+		{rewardKindLabel}
+		{#if reward.equipped}
+			<span class="equipped-dot" aria-hidden="true"></span>
+			Equipped
+		{/if}
+	</span>
+
+	<time class="reward-date">Earned {formatDate(reward.earnedAt)}</time>
+
+	{#if showEquip}
+		<div class="reward-action">
 			{#if action}
 				{@render action(reward, nextRewardKey)}
 			{:else if onEquip}
@@ -84,39 +92,47 @@
 					label={reward.equipped ? 'Unequip' : 'Equip'}
 					onclick={() => onEquip?.(reward, nextRewardKey)}
 				/>
-			{:else}
-				<span class="collection-note">Title reward</span>
 			{/if}
-		{:else}
-			<span class="collection-note">Collection only</span>
-		{/if}
-	</div>
+		</div>
+	{/if}
 </article>
 
 <style>
 	.reward-card {
+		--tint-h: var(--color-accent-h);
+		--tint-s: var(--color-accent-s);
+		--tint-l: var(--color-accent-l);
 		align-items: center;
-		background: var(--color-surface);
+		background:
+			radial-gradient(
+				120% 80% at 50% -10%,
+				hsl(var(--tint-h) var(--tint-s) var(--tint-l) / 0.1),
+				transparent 60%
+			),
+			var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
+		border-radius: var(--radius-lg);
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
-		padding: 14px 16px;
-		transition: border-color 0.15s;
+		gap: 10px;
+		padding: 22px 18px 20px;
+		text-align: center;
+		transition:
+			border-color 0.15s,
+			box-shadow 0.15s;
 	}
 
 	.reward-card.equipped {
-		border-color: var(--color-star);
-		box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-star), transparent 70%);
+		border-color: hsl(var(--tint-h) var(--tint-s) var(--tint-l) / 0.45);
+		box-shadow: 0 0 0 1px hsl(var(--tint-h) var(--tint-s) var(--tint-l) / 0.2);
 	}
 
 	.reward-icon {
 		align-items: center;
+		block-size: 64px;
 		color: #fff;
 		display: grid;
-		block-size: 50px;
-		inline-size: 100%;
+		inline-size: 64px;
 		justify-items: center;
 		position: relative;
 	}
@@ -125,99 +141,134 @@
 		block-size: 100%;
 		inline-size: 100%;
 		inset: 0;
-		position: absolute;
 		overflow: visible;
+		position: absolute;
 	}
 
 	.hex-outline {
 		fill: none;
-		stroke: color-mix(in srgb, var(--hex-c1), white 55%);
-		stroke-width: 1.4;
+		stroke: hsl(var(--tint-h) var(--tint-s) calc(var(--tint-l) + 26%) / 0.6);
+		stroke-width: 1.2;
 	}
 
-	.reward-icon :global(svg ~ *) {
+	.reward-icon :global(svg ~ svg) {
 		position: relative;
 	}
 
-	.reward-icon.is-badge {
+	.sparkle {
+		color: hsl(var(--tint-h) var(--tint-s) calc(var(--tint-l) + 8%) / 0.55);
+		position: absolute;
+		z-index: 1;
+		animation: sparkle 2200ms ease-in-out infinite;
+	}
+
+	.sparkle :global(svg) {
+		fill: currentColor;
+		stroke: none;
+	}
+
+	.sparkle-1 {
+		inset-block-start: -4px;
+		inset-inline-end: -10px;
+	}
+
+	.sparkle-2 {
+		inset-block-end: -2px;
+		inset-inline-start: -10px;
+		animation-delay: 500ms;
+	}
+
+	.sparkle-3 {
+		inset-block-start: 24px;
+		inset-inline-end: -14px;
+		animation-delay: 1000ms;
+	}
+
+	.reward-card.kind-badge {
+		--tint-h: var(--color-accent-h);
+		--tint-s: var(--color-accent-s);
+		--tint-l: var(--color-accent-l);
+	}
+
+	.reward-card.kind-badge .reward-icon {
 		--hex-c1: hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) + 10%));
 		--hex-c2: hsl(var(--color-accent-h) var(--color-accent-s) var(--color-accent-l));
 		--hex-c3: hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 14%));
 		--hex-stroke: hsl(var(--color-accent-h) var(--color-accent-s) calc(var(--color-accent-l) - 22%));
-		filter:
-			drop-shadow(0 1px 4px hsl(var(--color-accent-h) var(--color-accent-s) var(--color-accent-l) / 0.3));
+		filter: drop-shadow(
+			0 3px 8px hsl(var(--color-accent-h) var(--color-accent-s) var(--color-accent-l) / 0.32)
+		);
 	}
 
-	.reward-icon.is-title {
+	.reward-card.kind-title {
+		--tint-h: 280;
+		--tint-s: 80%;
+		--tint-l: 50%;
+	}
+
+	.reward-card.kind-title .reward-icon {
 		--hex-c1: hsl(280 80% 62%);
 		--hex-c2: hsl(280 80% 50%);
 		--hex-c3: hsl(280 80% 38%);
 		--hex-stroke: hsl(280 80% 30%);
-		filter:
-			drop-shadow(0 1px 4px hsl(280 80% 50% / 0.3));
+		filter: drop-shadow(0 3px 8px hsl(280 80% 50% / 0.32));
 	}
 
-	.reward-details {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 2px;
-		min-inline-size: 0;
-	}
-
-	.reward-details strong {
-		font-size: 0.94rem;
-	}
-
-	.reward-meta {
-		align-items: center;
-		color: var(--color-text-muted);
-		display: flex;
-		font-size: 0.8rem;
-		font-weight: 600;
-		gap: 6px;
-	}
-
-	.equipped-pill {
-		background: color-mix(in srgb, var(--color-star), transparent 85%);
-		border-radius: 999px;
-		color: hsl(var(--color-star-h) var(--color-star-s) 38%);
-		font-size: 0.7rem;
+	.reward-name {
+		font-size: 1.05rem;
 		font-weight: 750;
-		padding: 2px 8px;
-		text-transform: uppercase;
+		letter-spacing: -0.01em;
+		line-height: 1.2;
+	}
+
+	.reward-pill {
+		align-items: center;
+		background: hsl(var(--tint-h) var(--tint-s) var(--tint-l) / 0.12);
+		border: 1px solid hsl(var(--tint-h) var(--tint-s) var(--tint-l) / 0.22);
+		border-radius: 999px;
+		color: hsl(var(--tint-h) var(--tint-s) calc(var(--tint-l) - 8%));
+		display: inline-flex;
+		font-size: 0.78rem;
+		font-weight: 700;
+		gap: 6px;
+		padding: 3px 12px;
+	}
+
+	.equipped-dot {
+		background: currentColor;
+		block-size: 5px;
+		border-radius: 50%;
+		inline-size: 5px;
 	}
 
 	.reward-date {
 		color: var(--color-text-muted);
-		font-size: 0.78rem;
-		white-space: nowrap;
+		font-size: 0.82rem;
 	}
 
 	.reward-action {
-		justify-self: end;
+		margin-block-start: 4px;
 	}
 
 	.reward-action :global(form) {
 		margin: 0;
 	}
 
-	.collection-note {
-		color: var(--color-text-muted);
-		font-size: 0.76rem;
-		font-weight: 700;
-		white-space: nowrap;
+	@media (prefers-reduced-motion: reduce) {
+		.sparkle {
+			animation: none;
+		}
 	}
 
-	@media (max-width: 520px) {
-		.reward-card {
-			grid-template-columns: auto 1fr;
+	@keyframes sparkle {
+		0%,
+		100% {
+			opacity: 0.5;
+			transform: scale(0.85);
 		}
-
-		.reward-date,
-		.reward-action {
-			grid-column: 2;
-			justify-self: start;
+		50% {
+			opacity: 1;
+			transform: scale(1.1);
 		}
 	}
 </style>
