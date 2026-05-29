@@ -667,6 +667,20 @@ export function getActiveQuizQuestions(
 	return getQuizQuestionsByLifecycle(client, quiz, 'active');
 }
 
+export function toPracticeQuizQuestion({
+	correct_choice_id: _correctChoiceId,
+	correct_choice_ids: _correctChoiceIds,
+	correct_numeric_value: _correctNumericValue,
+	correct_numeric_tolerance: _correctNumericTolerance,
+	accepted_answers: _acceptedAnswers,
+	math_match_mode: _mathMatchMode,
+	accepted_math_answers: _acceptedMathAnswers,
+	explanation: _explanation,
+	...question
+}: QuizQuestionVersion): PracticeQuizQuestion {
+	return question;
+}
+
 export async function getActiveReleaseQuestions(
 	client: SupabaseClient,
 	content: TopicContent
@@ -728,18 +742,5 @@ export async function getPracticeQuizQuestions(
 	client: SupabaseClient,
 	quiz: QuizVersion
 ): Promise<PracticeQuizQuestion[]> {
-	return (await getActiveQuizQuestions(client, quiz)).map(
-		({
-			correct_choice_id: _correctChoiceId,
-			correct_choice_ids: _correctChoiceIds,
-			correct_numeric_value: _correctNumericValue,
-			correct_numeric_tolerance: _correctNumericTolerance,
-			accepted_answers: _acceptedAnswers,
-			math_template: _mathTemplate,
-			math_match_mode: _mathMatchMode,
-			accepted_math_answers: _acceptedMathAnswers,
-			explanation: _explanation,
-			...question
-		}) => question
-	);
+	return (await getActiveQuizQuestions(client, quiz)).map(toPracticeQuizQuestion);
 }

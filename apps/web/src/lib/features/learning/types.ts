@@ -177,7 +177,6 @@ export type PracticeQuizQuestion = Omit<
 	| 'correct_numeric_value'
 	| 'correct_numeric_tolerance'
 	| 'accepted_answers'
-	| 'math_template'
 	| 'math_match_mode'
 	| 'accepted_math_answers'
 	| 'explanation'
