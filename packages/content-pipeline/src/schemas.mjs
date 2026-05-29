@@ -62,6 +62,27 @@ const answerExplanationMarkdownSchema = z
 	.string()
 	.min(1)
 	.describe('Answer explanation Markdown rendered after submission. Supports LaTeX math.');
+const choiceOrderStrategySchema = z.enum(['shuffle', 'fixed']);
+const mathMatchModeSchema = z.enum(['exact', 'normalized']);
+
+const textChoiceAuthoringSchema = z.union([
+	renderedMarkdownSchema,
+	z
+		.object({
+			id: z.string().min(1).optional(),
+			label: renderedMarkdownSchema
+		})
+		.strict()
+]);
+
+const imageChoiceAuthoringSchema = z
+	.object({
+		id: z.string().min(1).optional(),
+		label: renderedMarkdownSchema.optional(),
+		image_src: z.string().min(1),
+		image_alt: z.string().min(1)
+	})
+	.strict();
 
 const numericAnswerSchema = z
 	.object({
@@ -69,6 +90,28 @@ const numericAnswerSchema = z
 		tolerance: z.number().nonnegative().default(0)
 	})
 	.strict();
+
+const mathAcceptedAnswerSchema = z
+	.object({
+		latex: z.string().min(1).optional(),
+		prompts: z
+			.record(z.string().min(1), z.string().min(1))
+			.refine((prompts) => Object.keys(prompts).length > 0, {
+				message: 'prompts require at least one prompt'
+			})
+			.optional(),
+		matchMode: mathMatchModeSchema.optional(),
+		feedback: answerExplanationMarkdownSchema.optional()
+	})
+	.strict()
+	.superRefine((answer, context) => {
+		if (!answer.latex && (!answer.prompts || Object.keys(answer.prompts).length === 0)) {
+			context.addIssue({
+				code: 'custom',
+				message: 'accepted_math_answers require latex or at least one prompt'
+			});
+		}
+	});
 
 const lessonFrontmatterSchema = z
 	.object({
@@ -109,7 +152,9 @@ const baseQuestionSchema = z.object({
 		'multiple_select',
 		'numeric',
 		'sequencing',
-		'short_answer'
+		'short_answer',
+		'math',
+		'image_choice'
 	]),
 	difficulty: z.enum(['easy', 'medium', 'hard']),
 	prompt: renderedMarkdownSchema,
@@ -120,9 +165,9 @@ const baseQuestionSchema = z.object({
 const multipleChoiceQuestionSchema = baseQuestionSchema
 	.extend({
 		response_type: z.literal('multiple_choice'),
-		choices: z.array(renderedMarkdownSchema).min(2),
+		choices: z.array(textChoiceAuthoringSchema).min(2),
 		correct_index: z.number().int().nonnegative(),
-		choice_order_strategy: z.enum(['shuffle', 'fixed']).optional(),
+		choice_order_strategy: choiceOrderStrategySchema.optional(),
 		fixed_choice_indices: z.array(z.number().int().nonnegative()).optional()
 	})
 	.strict();
@@ -130,9 +175,9 @@ const multipleChoiceQuestionSchema = baseQuestionSchema
 const multipleSelectQuestionSchema = baseQuestionSchema
 	.extend({
 		response_type: z.literal('multiple_select'),
-		choices: z.array(renderedMarkdownSchema).min(2),
+		choices: z.array(textChoiceAuthoringSchema).min(2),
 		correct_indices: z.array(z.number().int().nonnegative()).min(2),
-		choice_order_strategy: z.enum(['shuffle', 'fixed']).optional(),
+		choice_order_strategy: choiceOrderStrategySchema.optional(),
 		fixed_choice_indices: z.array(z.number().int().nonnegative()).optional()
 	})
 	.strict();
@@ -158,17 +203,38 @@ const shortAnswerQuestionSchema = baseQuestionSchema
 	})
 	.strict();
 
+const mathQuestionSchema = baseQuestionSchema
+	.extend({
+		response_type: z.literal('math'),
+		math_template: z.string().min(1).optional(),
+		math_match_mode: mathMatchModeSchema.optional(),
+		accepted_math_answers: z.array(mathAcceptedAnswerSchema).min(1)
+	})
+	.strict();
+
+const imageChoiceQuestionSchema = baseQuestionSchema
+	.extend({
+		response_type: z.literal('image_choice'),
+		choices: z.array(imageChoiceAuthoringSchema).min(2),
+		correct_index: z.number().int().nonnegative(),
+		choice_order_strategy: choiceOrderStrategySchema.optional(),
+		fixed_choice_indices: z.array(z.number().int().nonnegative()).optional()
+	})
+	.strict();
+
 const questionSchema = z
 	.discriminatedUnion('response_type', [
 		multipleChoiceQuestionSchema,
 		multipleSelectQuestionSchema,
 		numericQuestionSchema,
 		sequencingQuestionSchema,
-		shortAnswerQuestionSchema
+		shortAnswerQuestionSchema,
+		mathQuestionSchema,
+		imageChoiceQuestionSchema
 	])
 	.superRefine((question, context) => {
 		if (
-			question.response_type === 'multiple_choice' &&
+			(question.response_type === 'multiple_choice' || question.response_type === 'image_choice') &&
 			question.correct_index >= question.choices.length
 		) {
 			context.addIssue({
@@ -199,7 +265,8 @@ const questionSchema = z
 		}
 		if (
 			(question.response_type === 'multiple_choice' ||
-				question.response_type === 'multiple_select') &&
+				question.response_type === 'multiple_select' ||
+				question.response_type === 'image_choice') &&
 			question.fixed_choice_indices
 		) {
 			const seen = new Set();

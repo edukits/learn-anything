@@ -277,6 +277,126 @@ test('bundles indexed answer keys using normalized custom choice ids', async () 
 	assert.deepEqual(questions[1].fixed_choice_ids, ['plus-two']);
 });
 
+test('bundles math and image choice questions from quizzes and lesson interactions', async () => {
+	const dir = await tempDir();
+	const input = {
+		topicDir: dir,
+		sourceRefs: [{ source_id: 'source_test', path: 'sources/source.md' }],
+		topic: {
+			subject: {
+				id: 'subject_math',
+				slug: 'math',
+				name: 'Math',
+				summary: 'Math topics'
+			},
+			topic: {
+				id: 'topic_linear_equations',
+				slug: 'linear-equations',
+				name: 'Linear Equations',
+				summary: 'Solve linear equations',
+				public_summary: 'Practice linear equations.',
+				preview_markdown: 'A short path for solving equations.',
+				app_path: '/app/topics/linear-equations',
+				level_label: 'Algebra'
+			},
+			release: {},
+			learning_path: {}
+		}
+	};
+	const mathQuestion = {
+		skill_slug: 'inverse-operations',
+		question_purpose: 'application',
+		response_type: 'math',
+		difficulty: 'medium',
+		prompt: 'Factor $x^2 + 3x + 2$.',
+		accepted_math_answers: [{ latex: '(x+1)(x+2)' }],
+		explanation: 'The factors multiply to 2 and add to 3.'
+	};
+	const imageQuestion = {
+		skill_slug: 'inverse-operations',
+		question_purpose: 'recognition',
+		response_type: 'image_choice',
+		difficulty: 'easy',
+		prompt: 'Which graph shows a positive slope?',
+		choices: [
+			{
+				label: 'Positive slope',
+				image_src: '/images/positive-slope.png',
+				image_alt: 'A line rising from left to right'
+			},
+			{
+				label: 'Negative slope',
+				image_src: '/images/negative-slope.png',
+				image_alt: 'A line falling from left to right'
+			}
+		],
+		correct_index: 0,
+		explanation: 'A positive slope rises as x increases.'
+	};
+
+	const run = await bundleRun({
+		input,
+		syllabus: { summary: 'Learn equations.' },
+		runId: 'run_2026_05_22_math_linear_equations_v1',
+		outDir: join(dir, 'dist'),
+		now: new Date('2026-05-22T12:00:00.000Z'),
+		reviewedItems: [
+			{
+				type: 'lesson',
+				title: 'Use Inverse Operations',
+				summary: 'Practice rich questions inline.',
+				estimated_minutes: 5,
+				skill_slugs: ['inverse-operations'],
+				body_markdown:
+					'# Use Inverse Operations\n\nPractice factoring and graph recognition.\n\n::mini-practice{slug="rich-check"}',
+				render_blocks: [
+					{
+						type: 'markdown',
+						markdown: '# Use Inverse Operations\n\nPractice factoring and graph recognition.'
+					},
+					{ type: 'interaction', slug: 'rich-check', interaction_type: 'mini_practice' }
+				],
+				interactions: [
+					{
+						slug: 'rich-check',
+						type: 'mini_practice',
+						questions: [mathQuestion, imageQuestion]
+					}
+				]
+			},
+			{
+				type: 'quiz',
+				title: 'Rich Question Check',
+				description: 'Use rich response formats.',
+				questions: [mathQuestion, imageQuestion]
+			}
+		]
+	});
+
+	assert.equal(run.report.valid, true);
+	assert.equal(run.report.counts.questions, 4);
+
+	const questions = (await readFile(join(dir, 'dist', 'questions.jsonl'), 'utf8'))
+		.trim()
+		.split('\n')
+		.map((line) => JSON.parse(line));
+	assert.equal(questions.filter((question) => question.response_type === 'math').length, 2);
+	assert.equal(
+		questions.every((question) =>
+			question.response_type === 'math' ? question.accepted_math_answers.length === 1 : true
+		),
+		true
+	);
+	assert.equal(
+		questions.every((question) =>
+			question.response_type === 'image_choice'
+				? question.choices[0].image_src === '/images/positive-slope.png'
+				: true
+		),
+		true
+	);
+});
+
 test('bundles legacy reviewed items with a default module', async () => {
 	const dir = await tempDir();
 	const input = {

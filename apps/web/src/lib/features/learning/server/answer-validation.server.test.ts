@@ -25,8 +25,40 @@ function buildSequencingQuestion(): QuizQuestionVersion {
 			{ id: 'third', label: 'Third' }
 		],
 		accepted_answers: [],
+		math_template: null,
+		math_match_mode: 'normalized',
+		accepted_math_answers: [],
 		explanation: 'The listed order is the expected order.',
 		ordering: 1
+	};
+}
+
+function buildChoiceQuestion(
+	responseType: 'multiple_choice' | 'image_choice'
+): QuizQuestionVersion {
+	return {
+		...buildSequencingQuestion(),
+		question_id: `question_${responseType}_1`,
+		skill_label: 'Choice',
+		response_type: responseType,
+		choices: [
+			{ id: 'positive', label: 'Positive', image_src: '/positive.png', image_alt: 'Positive' },
+			{ id: 'negative', label: 'Negative', image_src: '/negative.png', image_alt: 'Negative' }
+		],
+		correct_choice_id: 'positive',
+		sequence_items: []
+	};
+}
+
+function buildMathQuestion(): QuizQuestionVersion {
+	return {
+		...buildSequencingQuestion(),
+		question_id: 'question_math_1',
+		skill_label: 'Math',
+		response_type: 'math',
+		sequence_items: [],
+		math_template: null,
+		accepted_math_answers: [{ latex: '(x+1)(x+2)' }]
 	};
 }
 
@@ -93,6 +125,58 @@ describe('buildValidatedRpcAnswers', () => {
 						questionId: 'question_sequence_1',
 						selectedChoiceId: '',
 						answerValue: ['second', 'first', 'second']
+					}
+				],
+				'quiz'
+			)
+		).toThrow(AnswerValidationError);
+	});
+
+	test('accepts image choice answers as selected choice ids', () => {
+		const [answer] = buildValidatedRpcAnswers(
+			[buildChoiceQuestion('image_choice')],
+			[
+				{
+					questionId: 'question_image_choice_1',
+					selectedChoiceId: 'positive',
+					answerValue: 'positive'
+				}
+			],
+			'quiz'
+		);
+
+		expect(answer.selected_choice_id).toBe('positive');
+		expect(answer.answer_value).toBe('positive');
+	});
+
+	test('accepts math answers with latex and prompt values', () => {
+		const [answer] = buildValidatedRpcAnswers(
+			[buildMathQuestion()],
+			[
+				{
+					questionId: 'question_math_1',
+					selectedChoiceId: '',
+					answerValue: { latex: '(x+1)(x+2)', prompts: { x: '3' } }
+				}
+			],
+			'quiz'
+		);
+
+		expect(answer.answer_value).toEqual({
+			latex: '(x+1)(x+2)',
+			prompts: { x: '3' }
+		});
+	});
+
+	test('rejects empty math answers', () => {
+		expect(() =>
+			buildValidatedRpcAnswers(
+				[buildMathQuestion()],
+				[
+					{
+						questionId: 'question_math_1',
+						selectedChoiceId: '',
+						answerValue: { latex: '', prompts: {} }
 					}
 				],
 				'quiz'

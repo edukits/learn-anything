@@ -11,6 +11,8 @@ import type { ReviewState } from '../types';
 import { getDueSpacedRepetitionItems } from './scheduling.server';
 
 export const REVIEW_ATTEMPT_KIND = 'review' as const;
+const QUESTION_VERSION_SELECT =
+	'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,choice_order_strategy,fixed_choice_ids,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,math_template,math_match_mode,accepted_math_answers,explanation';
 const REVIEW_POLICY = {
 	questionLimit: 8,
 	lowSkillAccuracyThreshold: 0.7,
@@ -342,9 +344,7 @@ async function getReviewSessionQuestions(
 
 	const { data: questions, error: questionsError } = await client
 		.from('quiz_question_versions')
-		.select(
-			'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,choice_order_strategy,fixed_choice_ids,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
-		)
+		.select(QUESTION_VERSION_SELECT)
 		.in(
 			'question_id',
 			reviewQuestions.map((question) => question.question_id)
@@ -373,6 +373,9 @@ async function getReviewSessionQuestions(
 				correct_numeric_tolerance: question.correct_numeric_tolerance ?? 0,
 				sequence_items: question.sequence_items ?? [],
 				accepted_answers: question.accepted_answers ?? [],
+				math_template: question.math_template,
+				math_match_mode: question.math_match_mode ?? 'normalized',
+				accepted_math_answers: question.accepted_math_answers ?? [],
 				explanation: question.explanation
 			} satisfies Omit<QuizQuestionVersion, 'ordering'>
 		])

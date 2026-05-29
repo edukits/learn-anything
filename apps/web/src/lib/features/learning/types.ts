@@ -15,7 +15,9 @@ export type SkillAccuracyItem = {
 
 export type Choice = {
 	id: string;
-	label: string;
+	label?: string;
+	image_src?: string;
+	image_alt?: string;
 };
 
 export type SequenceItem = {
@@ -128,9 +130,20 @@ export type ResponseType =
 	| 'multiple_select'
 	| 'numeric'
 	| 'sequencing'
-	| 'short_answer';
+	| 'short_answer'
+	| 'math'
+	| 'image_choice';
 
 export type ChoiceOrderStrategy = 'shuffle' | 'fixed';
+
+export type MathMatchMode = 'exact' | 'normalized';
+
+export type AcceptedMathAnswer = {
+	latex?: string;
+	prompts?: Record<string, string>;
+	matchMode?: MathMatchMode;
+	feedback?: string;
+};
 
 export type QuizQuestionVersion = {
 	question_id: string;
@@ -150,6 +163,9 @@ export type QuizQuestionVersion = {
 	correct_numeric_tolerance: number;
 	sequence_items: SequenceItem[];
 	accepted_answers: string[];
+	math_template: string | null;
+	math_match_mode: MathMatchMode;
+	accepted_math_answers: AcceptedMathAnswer[];
 	explanation: string;
 	ordering: number;
 };
@@ -161,6 +177,8 @@ export type PracticeQuizQuestion = Omit<
 	| 'correct_numeric_value'
 	| 'correct_numeric_tolerance'
 	| 'accepted_answers'
+	| 'math_match_mode'
+	| 'accepted_math_answers'
 	| 'explanation'
 >;
 

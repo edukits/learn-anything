@@ -14,6 +14,16 @@ import {
 import { JsonReadError } from './utils.mjs';
 
 const skillDir = join(dirname(fileURLToPath(import.meta.url)), 'skills');
+const questionContextPromptName = 'QUESTION_CONTEXT.md';
+const questionSystemPromptNames = new Set(['QUIZ.md', 'INTERACTIONS.md', 'REVIEW.md']);
+
+export async function buildSystemPrompt(systemPromptName) {
+	const systemPromptParts = [await readFile(join(skillDir, systemPromptName), 'utf8')];
+	if (questionSystemPromptNames.has(systemPromptName)) {
+		systemPromptParts.push(await readFile(join(skillDir, questionContextPromptName), 'utf8'));
+	}
+	return systemPromptParts.join('\n\n');
+}
 
 export function parseModel(value) {
 	const [provider, ...modelParts] = value.split(':');
@@ -93,9 +103,7 @@ function artifactParseRepairPrompt(path, error, content, format) {
 
 function schemaRepairPrompt(path, error, content, format = 'json') {
 	const fileDescription =
-		format === 'json'
-			? 'JSON file'
-			: 'Markdown lesson file with YAML frontmatter';
+		format === 'json' ? 'JSON file' : 'Markdown lesson file with YAML frontmatter';
 	const rewriteInstruction =
 		format === 'json'
 			? 'Fix the validation errors and rewrite that same file as JSON only.'
@@ -153,7 +161,9 @@ export async function readValidatedArtifact({
 	maxRepairAttempts = 3,
 	log = () => {},
 	onRepair = ({ label: repairLabel, kind, attempt, maxRepairAttempts: max }) =>
-		log(`repair ${repairLabel} ${kind} validation failed; asking agent to rewrite (${attempt}/${max})`)
+		log(
+			`repair ${repairLabel} ${kind} validation failed; asking agent to rewrite (${attempt}/${max})`
+		)
 }) {
 	let repairAttempts = 0;
 
@@ -239,7 +249,7 @@ export class AgentRunner {
 		maxRepairAttempts = 3,
 		emit = () => {}
 	}) {
-		const systemPrompt = await readFile(join(skillDir, systemPromptName), 'utf8');
+		const systemPrompt = await buildSystemPrompt(systemPromptName);
 		const loader = new DefaultResourceLoader({
 			cwd: this.cwd,
 			agentDir: getAgentDir(),

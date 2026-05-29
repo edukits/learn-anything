@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { PracticeQuizQuestion, QuizQuestionVersion, TopicContent } from '../types';
 import { buildValidatedRpcAnswers } from './answer-validation.server';
-import { getActiveReleaseQuestions } from './content.server';
+import { getActiveReleaseQuestions, toPracticeQuizQuestion } from './content.server';
 import type { SubmittedAnswer } from './submissions.server';
 
 export type DiagnosticOutcomeSummary = {
@@ -41,17 +41,7 @@ export async function getDiagnosticQuestions(
 	client: SupabaseClient,
 	content: TopicContent
 ): Promise<PracticeQuizQuestion[]> {
-	return (await getDiagnosticQuestionVersions(client, content)).map(
-		({
-			correct_choice_id: _correctChoiceId,
-			correct_choice_ids: _correctChoiceIds,
-			correct_numeric_value: _correctNumericValue,
-			correct_numeric_tolerance: _correctNumericTolerance,
-			accepted_answers: _acceptedAnswers,
-			explanation: _explanation,
-			...question
-		}) => question
-	);
+	return (await getDiagnosticQuestionVersions(client, content)).map(toPracticeQuizQuestion);
 }
 
 export async function getLatestDiagnosticSummary(
