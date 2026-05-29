@@ -11,6 +11,7 @@ export {
 	avatarHairOptions,
 	avatarLipOptions,
 	buildNotionistsAvatarUrl,
+	createAvatarOptionsFromSeed,
 	createDefaultAvatarOptions,
 	defaultAvatarOptions,
 	normalizeAvatarOptions,

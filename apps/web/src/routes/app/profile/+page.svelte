@@ -13,15 +13,45 @@
 		avatarHairOptions,
 		avatarLipOptions,
 		buildNotionistsAvatarUrl,
+		createAvatarOptionsFromSeed,
 		normalizeAvatarOptions,
 		type PublicAvatarOptions
 	} from '$lib/features/social';
 
 	let { data, form }: PageProps = $props();
 
+	const avatarPanels = [
+		{ key: 'seed', label: 'Seed' },
+		{ key: 'backgroundColor', label: 'Background' },
+		{ key: 'hair', label: 'Hair' },
+		{ key: 'eyes', label: 'Eyes' },
+		{ key: 'brows', label: 'Brows' },
+		{ key: 'lips', label: 'Lips' },
+		{ key: 'beard', label: 'Beard' },
+		{ key: 'glasses', label: 'Glasses' },
+		{ key: 'bodyIcon', label: 'Body icon' },
+		{ key: 'gesture', label: 'Gesture' }
+	] as const;
+
+	const avatarOptionGroups = {
+		backgroundColor: avatarBackgroundColors,
+		hair: avatarHairOptions,
+		eyes: avatarEyeOptions,
+		brows: avatarBrowOptions,
+		lips: avatarLipOptions,
+		beard: avatarBeardOptions,
+		glasses: avatarGlassesOptions,
+		bodyIcon: avatarBodyIconOptions,
+		gesture: avatarGestureOptions
+	} as const;
+
+	type AvatarPanelKey = (typeof avatarPanels)[number]['key'];
+	type AvatarChoiceKey = Exclude<AvatarPanelKey, 'seed'>;
+
 	let avatarOptions = $derived(
 		normalizeAvatarOptions(form?.values?.avatarOptions ?? data.profile.avatar_options)
 	);
+	let activeAvatarPanel = $state<AvatarPanelKey>('hair');
 
 	let profileForm = $derived({
 		displayName: form?.values?.displayName ?? data.profile.display_name,
@@ -31,42 +61,41 @@
 	});
 
 	let avatarUrl = $derived(buildNotionistsAvatarUrl(avatarOptions, 192));
+	let activeAvatarPanelLabel = $derived(
+		avatarPanels.find((panel) => panel.key === activeAvatarPanel)?.label ?? 'Avatar'
+	);
+	let activeAvatarChoicePanel = $derived<AvatarChoiceKey>(
+		activeAvatarPanel === 'seed' ? 'hair' : activeAvatarPanel
+	);
+	let activeAvatarOptions = $derived(avatarOptionGroups[activeAvatarChoicePanel]);
 
 	function randomizeAvatar() {
 		const random =
 			typeof crypto !== 'undefined' && 'randomUUID' in crypto
 				? crypto.randomUUID().slice(0, 8)
 				: Math.random().toString(36).slice(2, 10);
-		updateAvatarOption('seed', `${profileForm.displayName || 'Learner'} ${random}`);
+		updateAvatarSeed(`${profileForm.displayName || 'Learner'} ${random}`);
 	}
 
-	function updateAvatarOption<Key extends keyof PublicAvatarOptions>(
-		key: Key,
-		value: PublicAvatarOptions[Key]
-	) {
-		avatarOptions = { ...avatarOptions, [key]: value };
+	function updateAvatarSeed(seed: string) {
+		avatarOptions = createAvatarOptionsFromSeed(seed);
 	}
 
-	function controlValue(event: Event) {
-		return (event.currentTarget as HTMLInputElement | HTMLSelectElement).value;
+	function updateAvatarChoice(key: AvatarChoiceKey, value: string) {
+		avatarOptions = { ...avatarOptions, [key]: value } as PublicAvatarOptions;
 	}
 
-	function optionLabel(value: string) {
-		if (value === 'none') return 'None';
-		return value
-			.replace(/([a-z])([A-Z])/g, '$1 $2')
-			.replace(/^variant0?/, 'Variant ')
-			.replace(/^./, (match) => match.toUpperCase());
+	function previewAvatarUrl(key: AvatarChoiceKey, value: string) {
+		return buildNotionistsAvatarUrl({ ...avatarOptions, [key]: value } as PublicAvatarOptions, 112);
+	}
+
+	function isActiveChoice(key: AvatarChoiceKey, value: string) {
+		return avatarOptions[key] === value;
 	}
 </script>
 
 <main class="page profile-page">
 	<section class="hero">
-		<div class="hero-visual">
-			<div class="avatar-preview">
-				<img src={avatarUrl} alt="" />
-			</div>
-		</div>
 		<div class="hero-text">
 			<p class="eyebrow">Public profile</p>
 			<h1>{profileForm.displayName || 'Your profile'}</h1>
@@ -95,182 +124,88 @@
 				<div class="avatar-field">
 					<span class="field-label">Avatar</span>
 					<div class="avatar-builder">
-						<div class="avatar-stage">
-							<img src={avatarUrl} alt="" />
+						<div class="avatar-sidebar">
+							<div class="avatar-nav" aria-label="Avatar settings">
+								{#each avatarPanels as panel (panel.key)}
+									<button
+										type="button"
+										class:is-active={activeAvatarPanel === panel.key}
+										onclick={() => (activeAvatarPanel = panel.key)}
+									>
+										{panel.label}
+									</button>
+								{/each}
+							</div>
 						</div>
 
-						<div class="avatar-controls">
-							<label>
-								<span class="field-label">Seed</span>
-								<div class="seed-row">
-									<input
-										name="avatarSeed"
-										value={avatarOptions.seed}
-										maxlength="120"
-										required
-										oninput={(event) => updateAvatarOption('seed', controlValue(event))}
-									/>
-									<button type="button" class="icon-button" onclick={randomizeAvatar} title="Randomize avatar">
-										<Shuffle size={18} />
-									</button>
-								</div>
-							</label>
+						<div class="avatar-config">
+							<div class="avatar-stage">
+								<img src={avatarUrl} alt="" />
+							</div>
 
-							<div class="swatch-group" aria-label="Avatar background color">
-								<span class="field-label">Background</span>
-								<div class="swatches">
-									{#each avatarBackgroundColors as color (color)}
-										<label class="swatch" style:--swatch-color={`#${color}`} title={`#${color}`}>
+							<input type="hidden" name="avatarSeed" value={avatarOptions.seed} />
+							<input type="hidden" name="avatarBackgroundColor" value={avatarOptions.backgroundColor} />
+							<input type="hidden" name="avatarHair" value={avatarOptions.hair} />
+							<input type="hidden" name="avatarEyes" value={avatarOptions.eyes} />
+							<input type="hidden" name="avatarBrows" value={avatarOptions.brows} />
+							<input type="hidden" name="avatarLips" value={avatarOptions.lips} />
+							<input type="hidden" name="avatarBeard" value={avatarOptions.beard} />
+							<input type="hidden" name="avatarGlasses" value={avatarOptions.glasses} />
+							<input type="hidden" name="avatarBodyIcon" value={avatarOptions.bodyIcon} />
+							<input type="hidden" name="avatarGesture" value={avatarOptions.gesture} />
+
+							{#if activeAvatarPanel === 'seed'}
+								<div class="seed-panel">
+									<label>
+										<span class="field-label">Seed</span>
+										<div class="seed-row">
 											<input
-												type="radio"
-												name="avatarBackgroundColor"
-												value={color}
-												checked={avatarOptions.backgroundColor === color}
-												onchange={() => updateAvatarOption('backgroundColor', color)}
+												value={avatarOptions.seed}
+												maxlength="120"
+												required
+												oninput={(event) =>
+													updateAvatarSeed((event.currentTarget as HTMLInputElement).value)}
 											/>
-											<span></span>
-										</label>
-									{/each}
+											<button
+												type="button"
+												class="icon-button"
+												onclick={randomizeAvatar}
+												title="Randomize avatar"
+											>
+												<Shuffle size={18} />
+											</button>
+										</div>
+									</label>
 								</div>
-							</div>
-
-							<div class="avatar-select-grid">
-								<label>
-									<span class="field-label">Hair</span>
-									<select
-										name="avatarHair"
-										value={avatarOptions.hair}
-										onchange={(event) =>
-											updateAvatarOption(
-												'hair',
-												controlValue(event) as PublicAvatarOptions['hair']
-											)}
-									>
-										{#each avatarHairOptions as option (option)}
-											<option value={option}>{optionLabel(option)}</option>
+							{:else}
+								<div class="option-panel">
+									<div class="option-panel-heading">
+										<h3>{activeAvatarPanelLabel}</h3>
+									</div>
+									<div class="visual-options" data-panel={activeAvatarChoicePanel}>
+										{#each activeAvatarOptions as option (option)}
+											<button
+												type="button"
+												class="visual-option"
+												class:is-selected={isActiveChoice(activeAvatarChoicePanel, option)}
+												style:--option-color={activeAvatarChoicePanel === 'backgroundColor'
+													? `#${option}`
+													: undefined}
+												onclick={() => updateAvatarChoice(activeAvatarChoicePanel, option)}
+												aria-label={`Choose ${activeAvatarPanelLabel} option`}
+												aria-pressed={isActiveChoice(activeAvatarChoicePanel, option)}
+											>
+												<span class="option-avatar">
+													<img src={previewAvatarUrl(activeAvatarChoicePanel, option)} alt="" />
+												</span>
+												{#if isActiveChoice(activeAvatarChoicePanel, option)}
+													<span class="selected-indicator">Selected</span>
+												{/if}
+											</button>
 										{/each}
-									</select>
-								</label>
-
-								<label>
-									<span class="field-label">Eyes</span>
-									<select
-										name="avatarEyes"
-										value={avatarOptions.eyes}
-										onchange={(event) =>
-											updateAvatarOption(
-												'eyes',
-												controlValue(event) as PublicAvatarOptions['eyes']
-											)}
-									>
-										{#each avatarEyeOptions as option (option)}
-											<option value={option}>{optionLabel(option)}</option>
-										{/each}
-									</select>
-								</label>
-
-								<label>
-									<span class="field-label">Brows</span>
-									<select
-										name="avatarBrows"
-										value={avatarOptions.brows}
-										onchange={(event) =>
-											updateAvatarOption(
-												'brows',
-												controlValue(event) as PublicAvatarOptions['brows']
-											)}
-									>
-										{#each avatarBrowOptions as option (option)}
-											<option value={option}>{optionLabel(option)}</option>
-										{/each}
-									</select>
-								</label>
-
-								<label>
-									<span class="field-label">Lips</span>
-									<select
-										name="avatarLips"
-										value={avatarOptions.lips}
-										onchange={(event) =>
-											updateAvatarOption(
-												'lips',
-												controlValue(event) as PublicAvatarOptions['lips']
-											)}
-									>
-										{#each avatarLipOptions as option (option)}
-											<option value={option}>{optionLabel(option)}</option>
-										{/each}
-									</select>
-								</label>
-
-								<label>
-									<span class="field-label">Beard</span>
-									<select
-										name="avatarBeard"
-										value={avatarOptions.beard}
-										onchange={(event) =>
-											updateAvatarOption(
-												'beard',
-												controlValue(event) as PublicAvatarOptions['beard']
-											)}
-									>
-										{#each avatarBeardOptions as option (option)}
-											<option value={option}>{optionLabel(option)}</option>
-										{/each}
-									</select>
-								</label>
-
-								<label>
-									<span class="field-label">Glasses</span>
-									<select
-										name="avatarGlasses"
-										value={avatarOptions.glasses}
-										onchange={(event) =>
-											updateAvatarOption(
-												'glasses',
-												controlValue(event) as PublicAvatarOptions['glasses']
-											)}
-									>
-										{#each avatarGlassesOptions as option (option)}
-											<option value={option}>{optionLabel(option)}</option>
-										{/each}
-									</select>
-								</label>
-
-								<label>
-									<span class="field-label">Body icon</span>
-									<select
-										name="avatarBodyIcon"
-										value={avatarOptions.bodyIcon}
-										onchange={(event) =>
-											updateAvatarOption(
-												'bodyIcon',
-												controlValue(event) as PublicAvatarOptions['bodyIcon']
-											)}
-									>
-										{#each avatarBodyIconOptions as option (option)}
-											<option value={option}>{optionLabel(option)}</option>
-										{/each}
-									</select>
-								</label>
-
-								<label>
-									<span class="field-label">Gesture</span>
-									<select
-										name="avatarGesture"
-										value={avatarOptions.gesture}
-										onchange={(event) =>
-											updateAvatarOption(
-												'gesture',
-												controlValue(event) as PublicAvatarOptions['gesture']
-											)}
-									>
-										{#each avatarGestureOptions as option (option)}
-											<option value={option}>{optionLabel(option)}</option>
-										{/each}
-									</select>
-								</label>
-							</div>
+									</div>
+								</div>
+							{/if}
 						</div>
 					</div>
 				</div>
@@ -321,7 +256,7 @@
 	.profile-page {
 		display: grid;
 		gap: 32px;
-		max-inline-size: 680px;
+		max-inline-size: 920px;
 	}
 
 	/* ---- Hero ---- */
@@ -332,27 +267,6 @@
 		gap: 24px;
 		padding: clamp(20px, 4vw, 36px) 0;
 		border-bottom: 1px dashed var(--color-border);
-	}
-
-	.avatar-preview {
-		align-items: center;
-		aspect-ratio: 1;
-		background: var(--color-surface-raised);
-		border: 2px solid var(--color-border);
-		border-radius: 50%;
-		color: var(--color-text-muted);
-		display: grid;
-		block-size: 80px;
-		inline-size: 80px;
-		justify-items: center;
-		overflow: hidden;
-		flex-shrink: 0;
-	}
-
-	.avatar-preview img {
-		block-size: 100%;
-		inline-size: 100%;
-		object-fit: cover;
 	}
 
 	.avatar-field {
@@ -366,9 +280,14 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		display: grid;
-		gap: 20px;
-		grid-template-columns: 148px 1fr;
-		padding: 16px;
+		gap: 18px;
+		grid-template-columns: 180px minmax(0, 1fr);
+		padding: 18px;
+	}
+
+	.avatar-sidebar {
+		display: grid;
+		gap: 16px;
 	}
 
 	.avatar-stage {
@@ -378,9 +297,10 @@
 		border: 1px solid var(--color-border);
 		border-radius: 50%;
 		display: grid;
-		inline-size: 100%;
+		inline-size: min(100%, 176px);
 		justify-items: center;
 		overflow: hidden;
+		justify-self: center;
 	}
 
 	.avatar-stage img {
@@ -389,10 +309,49 @@
 		object-fit: cover;
 	}
 
-	.avatar-controls {
+	.avatar-nav {
 		display: grid;
-		gap: 14px;
+		gap: 6px;
+	}
+
+	.avatar-nav button {
+		background: transparent;
+		border: 1px solid transparent;
+		border-radius: var(--radius-sm);
+		color: var(--color-text-muted);
+		cursor: pointer;
+		font: inherit;
+		font-weight: 700;
+		padding: 9px 12px;
+		text-align: start;
+	}
+
+	.avatar-nav button:hover,
+	.avatar-nav button.is-active {
+		background: var(--color-surface-raised);
+		border-color: var(--color-border);
+		color: var(--color-text);
+	}
+
+	.avatar-nav button.is-active {
+		border-color: color-mix(in srgb, var(--color-accent), transparent 45%);
+		box-shadow: inset 3px 0 0 var(--color-accent);
+	}
+
+	.avatar-config {
+		background: var(--color-surface-raised);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		display: grid;
+		gap: 16px;
 		min-inline-size: 0;
+		padding: 16px;
+		justify-items: stretch;
+	}
+
+	.seed-panel {
+		display: grid;
+		max-inline-size: 420px;
 	}
 
 	.seed-row {
@@ -419,49 +378,75 @@
 		color: var(--color-accent);
 	}
 
-	.swatch-group {
+	.option-panel {
 		display: grid;
-		gap: 8px;
+		gap: 14px;
 	}
 
-	.swatches {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
+	.option-panel-heading h3 {
+		font-size: 1rem;
+		letter-spacing: 0;
+		margin: 0;
 	}
 
-	.swatch {
-		display: block;
+	.visual-options {
+		display: grid;
+		gap: 10px;
+		grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+	}
+
+	.visual-option {
+		align-items: center;
+		aspect-ratio: 1;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		color: var(--color-text);
+		cursor: pointer;
+		display: grid;
+		justify-items: center;
+		padding: 10px;
 		position: relative;
 	}
 
-	.swatch input {
-		block-size: 1px;
-		inline-size: 1px;
-		opacity: 0;
-		position: absolute;
+	.visual-option:hover,
+	.visual-option.is-selected {
+		border-color: var(--color-accent);
+		box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent), transparent 75%);
 	}
 
-	.swatch span {
-		background: var(--swatch-color);
-		border: 1px solid color-mix(in srgb, var(--swatch-color), #000 22%);
-		border-radius: 999px;
-		box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.5);
-		cursor: pointer;
-		display: block;
-		block-size: 28px;
-		inline-size: 28px;
+	.visual-options[data-panel='backgroundColor'] .visual-option {
+		background: var(--option-color, var(--color-surface));
 	}
 
-	.swatch input:checked + span {
-		outline: 3px solid color-mix(in srgb, var(--color-accent), transparent 55%);
-		outline-offset: 2px;
-	}
-
-	.avatar-select-grid {
+	.option-avatar {
+		align-items: center;
+		aspect-ratio: 1;
+		background: var(--color-surface-raised);
+		border: 1px solid var(--color-border);
+		border-radius: 50%;
 		display: grid;
-		gap: 12px;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+		inline-size: min(100%, 82px);
+		justify-items: center;
+		overflow: hidden;
+	}
+
+	.option-avatar img {
+		block-size: 100%;
+		inline-size: 100%;
+		object-fit: cover;
+	}
+
+	.selected-indicator {
+		background: var(--color-accent);
+		border-radius: 999px;
+		color: var(--color-accent-contrast);
+		font-size: 0.68rem;
+		font-weight: 800;
+		inset-block-end: 8px;
+		line-height: 1;
+		padding: 4px 7px;
+		position: absolute;
 	}
 
 	.hero-text {
@@ -606,8 +591,12 @@
 			inline-size: 144px;
 		}
 
-		.avatar-select-grid {
-			grid-template-columns: 1fr;
+		.avatar-nav {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.visual-options {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 	}
 </style>

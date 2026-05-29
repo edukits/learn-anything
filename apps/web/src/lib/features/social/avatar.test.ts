@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
 	buildNotionistsAvatarUrl,
+	createAvatarOptionsFromSeed,
 	defaultAvatarOptions,
 	normalizeAvatarOptions,
 	publicAvatarOptionsSchema
@@ -23,7 +24,7 @@ describe('avatar helpers', () => {
 			)
 		);
 
-		expect(url.origin + url.pathname).toBe('https://api.dicebear.com/10.x/notionists/svg');
+		expect(url.origin + url.pathname).toBe('https://api.dicebear.com/9.x/notionists/svg');
 		expect(url.searchParams.get('seed')).toBe('Learner 123');
 		expect(url.searchParams.get('size')).toBe('96');
 		expect(url.searchParams.get('backgroundType')).toBe('solid');
@@ -72,5 +73,15 @@ describe('avatar helpers', () => {
 		expect(publicAvatarOptionsSchema.safeParse(options).success).toBe(true);
 		expect(options.seed).toBe('Fallback Learner');
 		expect(options.style).toBe('notionists');
+	});
+
+	test('creates selected options from a changed seed', () => {
+		const first = createAvatarOptionsFromSeed('Learner alpha');
+		const second = createAvatarOptionsFromSeed('Learner beta');
+
+		expect(publicAvatarOptionsSchema.safeParse(first).success).toBe(true);
+		expect(publicAvatarOptionsSchema.safeParse(second).success).toBe(true);
+		expect(first).toEqual(createAvatarOptionsFromSeed('Learner alpha'));
+		expect(first).not.toEqual(second);
 	});
 });

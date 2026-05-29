@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const AVATAR_STYLE = 'notionists';
 export const AVATAR_VERSION = 1;
-export const DICEBEAR_NOTIONISTS_BASE_URL = 'https://api.dicebear.com/10.x/notionists/svg';
+export const DICEBEAR_NOTIONISTS_BASE_URL = 'https://api.dicebear.com/9.x/notionists/svg';
 
 export const avatarBackgroundColors = [
 	'b6e3f4',
@@ -130,6 +130,12 @@ export function createDefaultAvatarOptions(
 	displayName = 'Learner'
 ): PublicAvatarOptions {
 	const seed = normalizeSeed(`${displayName || 'Learner'} ${userId.slice(0, 8)}`);
+
+	return createAvatarOptionsFromSeed(seed);
+}
+
+export function createAvatarOptionsFromSeed(seedValue: string): PublicAvatarOptions {
+	const seed = normalizeSeed(seedValue);
 	const index = hashString(seed);
 
 	return {

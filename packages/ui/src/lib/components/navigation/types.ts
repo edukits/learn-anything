@@ -9,6 +9,7 @@ export type NavSubject = {
 
 export type NavUser = {
 	email?: string;
+	avatarUrl?: string | null;
 };
 
 export type NavTopic = {

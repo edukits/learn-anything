@@ -148,7 +148,13 @@
 					triggerProps={{ 'aria-label': 'User menu' }}
 				>
 					{#snippet trigger()}
-						<User size={18} strokeWidth={2.25} aria-hidden="true" />
+						{#if user.avatarUrl}
+							<span class="user-avatar-frame">
+								<img class="user-avatar" src={user.avatarUrl} alt="" />
+							</span>
+						{:else}
+							<User size={18} strokeWidth={2.25} aria-hidden="true" />
+						{/if}
 					{/snippet}
 					{#snippet children()}
 						<DropdownMenuPrimitive.Item closeOnSelect textValue="Profile">
@@ -246,6 +252,25 @@
 		align-items: center;
 		display: flex;
 		justify-content: end;
+	}
+
+	.user-avatar {
+		aspect-ratio: 1;
+		border-radius: 50%;
+		display: block;
+		height: 100%;
+		object-fit: cover;
+		width: 100%;
+	}
+
+	.user-avatar-frame {
+		aspect-ratio: 1;
+		border-radius: 50%;
+		display: block;
+		height: 2.25rem;
+		margin: -0.5rem;
+		overflow: hidden;
+		width: 2.25rem;
 	}
 
 	form {

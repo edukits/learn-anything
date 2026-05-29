@@ -53,7 +53,7 @@
 {#if !isFocusedQuizRoute && !isSignInRoute}
 	<GlobalNav
 		subjects={data.subjects}
-		user={data.user}
+		user={data.navUser}
 		currentPathname={page.url.pathname}
 		showAdmin={Boolean(data.adminRole)}
 	/>
