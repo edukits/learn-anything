@@ -209,6 +209,41 @@ test('simplified quiz schema accepts every supported response type', () => {
 	assert.equal(result.success, true);
 });
 
+test('simplified quiz schema rejects empty math prompt accepted answers', () => {
+	const quiz = {
+		title: 'Math Prompt Guard',
+		description: 'Reject empty prompt maps.',
+		questions: [
+			{
+				...questionFor('math'),
+				accepted_math_answers: [{ prompts: {} }]
+			}
+		]
+	};
+
+	const result = validateWithSchema(schemaForItemType('quiz'))(quiz);
+
+	assert.equal(result.success, false);
+	assert.match(result.error, /at least one prompt/);
+});
+
+test('simplified quiz schema accepts prompt-only math accepted answers with values', () => {
+	const quiz = {
+		title: 'Math Prompt Answers',
+		description: 'Accept prompt maps with deterministic values.',
+		questions: [
+			{
+				...questionFor('math'),
+				accepted_math_answers: [{ prompts: { x: '3', y: '-2' } }]
+			}
+		]
+	};
+
+	const result = validateWithSchema(schemaForItemType('quiz'))(quiz);
+
+	assert.equal(result.success, true);
+});
+
 test('lesson interaction schema accepts every supported response type', () => {
 	const responseTypes = [
 		'multiple_choice',

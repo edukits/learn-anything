@@ -131,6 +131,7 @@
 					"latex": { "type": "string", "minLength": 1 },
 					"prompts": {
 						"type": "object",
+						"minProperties": 1,
 						"additionalProperties": { "type": "string", "minLength": 1 }
 					},
 					"matchMode": { "enum": ["exact", "normalized"] },
@@ -140,7 +141,19 @@
 						"description": "Optional answer-specific feedback rendered as Markdown."
 					}
 				},
-				"anyOf": [{ "required": ["latex"] }, { "required": ["prompts"] }]
+				"anyOf": [
+					{ "required": ["latex"] },
+					{
+						"required": ["prompts"],
+						"properties": {
+							"prompts": {
+								"type": "object",
+								"minProperties": 1,
+								"additionalProperties": { "type": "string", "minLength": 1 }
+							}
+						}
+					}
+				]
 			}
 		},
 		"grading_rubric": {

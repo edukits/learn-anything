@@ -6,7 +6,60 @@ alter table public.quiz_question_versions
 alter table public.quiz_question_versions
 	drop constraint if exists quiz_question_versions_response_type_check,
 	drop constraint if exists quiz_question_versions_math_match_mode_check,
-	drop constraint if exists quiz_question_versions_accepted_math_answers_array;
+	drop constraint if exists quiz_question_versions_accepted_math_answers_array,
+	drop constraint if exists quiz_question_versions_accepted_math_answers_valid;
+
+create or replace function app_private.valid_math_accepted_prompts(p_prompts jsonb)
+returns boolean
+language sql
+immutable
+as $$
+	select case
+		when jsonb_typeof(coalesce(p_prompts, 'null'::jsonb)) <> 'object' then false
+		when not exists (
+			select 1
+			from jsonb_each(p_prompts) as prompt(key, value)
+		) then false
+		else not exists (
+			select 1
+			from jsonb_each(p_prompts) as prompt(key, value)
+			where length(prompt.key) = 0
+				or jsonb_typeof(prompt.value) <> 'string'
+				or length(prompt.value #>> '{}') = 0
+		)
+	end;
+$$;
+
+create or replace function app_private.valid_math_accepted_answers(p_answers jsonb)
+returns boolean
+language sql
+immutable
+as $$
+	select case
+		when jsonb_typeof(coalesce(p_answers, 'null'::jsonb)) <> 'array' then false
+		else not exists (
+			select 1
+			from jsonb_array_elements(p_answers) as accepted(value)
+			where
+				jsonb_typeof(accepted.value) <> 'object'
+				or (
+					accepted.value ? 'prompts'
+					and not app_private.valid_math_accepted_prompts(accepted.value -> 'prompts')
+				)
+				or not (
+					(
+						accepted.value ? 'latex'
+						and jsonb_typeof(accepted.value -> 'latex') = 'string'
+						and length(accepted.value ->> 'latex') > 0
+					)
+					or (
+						accepted.value ? 'prompts'
+						and app_private.valid_math_accepted_prompts(accepted.value -> 'prompts')
+					)
+				)
+		)
+	end;
+$$;
 
 alter table public.quiz_question_versions
 	add constraint quiz_question_versions_response_type_check
@@ -14,7 +67,9 @@ alter table public.quiz_question_versions
 	add constraint quiz_question_versions_math_match_mode_check
 	check (math_match_mode in ('exact', 'normalized')),
 	add constraint quiz_question_versions_accepted_math_answers_array
-	check (jsonb_typeof(accepted_math_answers) = 'array');
+	check (jsonb_typeof(accepted_math_answers) = 'array'),
+	add constraint quiz_question_versions_accepted_math_answers_valid
+	check (app_private.valid_math_accepted_answers(accepted_math_answers));
 
 create or replace function app_private.normalize_latex_answer(p_value text)
 returns text
@@ -64,6 +119,10 @@ as $$
 	select case
 		when p_accepted_prompts is null then true
 		when jsonb_typeof(coalesce(p_accepted_prompts, 'null'::jsonb)) <> 'object' then false
+		when not exists (
+			select 1
+			from jsonb_each(p_accepted_prompts) as accepted(key, value)
+		) then false
 		when jsonb_typeof(coalesce(p_answer_prompts, '{}'::jsonb)) <> 'object' then false
 		else not exists (
 			select 1

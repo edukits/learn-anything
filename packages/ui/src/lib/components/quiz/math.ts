@@ -91,7 +91,11 @@ export function gradeMathAnswer(
 	return { correct: false };
 }
 
-function latexMatches(answer: string, accepted: string | undefined, matchMode: MathAnswerMatchMode) {
+function latexMatches(
+	answer: string,
+	accepted: string | undefined,
+	matchMode: MathAnswerMatchMode
+) {
 	if (accepted === undefined) {
 		return true;
 	}
@@ -106,6 +110,10 @@ function promptsMatch(
 ) {
 	if (acceptedPrompts === undefined) {
 		return true;
+	}
+
+	if (Object.keys(acceptedPrompts).length === 0) {
+		return false;
 	}
 
 	return Object.entries(acceptedPrompts).every(

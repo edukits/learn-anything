@@ -163,15 +163,20 @@ const mathMatchModeSchema = z.enum(['exact', 'normalized']);
 const mathAcceptedAnswerSchema = z
 	.object({
 		latex: z.string().min(1).optional(),
-		prompts: z.record(z.string().min(1), z.string().min(1)).optional(),
+		prompts: z
+			.record(z.string().min(1), z.string().min(1))
+			.refine((prompts) => Object.keys(prompts).length > 0, {
+				message: 'prompts require at least one prompt'
+			})
+			.optional(),
 		matchMode: mathMatchModeSchema.optional(),
 		feedback: answerExplanationMarkdownSchema.optional()
 	})
 	.superRefine((answer, context) => {
-		if (!answer.latex && !answer.prompts) {
+		if (!answer.latex && (!answer.prompts || Object.keys(answer.prompts).length === 0)) {
 			context.addIssue({
 				code: 'custom',
-				message: 'accepted_math_answers require latex or prompts'
+				message: 'accepted_math_answers require latex or at least one prompt'
 			});
 		}
 	});
