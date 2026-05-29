@@ -27,6 +27,7 @@ export type AchievementCelebrationItem = {
 
 export type RewardInventoryCardData = {
 	id: string;
+	achievementCategory: AchievementCategory;
 	rewardKind: RewardKind;
 	rewardKey: string;
 	rewardLabel: string;

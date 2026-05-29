@@ -44,6 +44,13 @@
 			? data.achievements.filter((achievement) => achievement.category === activeCategory)
 			: data.achievements
 	);
+	let rewardAchievementCategories = $derived.by(() => {
+		return new Map(
+			data.achievements.flatMap((achievement) =>
+				achievement.reward_key ? [[achievement.reward_key, achievement.category]] : []
+			)
+		);
+	});
 </script>
 
 <main class="page achievements-page">
@@ -129,7 +136,10 @@
 			<div class="inventory-grid">
 				{#each data.rewards as reward (reward.id)}
 					<RewardInventoryCard
-						reward={toRewardInventoryCardData(reward)}
+						reward={toRewardInventoryCardData(
+							reward,
+							rewardAchievementCategories.get(reward.reward_key)
+						)}
 						action={titleRewardAction}
 					/>
 				{/each}
