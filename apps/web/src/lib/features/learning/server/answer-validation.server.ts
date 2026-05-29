@@ -62,6 +62,7 @@ function validateSubmittedAnswer(
 ): ValidatedAnswer {
 	switch (question.response_type) {
 		case 'multiple_choice':
+		case 'image_choice':
 			return validateSingleChoice(question, answer);
 		case 'multiple_select':
 			return validateMultipleSelect(question, answer);
@@ -71,6 +72,8 @@ function validateSubmittedAnswer(
 			return validateSequencing(question, answer);
 		case 'short_answer':
 			return validateShortAnswer(question, answer);
+		case 'math':
+			return validateMath(question, answer);
 		default: {
 			const exhaustive: never = question.response_type;
 			throw new AnswerValidationError(`Unsupported response type: ${exhaustive}`);
@@ -185,6 +188,19 @@ function validateShortAnswer(
 	};
 }
 
+function validateMath(question: AnswerableQuestion, answer: SubmittedAnswer): ValidatedAnswer {
+	const value = extractMathAnswerValue(answer.answerValue);
+	if (!value) {
+		throw new AnswerValidationError(`Invalid answer for ${question.question_id}.`);
+	}
+
+	return {
+		question_id: question.question_id,
+		selected_choice_id: '',
+		answer_value: value
+	};
+}
+
 function extractNumericValue(value: unknown): string | null {
 	const rawValue =
 		typeof value === 'object' && value !== null && 'value' in value
@@ -197,4 +213,39 @@ function extractNumericValue(value: unknown): string | null {
 
 	const normalized = String(rawValue).trim();
 	return /^-?(?:\d+|\d*\.\d+)$/.test(normalized) ? normalized : null;
+}
+
+function extractMathAnswerValue(
+	value: unknown
+): { latex: string; prompts: Record<string, string> } | null {
+	if (typeof value !== 'object' || value === null) {
+		return null;
+	}
+
+	const raw = value as { latex?: unknown; prompts?: unknown };
+	const latex = typeof raw.latex === 'string' ? raw.latex : '';
+	if (
+		raw.prompts !== undefined &&
+		(typeof raw.prompts !== 'object' || raw.prompts === null || Array.isArray(raw.prompts))
+	) {
+		return null;
+	}
+
+	const rawPrompts = raw.prompts as Record<string, unknown> | undefined;
+	const prompts = rawPrompts
+		? Object.fromEntries(
+				Object.entries(rawPrompts).filter(
+					(entry): entry is [string, string] =>
+						typeof entry[0] === 'string' && typeof entry[1] === 'string'
+				)
+			)
+		: {};
+
+	if (Object.keys(prompts).length !== (rawPrompts ? Object.keys(rawPrompts).length : 0)) {
+		return null;
+	}
+
+	const hasLatex = latex.trim().length > 0;
+	const hasPrompts = Object.values(prompts).some((promptValue) => promptValue.trim().length > 0);
+	return hasLatex || hasPrompts ? { latex, prompts } : null;
 }

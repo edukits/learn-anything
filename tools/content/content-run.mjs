@@ -123,7 +123,9 @@ const answerExplanationMarkdownSchema = z
 
 const choiceSchema = z.object({
 	id: z.string().min(1),
-	label: renderedMarkdownSchema
+	label: renderedMarkdownSchema.optional(),
+	image_src: z.string().min(1).optional(),
+	image_alt: z.string().min(1).optional()
 });
 
 const choiceOrderStrategySchema = z.enum(['shuffle', 'fixed']);
@@ -133,14 +135,18 @@ const responseTypeSchema = z.enum([
 	'multiple_select',
 	'numeric',
 	'sequencing',
-	'short_answer'
+	'short_answer',
+	'math',
+	'image_choice'
 ]);
 const importableResponseTypes = new Set([
 	'multiple_choice',
 	'multiple_select',
 	'numeric',
 	'sequencing',
-	'short_answer'
+	'short_answer',
+	'math',
+	'image_choice'
 ]);
 
 const numericAnswerSchema = z.object({
@@ -152,6 +158,23 @@ const sequenceItemSchema = z.object({
 	id: z.string().min(1),
 	label: renderedMarkdownSchema
 });
+
+const mathMatchModeSchema = z.enum(['exact', 'normalized']);
+const mathAcceptedAnswerSchema = z
+	.object({
+		latex: z.string().min(1).optional(),
+		prompts: z.record(z.string().min(1), z.string().min(1)).optional(),
+		matchMode: mathMatchModeSchema.optional(),
+		feedback: answerExplanationMarkdownSchema.optional()
+	})
+	.superRefine((answer, context) => {
+		if (!answer.latex && !answer.prompts) {
+			context.addIssue({
+				code: 'custom',
+				message: 'accepted_math_answers require latex or prompts'
+			});
+		}
+	});
 
 const questionSchema = z
 	.object({
@@ -171,6 +194,9 @@ const questionSchema = z
 		correct_numeric_answer: numericAnswerSchema.optional(),
 		sequence_items: z.array(sequenceItemSchema).optional(),
 		accepted_answers: z.array(z.string().min(1)).optional(),
+		math_template: z.string().min(1).optional(),
+		math_match_mode: mathMatchModeSchema.optional(),
+		accepted_math_answers: z.array(mathAcceptedAnswerSchema).optional(),
 		grading_rubric: z.string().min(1).optional(),
 		explanation: answerExplanationMarkdownSchema
 	})
@@ -197,20 +223,55 @@ const questionSchema = z
 			fixedChoiceIds.add(choiceId);
 		}
 
-		if (question.response_type === 'multiple_choice') {
+		if (question.response_type === 'multiple_choice' || question.response_type === 'image_choice') {
 			if (choices.length < 2) {
 				context.addIssue({
 					code: 'custom',
-					message: 'multiple_choice responses require at least 2 choices',
+					message: `${question.response_type} responses require at least 2 choices`,
 					path: ['choices']
 				});
 			}
 			if (!question.correct_choice_id) {
 				context.addIssue({
 					code: 'custom',
-					message: 'multiple_choice responses require correct_choice_id',
+					message: `${question.response_type} responses require correct_choice_id`,
 					path: ['correct_choice_id']
 				});
+			} else if (!choiceIds.has(question.correct_choice_id)) {
+				context.addIssue({
+					code: 'custom',
+					message: `correct_choice_id ${question.correct_choice_id} is not present in choices`,
+					path: ['correct_choice_id']
+				});
+			}
+			if (question.response_type === 'multiple_choice') {
+				for (const [index, choice] of choices.entries()) {
+					if (!choice.label) {
+						context.addIssue({
+							code: 'custom',
+							message: 'multiple_choice choices require label',
+							path: ['choices', index, 'label']
+						});
+					}
+				}
+			}
+			if (question.response_type === 'image_choice') {
+				for (const [index, choice] of choices.entries()) {
+					if (!choice.image_src) {
+						context.addIssue({
+							code: 'custom',
+							message: 'image_choice choices require image_src',
+							path: ['choices', index, 'image_src']
+						});
+					}
+					if (!choice.image_alt) {
+						context.addIssue({
+							code: 'custom',
+							message: 'image_choice choices require image_alt',
+							path: ['choices', index, 'image_alt']
+						});
+					}
+				}
 			}
 			return;
 		}
@@ -229,6 +290,15 @@ const questionSchema = z
 					message: 'multiple_select questions require at least 2 correct_choice_ids',
 					path: ['correct_choice_ids']
 				});
+			}
+			for (const [index, choice] of choices.entries()) {
+				if (!choice.label) {
+					context.addIssue({
+						code: 'custom',
+						message: 'multiple_select choices require label',
+						path: ['choices', index, 'label']
+					});
+				}
 			}
 			for (const choiceId of question.correct_choice_ids ?? []) {
 				if (!choiceIds.has(choiceId)) {
@@ -263,6 +333,14 @@ const questionSchema = z
 				code: 'custom',
 				message: 'short_answer questions require accepted_answers for deterministic grading',
 				path: ['accepted_answers']
+			});
+		}
+
+		if (question.response_type === 'math' && !question.accepted_math_answers?.length) {
+			context.addIssue({
+				code: 'custom',
+				message: 'math questions require accepted_math_answers for deterministic grading',
+				path: ['accepted_math_answers']
 			});
 		}
 	});

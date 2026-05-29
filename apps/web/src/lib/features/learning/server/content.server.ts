@@ -20,6 +20,8 @@ import type {
 } from '../types';
 
 const RELEASE_ITEMS_PAGE_SIZE = 1_000;
+const QUESTION_VERSION_SELECT =
+	'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,choice_order_strategy,fixed_choice_ids,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,math_template,math_match_mode,accepted_math_answers,explanation';
 
 function requireSingle<T>(value: T | null | undefined, label: string): T {
 	if (!value) {
@@ -421,9 +423,7 @@ export async function getLessonInteractions(
 	const questionIds = [...new Set(interactionLinks.map((link) => link.question_id))];
 	const { data: questionRows, error: questionError } = await client
 		.from('quiz_question_versions')
-		.select(
-			'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,choice_order_strategy,fixed_choice_ids,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
-		)
+		.select(QUESTION_VERSION_SELECT)
 		.in('question_id', questionIds)
 		.eq('lifecycle_status', 'active');
 
@@ -453,6 +453,9 @@ export async function getLessonInteractions(
 			correct_numeric_tolerance: question.correct_numeric_tolerance ?? 0,
 			sequence_items: question.sequence_items ?? [],
 			accepted_answers: question.accepted_answers ?? [],
+			math_template: question.math_template,
+			math_match_mode: question.math_match_mode ?? 'normalized',
+			accepted_math_answers: question.accepted_math_answers ?? [],
 			explanation: question.explanation
 		})) as Omit<QuizQuestionVersion, 'ordering'>[] | null,
 		releaseQuestionItems,
@@ -560,9 +563,7 @@ async function getQuizQuestionsByLifecycle(
 
 	let query = client
 		.from('quiz_question_versions')
-		.select(
-			'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,choice_order_strategy,fixed_choice_ids,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
-		)
+		.select(QUESTION_VERSION_SELECT)
 		.in(
 			'question_id',
 			links.map((link) => link.question_id)
@@ -602,6 +603,9 @@ async function getQuizQuestionsByLifecycle(
 			correct_numeric_tolerance: question.correct_numeric_tolerance ?? 0,
 			sequence_items: question.sequence_items ?? [],
 			accepted_answers: question.accepted_answers ?? [],
+			math_template: question.math_template,
+			math_match_mode: question.math_match_mode ?? 'normalized',
+			accepted_math_answers: question.accepted_math_answers ?? [],
 			explanation: question.explanation
 		})) as Omit<QuizQuestionVersion, 'ordering'>[] | null,
 		releaseQuestionItems,
@@ -640,6 +644,9 @@ async function getQuizQuestionsByLifecycle(
 			correct_numeric_tolerance: question.correct_numeric_tolerance,
 			sequence_items: question.sequence_items,
 			accepted_answers: question.accepted_answers,
+			math_template: question.math_template,
+			math_match_mode: question.math_match_mode,
+			accepted_math_answers: question.accepted_math_answers,
 			explanation: question.explanation,
 			ordering: link.ordering
 		};
@@ -676,9 +683,7 @@ export async function getActiveReleaseQuestions(
 		).map(async (questionIds) => {
 			const { data, error } = await client
 				.from('quiz_question_versions')
-				.select(
-					'question_id,version,skill_id,device,question_purpose,response_type,difficulty,prompt,choices,choice_order_strategy,fixed_choice_ids,correct_choice_id,correct_choice_ids,correct_numeric_value,correct_numeric_tolerance,sequence_items,accepted_answers,explanation'
-				)
+				.select(QUESTION_VERSION_SELECT)
 				.in('question_id', questionIds)
 				.eq('lifecycle_status', 'active');
 
@@ -707,6 +712,9 @@ export async function getActiveReleaseQuestions(
 			correct_numeric_tolerance: question.correct_numeric_tolerance ?? 0,
 			sequence_items: question.sequence_items ?? [],
 			accepted_answers: question.accepted_answers ?? [],
+			math_template: question.math_template,
+			math_match_mode: question.math_match_mode ?? 'normalized',
+			accepted_math_answers: question.accepted_math_answers ?? [],
 			explanation: question.explanation
 		})) as Omit<QuizQuestionVersion, 'ordering'>[] | null,
 		questionItems,
@@ -727,6 +735,9 @@ export async function getPracticeQuizQuestions(
 			correct_numeric_value: _correctNumericValue,
 			correct_numeric_tolerance: _correctNumericTolerance,
 			accepted_answers: _acceptedAnswers,
+			math_template: _mathTemplate,
+			math_match_mode: _mathMatchMode,
+			accepted_math_answers: _acceptedMathAnswers,
 			explanation: _explanation,
 			...question
 		}) => question

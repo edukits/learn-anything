@@ -81,9 +81,17 @@ function normalizeChoices(question) {
 	if (!question.choices) {
 		return undefined;
 	}
-	return question.choices.map((choice, index) =>
-		typeof choice === 'string' ? { id: choiceIdForIndex(index), label: choice } : choice
-	);
+	return question.choices.map((choice, index) => {
+		if (typeof choice === 'string') {
+			return { id: choiceIdForIndex(index), label: choice };
+		}
+
+		return compactObject({
+			...choice,
+			id: choice.id ?? choiceIdForIndex(index),
+			label: choice.label
+		});
+	});
 }
 
 function choiceIdAtIndex(choices, index) {
@@ -229,6 +237,9 @@ function normalizeQuestion({
 		correct_numeric_answer: question.correct_numeric_answer,
 		sequence_items: sequenceItems,
 		accepted_answers: question.accepted_answers,
+		math_template: question.math_template,
+		math_match_mode: question.math_match_mode,
+		accepted_math_answers: question.accepted_math_answers,
 		grading_rubric: question.grading_rubric,
 		explanation: question.explanation
 	});

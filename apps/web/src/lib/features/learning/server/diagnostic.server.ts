@@ -48,6 +48,9 @@ export async function getDiagnosticQuestions(
 			correct_numeric_value: _correctNumericValue,
 			correct_numeric_tolerance: _correctNumericTolerance,
 			accepted_answers: _acceptedAnswers,
+			math_template: _mathTemplate,
+			math_match_mode: _mathMatchMode,
+			accepted_math_answers: _acceptedMathAnswers,
 			explanation: _explanation,
 			...question
 		}) => question

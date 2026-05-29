@@ -1,5 +1,15 @@
-import type { QuizQuestionData, QuizQuestionResult } from '@learn-anything/ui';
-import type { ChoiceOrderStrategy, QuestionPurpose, ResponseType } from './types';
+import type {
+	MathAnswerAcceptedValue,
+	QuizQuestionData,
+	QuizQuestionResult
+} from '@learn-anything/ui';
+import type {
+	AcceptedMathAnswer,
+	ChoiceOrderStrategy,
+	MathMatchMode,
+	QuestionPurpose,
+	ResponseType
+} from './types';
 
 type BuildLearningQuizQuestionsOptions = {
 	instantFeedback?: boolean;
@@ -15,7 +25,9 @@ export type LearningQuizQuestion = {
 	prompt: string;
 	choices: {
 		id: string;
-		label: string;
+		label?: string;
+		image_src?: string;
+		image_alt?: string;
 	}[];
 	choice_order_strategy?: ChoiceOrderStrategy;
 	fixed_choice_ids?: string[];
@@ -28,6 +40,9 @@ export type LearningQuizQuestion = {
 		label: string;
 	}[];
 	accepted_answers?: string[];
+	math_template?: string | null;
+	math_match_mode?: MathMatchMode;
+	accepted_math_answers?: AcceptedMathAnswer[];
 	explanation?: string;
 };
 
@@ -75,6 +90,17 @@ function buildQuestionResponse(
 				type: 'multiple-choice',
 				options: getOrderedChoices(question, options).map((choice) => ({
 					value: choice.id,
+					label: choice.label
+				})),
+				...(options.instantFeedback ? { correctValue: question.correct_choice_id ?? null } : {})
+			};
+		case 'image_choice':
+			return {
+				type: 'image-choice',
+				options: getOrderedChoices(question, options).map((choice) => ({
+					value: choice.id,
+					imageSrc: choice.image_src ?? '',
+					imageAlt: choice.image_alt,
 					label: choice.label
 				})),
 				...(options.instantFeedback ? { correctValue: question.correct_choice_id ?? null } : {})
@@ -128,11 +154,31 @@ function buildQuestionResponse(
 						}
 					: {})
 			};
+		case 'math':
+			return {
+				type: 'math',
+				placeholder: 'Type a math answer',
+				value: question.math_template ?? '',
+				template: question.math_template ?? undefined,
+				matchMode: question.math_match_mode ?? 'normalized',
+				...(options.instantFeedback
+					? { acceptedValues: toMathAcceptedValues(question.accepted_math_answers ?? []) }
+					: {})
+			};
 		default: {
 			const exhaustive: never = question.response_type;
 			throw new Error(`Unsupported response type: ${exhaustive}`);
 		}
 	}
+}
+
+function toMathAcceptedValues(answers: AcceptedMathAnswer[]): MathAnswerAcceptedValue[] {
+	return answers.map((answer) => ({
+		latex: answer.latex,
+		prompts: answer.prompts,
+		matchMode: answer.matchMode,
+		feedback: answer.feedback
+	}));
 }
 
 function getOrderedChoices(

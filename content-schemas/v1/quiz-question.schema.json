@@ -28,7 +28,15 @@
 			"enum": ["recognition", "application"]
 		},
 		"response_type": {
-			"enum": ["multiple_choice", "multiple_select", "numeric", "sequencing", "short_answer"]
+			"enum": [
+				"multiple_choice",
+				"multiple_select",
+				"numeric",
+				"sequencing",
+				"short_answer",
+				"math",
+				"image_choice"
+			]
 		},
 		"difficulty": { "enum": ["easy", "medium", "hard"] },
 		"prompt": {
@@ -41,14 +49,16 @@
 			"minItems": 2,
 			"items": {
 				"type": "object",
-				"required": ["id", "label"],
+				"required": ["id"],
 				"properties": {
 					"id": { "type": "string", "minLength": 1 },
 					"label": {
 						"type": "string",
 						"minLength": 1,
 						"description": "Choice text rendered as Markdown. Supports LaTeX math."
-					}
+					},
+					"image_src": { "type": "string", "minLength": 1 },
+					"image_alt": { "type": "string", "minLength": 1 }
 				},
 				"additionalProperties": false
 			}
@@ -102,6 +112,37 @@
 			"minItems": 1,
 			"items": { "type": "string", "minLength": 1 }
 		},
+		"math_template": {
+			"type": "string",
+			"minLength": 1,
+			"description": "Optional MathLive LaTeX template for math response prompts."
+		},
+		"math_match_mode": {
+			"enum": ["exact", "normalized"],
+			"default": "normalized"
+		},
+		"accepted_math_answers": {
+			"type": "array",
+			"minItems": 1,
+			"items": {
+				"type": "object",
+				"additionalProperties": false,
+				"properties": {
+					"latex": { "type": "string", "minLength": 1 },
+					"prompts": {
+						"type": "object",
+						"additionalProperties": { "type": "string", "minLength": 1 }
+					},
+					"matchMode": { "enum": ["exact", "normalized"] },
+					"feedback": {
+						"type": "string",
+						"minLength": 1,
+						"description": "Optional answer-specific feedback rendered as Markdown."
+					}
+				},
+				"anyOf": [{ "required": ["latex"] }, { "required": ["prompts"] }]
+			}
+		},
 		"grading_rubric": {
 			"type": "string",
 			"minLength": 1,
@@ -121,8 +162,53 @@
 	},
 	"allOf": [
 		{
+			"if": { "properties": { "response_type": { "const": "multiple_choice" } } },
+			"then": {
+				"required": ["choices", "correct_choice_id"],
+				"properties": {
+					"choices": {
+						"items": { "required": ["id", "label"] }
+					}
+				}
+			}
+		},
+		{
+			"if": { "properties": { "response_type": { "const": "multiple_select" } } },
+			"then": {
+				"required": ["choices", "correct_choice_ids"],
+				"properties": {
+					"choices": {
+						"items": { "required": ["id", "label"] }
+					}
+				}
+			}
+		},
+		{
+			"if": { "properties": { "response_type": { "const": "numeric" } } },
+			"then": { "required": ["correct_numeric_answer"] }
+		},
+		{
+			"if": { "properties": { "response_type": { "const": "sequencing" } } },
+			"then": { "required": ["sequence_items"] }
+		},
+		{
 			"if": { "properties": { "response_type": { "const": "short_answer" } } },
 			"then": { "required": ["accepted_answers"] }
+		},
+		{
+			"if": { "properties": { "response_type": { "const": "math" } } },
+			"then": { "required": ["accepted_math_answers"] }
+		},
+		{
+			"if": { "properties": { "response_type": { "const": "image_choice" } } },
+			"then": {
+				"required": ["choices", "correct_choice_id"],
+				"properties": {
+					"choices": {
+						"items": { "required": ["id", "image_src", "image_alt"] }
+					}
+				}
+			}
 		}
 	],
 	"additionalProperties": false

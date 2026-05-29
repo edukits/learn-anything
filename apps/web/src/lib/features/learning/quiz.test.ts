@@ -23,6 +23,9 @@ function buildQuestion(overrides: Partial<LearningQuizQuestion> = {}): LearningQ
 			{ id: 'second', label: 'Second' }
 		],
 		accepted_answers: ['accepted answer'],
+		math_template: null,
+		math_match_mode: 'normalized',
+		accepted_math_answers: [{ latex: '(x+1)(x+2)' }],
 		explanation: '  Use **retrieval practice**: answer from memory before checking notes.  ',
 		...overrides
 	};
@@ -242,6 +245,73 @@ describe('buildLearningQuizQuestions', () => {
 			placeholder: 'Type your answer',
 			acceptedAnswers: ['A Clean Answer'],
 			matchMode: 'normalized'
+		});
+	});
+
+	test('maps math answers to MathAnswer configuration for instant feedback', () => {
+		const [question] = buildLearningQuizQuestions(
+			[
+				buildQuestion({
+					response_type: 'math',
+					math_template: '\\begin{bmatrix}\\placeholder[x]{}\\\\\\placeholder[y]{}\\end{bmatrix}',
+					accepted_math_answers: [{ prompts: { x: '3', y: '-2' } }]
+				})
+			],
+			{ instantFeedback: true }
+		);
+
+		expect(question.response).toEqual({
+			type: 'math',
+			placeholder: 'Type a math answer',
+			value: '\\begin{bmatrix}\\placeholder[x]{}\\\\\\placeholder[y]{}\\end{bmatrix}',
+			template: '\\begin{bmatrix}\\placeholder[x]{}\\\\\\placeholder[y]{}\\end{bmatrix}',
+			matchMode: 'normalized',
+			acceptedValues: [{ prompts: { x: '3', y: '-2' } }]
+		});
+	});
+
+	test('maps image choice questions to image-choice options and answer keys', () => {
+		const [question] = buildLearningQuizQuestions(
+			[
+				buildQuestion({
+					response_type: 'image_choice',
+					choices: [
+						{
+							id: 'positive',
+							label: 'Positive slope',
+							image_src: '/images/positive-slope.png',
+							image_alt: 'A line rising from left to right'
+						},
+						{
+							id: 'negative',
+							label: 'Negative slope',
+							image_src: '/images/negative-slope.png',
+							image_alt: 'A line falling from left to right'
+						}
+					],
+					correct_choice_id: 'positive'
+				})
+			],
+			{ instantFeedback: true }
+		);
+
+		expect(question.response).toEqual({
+			type: 'image-choice',
+			options: [
+				{
+					value: 'positive',
+					imageSrc: '/images/positive-slope.png',
+					imageAlt: 'A line rising from left to right',
+					label: 'Positive slope'
+				},
+				{
+					value: 'negative',
+					imageSrc: '/images/negative-slope.png',
+					imageAlt: 'A line falling from left to right',
+					label: 'Negative slope'
+				}
+			],
+			correctValue: 'positive'
 		});
 	});
 });

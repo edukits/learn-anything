@@ -5,6 +5,7 @@ import {
 	parseLessonMarkdown,
 	schemaForItemType,
 	validateItemForContext,
+	validateLessonInteractionsForContext,
 	validateSyllabusForModule,
 	validateWithSchema
 } from '../src/schemas.mjs';
@@ -29,6 +30,70 @@ const context = {
 	module: { slug: 'basics' },
 	moduleSyllabus: { syllabus: [] }
 };
+
+function questionFor(responseType, overrides = {}) {
+	const base = {
+		skill_slug: 'inverse-operations',
+		question_purpose: 'application',
+		response_type: responseType,
+		difficulty: 'easy',
+		prompt: 'Answer the question.',
+		explanation: 'This checks inverse operations.',
+		...overrides
+	};
+
+	if (responseType === 'multiple_choice') {
+		return {
+			...base,
+			choices: ['Choice A', 'Choice B'],
+			correct_index: 0
+		};
+	}
+	if (responseType === 'multiple_select') {
+		return {
+			...base,
+			choices: ['Choice A', 'Choice B', 'Choice C'],
+			correct_indices: [0, 1]
+		};
+	}
+	if (responseType === 'numeric') {
+		return {
+			...base,
+			correct_numeric_answer: { value: 4, tolerance: 0 }
+		};
+	}
+	if (responseType === 'sequencing') {
+		return {
+			...base,
+			sequence_items: ['First', 'Second']
+		};
+	}
+	if (responseType === 'short_answer') {
+		return {
+			...base,
+			accepted_answers: ['answer']
+		};
+	}
+	if (responseType === 'math') {
+		return {
+			...base,
+			prompt: 'Factor $x^2 + 3x + 2$.',
+			accepted_math_answers: [{ latex: '(x+1)(x+2)' }]
+		};
+	}
+	if (responseType === 'image_choice') {
+		return {
+			...base,
+			choices: [
+				{ label: 'Triangle', image_src: '/images/triangle.png', image_alt: 'A triangle' },
+				{ label: 'Square', image_src: '/images/square.png', image_alt: 'A square' }
+			],
+			correct_index: 0
+		};
+	}
+
+	throw new Error(`Unsupported fixture response type ${responseType}`);
+}
 
 test('parseLessonMarkdown parses YAML frontmatter and Markdown body', () => {
 	const lesson = parseLessonMarkdown(
@@ -115,6 +180,70 @@ test('simplified quiz schema validates and context catches bad references', () =
 
 	const contextResult = validateItemForContext(context)(quiz);
 	assert.equal(contextResult.success, true);
+});
+
+test('simplified quiz schema accepts every supported response type', () => {
+	const responseTypes = [
+		'multiple_choice',
+		'multiple_select',
+		'numeric',
+		'sequencing',
+		'short_answer',
+		'math',
+		'image_choice'
+	];
+	const quiz = {
+		title: 'All Question Types',
+		description: 'Exercise every supported question type.',
+		questions: responseTypes.map((responseType) => questionFor(responseType))
+	};
+
+	const result = validateItemForContext({
+		...context,
+		syllabusItem: {
+			...context.syllabusItem,
+			question_count: responseTypes.length
+		}
+	})(quiz);
+
+	assert.equal(result.success, true);
+});
+
+test('lesson interaction schema accepts every supported response type', () => {
+	const responseTypes = [
+		'multiple_choice',
+		'multiple_select',
+		'numeric',
+		'sequencing',
+		'short_answer',
+		'math',
+		'image_choice'
+	];
+	const lesson = {
+		type: 'lesson',
+		title: 'Question Types',
+		summary: 'Check all supported types.',
+		estimated_minutes: 5,
+		skill_slugs: ['inverse-operations'],
+		body_markdown: responseTypes
+			.map((responseType) => `::concept-check{slug="${responseType.replaceAll('_', '-')}"}`)
+			.join('\n\n')
+	};
+	const sidecar = {
+		interactions: responseTypes.map((responseType) => ({
+			slug: responseType.replaceAll('_', '-'),
+			type: 'concept_check',
+			questions: [questionFor(responseType)]
+		}))
+	};
+
+	const result = validateLessonInteractionsForContext({
+		lesson,
+		syllabusItem: context.syllabusItem,
+		moduleSyllabus: context.moduleSyllabus
+	})(sidecar);
+
+	assert.equal(result.success, true);
 });
 
 test('simplified quiz schema rejects invalid answer indexes and duplicate multi-select indexes', () => {
