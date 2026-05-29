@@ -1,28 +1,70 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import { Button } from '@learn-anything/ui';
-	import { ShieldCheck, UserRound } from '@lucide/svelte';
+	import { ShieldCheck, Shuffle } from '@lucide/svelte';
+	import {
+		avatarBackgroundColors,
+		avatarBeardOptions,
+		avatarBodyIconOptions,
+		avatarBrowOptions,
+		avatarEyeOptions,
+		avatarGestureOptions,
+		avatarGlassesOptions,
+		avatarHairOptions,
+		avatarLipOptions,
+		buildNotionistsAvatarUrl,
+		normalizeAvatarOptions,
+		type PublicAvatarOptions
+	} from '$lib/features/social';
 
 	let { data, form }: PageProps = $props();
 
+	let avatarOptions = $derived(
+		normalizeAvatarOptions(form?.values?.avatarOptions ?? data.profile.avatar_options)
+	);
+
 	let profileForm = $derived({
 		displayName: form?.values?.displayName ?? data.profile.display_name,
-		avatarUrl: form?.values?.avatarUrl ?? data.profile.avatar_url ?? '',
 		titleRewardKey: form?.values?.titleRewardKey ?? data.profile.equipped_title_reward_key ?? '',
 		bio: form?.values?.bio ?? data.profile.bio ?? '',
 		leaderboardOptIn: form?.values?.leaderboardOptIn ?? data.profile.leaderboard_opt_in
 	});
+
+	let avatarUrl = $derived(buildNotionistsAvatarUrl(avatarOptions, 192));
+
+	function randomizeAvatar() {
+		const random =
+			typeof crypto !== 'undefined' && 'randomUUID' in crypto
+				? crypto.randomUUID().slice(0, 8)
+				: Math.random().toString(36).slice(2, 10);
+		updateAvatarOption('seed', `${profileForm.displayName || 'Learner'} ${random}`);
+	}
+
+	function updateAvatarOption<Key extends keyof PublicAvatarOptions>(
+		key: Key,
+		value: PublicAvatarOptions[Key]
+	) {
+		avatarOptions = { ...avatarOptions, [key]: value };
+	}
+
+	function controlValue(event: Event) {
+		return (event.currentTarget as HTMLInputElement | HTMLSelectElement).value;
+	}
+
+	function optionLabel(value: string) {
+		if (value === 'none') return 'None';
+		return value
+			.replace(/([a-z])([A-Z])/g, '$1 $2')
+			.replace(/^variant0?/, 'Variant ')
+			.replace(/^./, (match) => match.toUpperCase());
+	}
 </script>
 
 <main class="page profile-page">
 	<section class="hero">
 		<div class="hero-visual">
 			<div class="avatar-preview">
-				{#if profileForm.avatarUrl}
-					<img src={profileForm.avatarUrl} alt="" />
-				{:else}
-					<UserRound size={48} />
-				{/if}
+				<img src={avatarUrl} alt="" />
 			</div>
 		</div>
 		<div class="hero-text">
@@ -50,15 +92,188 @@
 					<input name="displayName" value={profileForm.displayName} maxlength="80" required />
 				</label>
 
-				<label>
-					<span class="field-label">Avatar URL</span>
-					<input
-						name="avatarUrl"
-						value={profileForm.avatarUrl}
-						maxlength="500"
-						placeholder="https://example.com/photo.jpg"
-					/>
-				</label>
+				<div class="avatar-field">
+					<span class="field-label">Avatar</span>
+					<div class="avatar-builder">
+						<div class="avatar-stage">
+							<img src={avatarUrl} alt="" />
+						</div>
+
+						<div class="avatar-controls">
+							<label>
+								<span class="field-label">Seed</span>
+								<div class="seed-row">
+									<input
+										name="avatarSeed"
+										value={avatarOptions.seed}
+										maxlength="120"
+										required
+										oninput={(event) => updateAvatarOption('seed', controlValue(event))}
+									/>
+									<button type="button" class="icon-button" onclick={randomizeAvatar} title="Randomize avatar">
+										<Shuffle size={18} />
+									</button>
+								</div>
+							</label>
+
+							<div class="swatch-group" aria-label="Avatar background color">
+								<span class="field-label">Background</span>
+								<div class="swatches">
+									{#each avatarBackgroundColors as color (color)}
+										<label class="swatch" style:--swatch-color={`#${color}`} title={`#${color}`}>
+											<input
+												type="radio"
+												name="avatarBackgroundColor"
+												value={color}
+												checked={avatarOptions.backgroundColor === color}
+												onchange={() => updateAvatarOption('backgroundColor', color)}
+											/>
+											<span></span>
+										</label>
+									{/each}
+								</div>
+							</div>
+
+							<div class="avatar-select-grid">
+								<label>
+									<span class="field-label">Hair</span>
+									<select
+										name="avatarHair"
+										value={avatarOptions.hair}
+										onchange={(event) =>
+											updateAvatarOption(
+												'hair',
+												controlValue(event) as PublicAvatarOptions['hair']
+											)}
+									>
+										{#each avatarHairOptions as option (option)}
+											<option value={option}>{optionLabel(option)}</option>
+										{/each}
+									</select>
+								</label>
+
+								<label>
+									<span class="field-label">Eyes</span>
+									<select
+										name="avatarEyes"
+										value={avatarOptions.eyes}
+										onchange={(event) =>
+											updateAvatarOption(
+												'eyes',
+												controlValue(event) as PublicAvatarOptions['eyes']
+											)}
+									>
+										{#each avatarEyeOptions as option (option)}
+											<option value={option}>{optionLabel(option)}</option>
+										{/each}
+									</select>
+								</label>
+
+								<label>
+									<span class="field-label">Brows</span>
+									<select
+										name="avatarBrows"
+										value={avatarOptions.brows}
+										onchange={(event) =>
+											updateAvatarOption(
+												'brows',
+												controlValue(event) as PublicAvatarOptions['brows']
+											)}
+									>
+										{#each avatarBrowOptions as option (option)}
+											<option value={option}>{optionLabel(option)}</option>
+										{/each}
+									</select>
+								</label>
+
+								<label>
+									<span class="field-label">Lips</span>
+									<select
+										name="avatarLips"
+										value={avatarOptions.lips}
+										onchange={(event) =>
+											updateAvatarOption(
+												'lips',
+												controlValue(event) as PublicAvatarOptions['lips']
+											)}
+									>
+										{#each avatarLipOptions as option (option)}
+											<option value={option}>{optionLabel(option)}</option>
+										{/each}
+									</select>
+								</label>
+
+								<label>
+									<span class="field-label">Beard</span>
+									<select
+										name="avatarBeard"
+										value={avatarOptions.beard}
+										onchange={(event) =>
+											updateAvatarOption(
+												'beard',
+												controlValue(event) as PublicAvatarOptions['beard']
+											)}
+									>
+										{#each avatarBeardOptions as option (option)}
+											<option value={option}>{optionLabel(option)}</option>
+										{/each}
+									</select>
+								</label>
+
+								<label>
+									<span class="field-label">Glasses</span>
+									<select
+										name="avatarGlasses"
+										value={avatarOptions.glasses}
+										onchange={(event) =>
+											updateAvatarOption(
+												'glasses',
+												controlValue(event) as PublicAvatarOptions['glasses']
+											)}
+									>
+										{#each avatarGlassesOptions as option (option)}
+											<option value={option}>{optionLabel(option)}</option>
+										{/each}
+									</select>
+								</label>
+
+								<label>
+									<span class="field-label">Body icon</span>
+									<select
+										name="avatarBodyIcon"
+										value={avatarOptions.bodyIcon}
+										onchange={(event) =>
+											updateAvatarOption(
+												'bodyIcon',
+												controlValue(event) as PublicAvatarOptions['bodyIcon']
+											)}
+									>
+										{#each avatarBodyIconOptions as option (option)}
+											<option value={option}>{optionLabel(option)}</option>
+										{/each}
+									</select>
+								</label>
+
+								<label>
+									<span class="field-label">Gesture</span>
+									<select
+										name="avatarGesture"
+										value={avatarOptions.gesture}
+										onchange={(event) =>
+											updateAvatarOption(
+												'gesture',
+												controlValue(event) as PublicAvatarOptions['gesture']
+											)}
+									>
+										{#each avatarGestureOptions as option (option)}
+											<option value={option}>{optionLabel(option)}</option>
+										{/each}
+									</select>
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
 
 				<label>
 					<span class="field-label">Title</span>
@@ -140,6 +355,115 @@
 		object-fit: cover;
 	}
 
+	.avatar-field {
+		display: grid;
+		gap: 8px;
+	}
+
+	.avatar-builder {
+		align-items: start;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		display: grid;
+		gap: 20px;
+		grid-template-columns: 148px 1fr;
+		padding: 16px;
+	}
+
+	.avatar-stage {
+		align-items: center;
+		aspect-ratio: 1;
+		background: var(--color-surface-raised);
+		border: 1px solid var(--color-border);
+		border-radius: 50%;
+		display: grid;
+		inline-size: 100%;
+		justify-items: center;
+		overflow: hidden;
+	}
+
+	.avatar-stage img {
+		block-size: 100%;
+		inline-size: 100%;
+		object-fit: cover;
+	}
+
+	.avatar-controls {
+		display: grid;
+		gap: 14px;
+		min-inline-size: 0;
+	}
+
+	.seed-row {
+		align-items: stretch;
+		display: grid;
+		gap: 8px;
+		grid-template-columns: 1fr 44px;
+	}
+
+	.icon-button {
+		align-items: center;
+		background: var(--color-surface-raised);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		color: var(--color-text);
+		cursor: pointer;
+		display: inline-flex;
+		justify-content: center;
+		padding: 0;
+	}
+
+	.icon-button:hover {
+		border-color: var(--color-accent);
+		color: var(--color-accent);
+	}
+
+	.swatch-group {
+		display: grid;
+		gap: 8px;
+	}
+
+	.swatches {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+
+	.swatch {
+		display: block;
+		position: relative;
+	}
+
+	.swatch input {
+		block-size: 1px;
+		inline-size: 1px;
+		opacity: 0;
+		position: absolute;
+	}
+
+	.swatch span {
+		background: var(--swatch-color);
+		border: 1px solid color-mix(in srgb, var(--swatch-color), #000 22%);
+		border-radius: 999px;
+		box-shadow: inset 0 1px 1px rgb(255 255 255 / 0.5);
+		cursor: pointer;
+		display: block;
+		block-size: 28px;
+		inline-size: 28px;
+	}
+
+	.swatch input:checked + span {
+		outline: 3px solid color-mix(in srgb, var(--color-accent), transparent 55%);
+		outline-offset: 2px;
+	}
+
+	.avatar-select-grid {
+		display: grid;
+		gap: 12px;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
 	.hero-text {
 		display: grid;
 		gap: 4px;
@@ -203,7 +527,8 @@
 		gap: 16px;
 	}
 
-	label {
+	label,
+	.avatar-field {
 		display: grid;
 		gap: 6px;
 	}
@@ -271,6 +596,18 @@
 		.hero {
 			flex-direction: column;
 			align-items: start;
+		}
+
+		.avatar-builder {
+			grid-template-columns: 1fr;
+		}
+
+		.avatar-stage {
+			inline-size: 144px;
+		}
+
+		.avatar-select-grid {
+			grid-template-columns: 1fr;
 		}
 	}
 </style>

@@ -1,8 +1,9 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import { Button, Tabs, type TabItem } from '@learn-anything/ui';
-	import { Crown, Medal, Settings, Trophy, UserRound } from '@lucide/svelte';
+	import { Crown, Settings, Trophy, UserRound } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
+	import { buildNotionistsAvatarUrl, type PublicAvatarOptions } from '$lib/features/social';
 
 	let { data }: PageProps = $props();
 
@@ -32,6 +33,15 @@
 		const s = ['th', 'st', 'nd', 'rd'];
 		const v = n % 100;
 		return n + (s[(v - 20) % 10] || s[v] || s[0]);
+	}
+
+	function safeAvatarUrl(options: PublicAvatarOptions | null | undefined, size: number) {
+		if (!options) return null;
+		try {
+			return buildNotionistsAvatarUrl(options, size);
+		} catch {
+			return null;
+		}
 	}
 </script>
 
@@ -84,10 +94,11 @@
 		</section>
 	{:else}
 		{#if viewerEntry}
+			{@const viewerAvatarUrl = safeAvatarUrl(viewerEntry.avatar_options, 72)}
 			<section class="viewer-strip" aria-label="Your ranking">
 				<div class="viewer-avatar">
-					{#if viewerEntry.avatar_url}
-						<img src={viewerEntry.avatar_url} alt="" />
+					{#if viewerAvatarUrl}
+						<img src={viewerAvatarUrl} alt="" />
 					{:else}
 						<UserRound size={18} />
 					{/if}
@@ -104,10 +115,11 @@
 			<section class="podium" aria-label="Top 3 learners">
 				{#each podiumOrder as entry, i (entry.entry_key)}
 					{@const place = i === 1 ? 1 : i === 0 ? 2 : 3}
+					{@const avatarUrl = safeAvatarUrl(entry.avatar_options, place === 1 ? 144 : 112)}
 					<article class="podium-slot" data-place={place} class:is-viewer={entry.is_viewer}>
 						<div class="podium-avatar" data-place={place}>
-							{#if entry.avatar_url}
-								<img src={entry.avatar_url} alt="" />
+							{#if avatarUrl}
+								<img src={avatarUrl} alt="" />
 							{:else}
 								<UserRound size={place === 1 ? 28 : 22} />
 							{/if}
@@ -130,11 +142,12 @@
 		{:else}
 			<section class="podium-compact" aria-label="Top learners">
 				{#each podiumEntries as entry (entry.entry_key)}
+					{@const avatarUrl = safeAvatarUrl(entry.avatar_options, 80)}
 					<article class="rank-row" class:is-viewer={entry.is_viewer}>
 						<span class="rank-num" data-place={entry.rank}>{entry.rank}</span>
 						<div class="rank-avatar">
-							{#if entry.avatar_url}
-								<img src={entry.avatar_url} alt="" />
+							{#if avatarUrl}
+								<img src={avatarUrl} alt="" />
 							{:else}
 								<UserRound size={20} />
 							{/if}
@@ -152,11 +165,12 @@
 		{#if remainingEntries.length > 0}
 			<section class="rankings" aria-label="Rankings">
 				{#each remainingEntries as entry (entry.entry_key)}
+					{@const avatarUrl = safeAvatarUrl(entry.avatar_options, 80)}
 					<article class="rank-row" class:is-viewer={entry.is_viewer}>
 						<span class="rank-num">{entry.rank}</span>
 						<div class="rank-avatar">
-							{#if entry.avatar_url}
-								<img src={entry.avatar_url} alt="" />
+							{#if avatarUrl}
+								<img src={avatarUrl} alt="" />
 							{:else}
 								<UserRound size={20} />
 							{/if}

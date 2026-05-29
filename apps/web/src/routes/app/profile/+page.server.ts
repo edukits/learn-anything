@@ -1,6 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { getRewardInventory } from '$lib/features/engagement/server/index.server';
+import { AVATAR_STYLE, AVATAR_VERSION } from '$lib/features/social';
 import {
 	ensureWeeklyLeagueMembership,
 	getPublicProfile,
@@ -26,16 +27,30 @@ export const actions: Actions = {
 	default: async ({ request, locals }) => {
 		const user = await requireUser(locals);
 		const formData = await request.formData();
+		const avatarOptions = {
+			version: AVATAR_VERSION,
+			style: AVATAR_STYLE,
+			seed: String(formData.get('avatarSeed') ?? ''),
+			backgroundColor: String(formData.get('avatarBackgroundColor') ?? ''),
+			hair: String(formData.get('avatarHair') ?? ''),
+			eyes: String(formData.get('avatarEyes') ?? ''),
+			brows: String(formData.get('avatarBrows') ?? ''),
+			lips: String(formData.get('avatarLips') ?? ''),
+			beard: String(formData.get('avatarBeard') ?? ''),
+			glasses: String(formData.get('avatarGlasses') ?? ''),
+			bodyIcon: String(formData.get('avatarBodyIcon') ?? ''),
+			gesture: String(formData.get('avatarGesture') ?? '')
+		};
 		const parsed = publicProfileInputSchema.safeParse({
 			display_name: String(formData.get('displayName') ?? ''),
-			avatar_url: String(formData.get('avatarUrl') ?? ''),
+			avatar_options: avatarOptions,
 			equipped_title_reward_key: String(formData.get('titleRewardKey') ?? ''),
 			bio: String(formData.get('bio') ?? ''),
 			leaderboard_opt_in: formData.get('leaderboardOptIn') === 'on'
 		});
 		const submittedValues = {
 			displayName: String(formData.get('displayName') ?? ''),
-			avatarUrl: String(formData.get('avatarUrl') ?? ''),
+			avatarOptions,
 			titleRewardKey: String(formData.get('titleRewardKey') ?? ''),
 			bio: String(formData.get('bio') ?? ''),
 			leaderboardOptIn: formData.get('leaderboardOptIn') === 'on'

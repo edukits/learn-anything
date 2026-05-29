@@ -1,11 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { normalizeAvatarOptions } from '../avatar';
 import type { LeaderboardEntry, WeeklyLeagueMembership } from '../types';
 
 type LeaderboardRow = {
 	rank: number | string;
 	entry_key: string;
 	display_name: string;
-	avatar_url: string | null;
+	avatar_options: unknown;
 	title: string | null;
 	bio: string | null;
 	xp_points: number | string;
@@ -54,7 +55,7 @@ export async function getWeeklyLeaderboard(
 		rank: Number(row.rank),
 		entry_key: row.entry_key,
 		display_name: row.display_name,
-		avatar_url: row.avatar_url,
+		avatar_options: normalizeAvatarOptions(row.avatar_options, row.display_name),
 		title: row.title,
 		bio: row.bio,
 		xp_points: Number(row.xp_points),

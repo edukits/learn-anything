@@ -1,18 +1,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import {
+	createDefaultAvatarOptions,
+	normalizeAvatarOptions,
+	publicAvatarOptionsSchema
+} from '../avatar';
 import type { PublicProfile } from '../types';
 
 export const publicProfileInputSchema = z.object({
 	display_name: z.string().trim().min(1).max(80),
-	avatar_url: z
-		.string()
-		.trim()
-		.max(500)
-		.optional()
-		.refine((value) => !value || isSafePublicImageUrl(value), {
-			message: 'Avatar URL must be an HTTP or HTTPS URL.'
-		})
-		.transform((value) => (value ? value : null)),
+	avatar_options: publicAvatarOptionsSchema,
 	equipped_title_reward_key: z
 		.string()
 		.trim()
@@ -37,17 +34,23 @@ export async function getPublicProfile(
 ): Promise<PublicProfile> {
 	const { data, error } = await client
 		.from('public_profiles')
-		.select('user_id,display_name,avatar_url,title,equipped_title_reward_key,bio,leaderboard_opt_in')
+		.select('user_id,display_name,avatar_options,title,equipped_title_reward_key,bio,leaderboard_opt_in')
 		.eq('user_id', userId)
 		.maybeSingle();
 
 	if (error) throw new Error(error.message);
-	if (data) return data as PublicProfile;
+	if (data) {
+		const profile = data as Omit<PublicProfile, 'avatar_options'> & { avatar_options: unknown };
+		return {
+			...profile,
+			avatar_options: normalizeAvatarOptions(profile.avatar_options, profile.display_name)
+		};
+	}
 
 	return {
 		user_id: userId,
 		display_name: 'Learner',
-		avatar_url: null,
+		avatar_options: createDefaultAvatarOptions(userId, 'Learner'),
 		title: null,
 		equipped_title_reward_key: null,
 		bio: null,
@@ -66,18 +69,22 @@ export async function upsertPublicProfile(
 			{
 				user_id: userId,
 				display_name: input.display_name,
-				avatar_url: input.avatar_url,
+				avatar_options: input.avatar_options,
 				equipped_title_reward_key: input.equipped_title_reward_key,
 				bio: input.bio,
 				leaderboard_opt_in: input.leaderboard_opt_in
 			},
 			{ onConflict: 'user_id' }
 		)
-		.select('user_id,display_name,avatar_url,title,equipped_title_reward_key,bio,leaderboard_opt_in')
+		.select('user_id,display_name,avatar_options,title,equipped_title_reward_key,bio,leaderboard_opt_in')
 		.single();
 
 	if (error) throw new Error(error.message);
-	return data as PublicProfile;
+	const profile = data as Omit<PublicProfile, 'avatar_options'> & { avatar_options: unknown };
+	return {
+		...profile,
+		avatar_options: normalizeAvatarOptions(profile.avatar_options, profile.display_name)
+	};
 }
 
 export async function equipPublicProfileTitleReward(
@@ -111,13 +118,4 @@ export async function equipPublicProfileTitleReward(
 		.single();
 
 	if (error) throw new Error(error.message);
-}
-
-function isSafePublicImageUrl(value: string) {
-	try {
-		const url = new URL(value);
-		return url.protocol === 'http:' || url.protocol === 'https:';
-	} catch {
-		return false;
-	}
 }
