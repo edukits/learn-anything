@@ -25,9 +25,91 @@
 	let nextRewardKey = $derived(reward.equipped ? null : reward.rewardKey);
 	let showEquip = $derived(reward.rewardKind === 'title' && (Boolean(action) || Boolean(onEquip)));
 
+	type SparklePoint = {
+		id: string;
+		x: string;
+		y: string;
+		size: number;
+		duration: string;
+		delay: string;
+		driftX: string;
+		driftY: string;
+		opacity: string;
+		minOpacity: string;
+	};
+
+	const SPARKLE_COUNT = 11;
+	const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+	const HEX_CLEAR_RADIUS = 34;
+	const SPARKLE_CLEARANCE = 2;
+	const SPARKLE_MAX_SCALE = 1.12;
+	const SPARKLE_SPREAD_VARIANCE = 52;
+	const CARD_ICON_CENTER_Y = 54;
+
 	const hexId = Math.random().toString(36).slice(2, 8);
 	const HEX =
 		'M17 4.68L27 4.68Q32 4.68 34.5 9.01L39.5 17.67Q42 22 39.5 26.33L34.5 34.99Q32 39.32 27 39.32L17 39.32Q12 39.32 9.5 34.99L4.5 26.33Q2 22 4.5 17.67L9.5 9.01Q12 4.68 17 4.68Z';
+
+	let sparkles = $derived.by(() => createSparkles(reward));
+
+	function createSparkles(reward: RewardInventoryCardData): SparklePoint[] {
+		const random = createSeededRandom(
+			hashText(`${reward.rewardKey}|${reward.rewardLabel}|${reward.earnedAt}|${reward.rewardKind}`)
+		);
+		const cardPhase = random();
+
+		return Array.from({ length: SPARKLE_COUNT }, (_, index) => {
+			const size = Math.round(7 + random() * 8);
+			const angle = index * GOLDEN_ANGLE + random() * 0.75;
+			const sparkleRadius = (size * SPARKLE_MAX_SCALE) / 2;
+			const minRadius = HEX_CLEAR_RADIUS + sparkleRadius + SPARKLE_CLEARANCE;
+			const unconstrainedRadius = minRadius + Math.pow(random(), 0.72) * SPARKLE_SPREAD_VARIANCE;
+			const verticalDirection = Math.sin(angle);
+			const topRadiusLimit =
+				verticalDirection < 0
+					? (CARD_ICON_CENTER_Y - sparkleRadius - 2) / Math.abs(verticalDirection)
+					: Number.POSITIVE_INFINITY;
+			const radius = Math.max(minRadius, Math.min(unconstrainedRadius, topRadiusLimit));
+			const x = Math.cos(angle) * radius;
+			const y = Math.sin(angle) * radius;
+			const duration = 1850 + random() * 1200;
+			const delay = -(cardPhase * duration + random() * duration);
+			const opacity = 0.46 + random() * 0.34;
+
+			return {
+				id: `${reward.rewardKey}-${index}-${Math.round(x * 10)}-${Math.round(y * 10)}`,
+				x: `${x.toFixed(1)}px`,
+				y: `${y.toFixed(1)}px`,
+				size,
+				duration: `${Math.round(duration)}ms`,
+				delay: `${Math.round(delay)}ms`,
+				driftX: `${((random() - 0.5) * 7).toFixed(1)}px`,
+				driftY: `${((random() - 0.5) * 7).toFixed(1)}px`,
+				opacity: opacity.toFixed(2),
+				minOpacity: (opacity * 0.42).toFixed(2)
+			};
+		});
+	}
+
+	function hashText(value: string): number {
+		let hash = 2166136261;
+
+		for (let index = 0; index < value.length; index += 1) {
+			hash ^= value.charCodeAt(index);
+			hash = Math.imul(hash, 16777619);
+		}
+
+		return hash >>> 0;
+	}
+
+	function createSeededRandom(seed: number) {
+		let state = seed || 1;
+
+		return () => {
+			state = Math.imul(state, 1664525) + 1013904223;
+			return (state >>> 0) / 4294967296;
+		};
+	}
 </script>
 
 <article
@@ -35,9 +117,23 @@
 	class:equipped={reward.equipped}
 >
 	<div class="reward-icon">
-		<span class="sparkle sparkle-1" aria-hidden="true"><Sparkle size={14} fill="currentColor" stroke="none" /></span>
-		<span class="sparkle sparkle-2" aria-hidden="true"><Sparkle size={10} fill="currentColor" stroke="none" /></span>
-		<span class="sparkle sparkle-3" aria-hidden="true"><Sparkle size={12} fill="currentColor" stroke="none" /></span>
+		<div class="sparkle-field" aria-hidden="true">
+			{#each sparkles as sparkle (sparkle.id)}
+				<span
+					class="sparkle"
+					style:--sparkle-x={sparkle.x}
+					style:--sparkle-y={sparkle.y}
+					style:--sparkle-duration={sparkle.duration}
+					style:--sparkle-delay={sparkle.delay}
+					style:--sparkle-drift-x={sparkle.driftX}
+					style:--sparkle-drift-y={sparkle.driftY}
+					style:--sparkle-opacity={sparkle.opacity}
+					style:--sparkle-min-opacity={sparkle.minOpacity}
+				>
+					<Sparkle size={sparkle.size} fill="currentColor" stroke="none" />
+				</span>
+			{/each}
+		</div>
 		<svg class="hex-bg" viewBox="0 0 44 44" aria-hidden="true">
 			<defs>
 				<linearGradient id="hfill-{hexId}" x1="0" y1="0" x2="0" y2="1">
@@ -115,7 +211,9 @@
 		display: flex;
 		flex-direction: column;
 		gap: 10px;
+		overflow: hidden;
 		padding: 22px 18px 20px;
+		position: relative;
 		text-align: center;
 		transition:
 			border-color 0.15s,
@@ -133,6 +231,7 @@
 		color: #fff;
 		display: grid;
 		inline-size: 64px;
+		isolation: isolate;
 		justify-items: center;
 		position: relative;
 	}
@@ -143,6 +242,7 @@
 		inset: 0;
 		overflow: visible;
 		position: absolute;
+		z-index: 1;
 	}
 
 	.hex-outline {
@@ -153,35 +253,37 @@
 
 	.reward-icon :global(svg ~ svg) {
 		position: relative;
+		z-index: 2;
+	}
+
+	.sparkle-field {
+		block-size: 196px;
+		inline-size: 196px;
+		inset-block-start: 50%;
+		inset-inline-start: 50%;
+		pointer-events: none;
+		position: absolute;
+		transform: translate(-50%, -50%);
+		z-index: 0;
 	}
 
 	.sparkle {
 		color: hsl(var(--tint-h) var(--tint-s) calc(var(--tint-l) + 8%) / 0.55);
+		display: grid;
+		inset-block-start: 50%;
+		inset-inline-start: 50%;
+		place-items: center;
 		position: absolute;
+		transform: translate(calc(-50% + var(--sparkle-x)), calc(-50% + var(--sparkle-y)))
+			scale(0.82);
+		transform-origin: center;
 		z-index: 1;
-		animation: sparkle 2200ms ease-in-out infinite;
+		animation: sparkle var(--sparkle-duration) ease-in-out var(--sparkle-delay) infinite;
 	}
 
 	.sparkle :global(svg) {
 		fill: currentColor;
 		stroke: none;
-	}
-
-	.sparkle-1 {
-		inset-block-start: -4px;
-		inset-inline-end: -10px;
-	}
-
-	.sparkle-2 {
-		inset-block-end: -2px;
-		inset-inline-start: -10px;
-		animation-delay: 500ms;
-	}
-
-	.sparkle-3 {
-		inset-block-start: 24px;
-		inset-inline-end: -14px;
-		animation-delay: 1000ms;
 	}
 
 	.reward-card.kind-badge {
@@ -263,12 +365,17 @@
 	@keyframes sparkle {
 		0%,
 		100% {
-			opacity: 0.5;
-			transform: scale(0.85);
+			opacity: var(--sparkle-min-opacity);
+			transform: translate(calc(-50% + var(--sparkle-x)), calc(-50% + var(--sparkle-y)))
+				scale(0.72);
 		}
 		50% {
-			opacity: 1;
-			transform: scale(1.1);
+			opacity: var(--sparkle-opacity);
+			transform: translate(
+					calc(-50% + var(--sparkle-x) + var(--sparkle-drift-x)),
+					calc(-50% + var(--sparkle-y) + var(--sparkle-drift-y))
+				)
+				scale(1.12);
 		}
 	}
 </style>
