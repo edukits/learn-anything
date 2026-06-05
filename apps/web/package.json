@@ -15,6 +15,7 @@
 		"@learn-anything/tokens": "workspace:*",
 		"@learn-anything/ui": "workspace:*",
 		"@lucide/svelte": "^1.16.0",
+		"@number-flow/svelte": "^0.4.0",
 		"@supabase/ssr": "^0.8.0",
 		"@supabase/supabase-js": "^2.88.0",
 		"bits-ui": "^2.18.1",

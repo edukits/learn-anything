@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { PageProps } from './$types';
 	import { Button } from '@learn-anything/ui';
+	import NumberFlow, { NumberFlowGroup, continuous, type Format } from '@number-flow/svelte';
 	import {
 		ArrowRight,
 		BookOpen,
@@ -11,13 +12,19 @@
 		Sparkles,
 		Trophy
 	} from '@lucide/svelte';
+	import { onMount } from 'svelte';
 	import { pluralize } from '$lib/shared/utils/format';
 	import logoUrl from '../../../../packages/ui/src/lib/assets/brand/logo-dark-md.png';
 	import heroImageUrl from '$lib/assets/hero-path.png';
 
 	let { data }: PageProps = $props();
+	let statFlowMounted = $state(false);
+	let statValuesReady = $state(false);
 
 	const avatarHues = [200, 32, 280, 140, 350, 220, 95, 12];
+	const statNumberFormat: Format = {
+		useGrouping: true
+	};
 
 	function formatDuration(minutes: number) {
 		if (minutes < 60) return `${minutes} min`;
@@ -51,12 +58,45 @@
 	const logoSparklePath =
 		'M102.23,218.89s-23.55-49.65-34.98-95.02c-6.27-24.9-6.92-46.44-2.64-62.61C76.67,15.61,112.13,1.66,150.23.52s78.08,38.1,92.03,75.44-3.47,95.64-62.61,122.21c-44.51,19.99-118.64,39.37-161.06-10.82-41.11-48.66-4.66-103.45,35.08-116.29,36.21-11.69,107.26-20,156.19,44.77,48.25,63.86-5.24,140.21-44.54,146.09-47.9,7.17-89.47-70.64-70.91-132.87,19.6-65.73,90.62-84.52,165.21-30.07,53.56,39.1,25.27,129.75-45.45,163.83-25,12.05-59.41,19.26-82.56.32-20.87-17.08-29.38-44.24-29.38-44.24Z';
 
+	let statItems = $derived([
+		{
+			id: 'subjects',
+			value: data.stats.subjectCount,
+			label: pluralize(data.stats.subjectCount, 'subject')
+		},
+		{
+			id: 'topics',
+			value: data.stats.topicCount,
+			label: pluralize(data.stats.topicCount, 'topic')
+		},
+		{
+			id: 'lessons',
+			value: data.stats.lessonCount,
+			label: pluralize(data.stats.lessonCount, 'lesson')
+		},
+		{
+			id: 'quizzes',
+			value: data.stats.quizCount,
+			label: pluralize(data.stats.quizCount, 'quiz', 'quizzes')
+		}
+	]);
+
 	let showStats = $derived(
 		data.stats.subjectCount > 0 ||
 			data.stats.topicCount > 0 ||
 			data.stats.lessonCount > 0 ||
 			data.stats.quizCount > 0
 	);
+
+	onMount(() => {
+		statFlowMounted = true;
+
+		const frame = requestAnimationFrame(() => {
+			statValuesReady = true;
+		});
+
+		return () => cancelAnimationFrame(frame);
+	});
 </script>
 
 <main class="landing">
@@ -148,8 +188,8 @@
 
 				<h1>Master any topic, one path at a time</h1>
 				<p class="lede">
-					Stop bouncing between tutorials. Follow a clear path from first principles to real
-					mastery — and actually remember it.
+					Stop bouncing between tutorials. Follow a clear path from first principles to real mastery
+					— and actually remember it.
 				</p>
 
 				<div class="button-row">
@@ -170,24 +210,32 @@
 	</section>
 
 	{#if showStats}
-		<section class="stats page" aria-label="Catalogue overview">
-			<div class="stat">
-				<strong>{data.stats.subjectCount}</strong>
-				<span>{pluralize(data.stats.subjectCount, 'subject')}</span>
-			</div>
-			<div class="stat">
-				<strong>{data.stats.topicCount}</strong>
-				<span>{pluralize(data.stats.topicCount, 'topic')}</span>
-			</div>
-			<div class="stat">
-				<strong>{data.stats.lessonCount}</strong>
-				<span>{pluralize(data.stats.lessonCount, 'lesson')}</span>
-			</div>
-			<div class="stat">
-				<strong>{data.stats.quizCount}</strong>
-				<span>{pluralize(data.stats.quizCount, 'quiz', 'quizzes')}</span>
-			</div>
-		</section>
+		<NumberFlowGroup>
+			<section class="stats page" aria-label="Catalogue overview">
+				{#each statItems as stat (stat.id)}
+					<div class="stat">
+						<strong class="stat-value">
+							<span class="sr-only">{stat.value.toLocaleString('en-US')}</span>
+							<span class="stat-flow-wrap" aria-hidden="true">
+								{#if statFlowMounted}
+									<NumberFlow
+										value={statValuesReady ? stat.value : 0}
+										locales="en-US"
+										format={statNumberFormat}
+										plugins={[continuous]}
+										trend={1}
+										willChange
+									/>
+								{:else}
+									0
+								{/if}
+							</span>
+						</strong>
+						<span>{stat.label}</span>
+					</div>
+				{/each}
+			</section>
+		</NumberFlowGroup>
 	{/if}
 
 	<section class="features page" aria-labelledby="features-heading">
@@ -512,18 +560,55 @@
 	.stat {
 		display: grid;
 		gap: 4px;
+		position: relative;
 		text-align: center;
+	}
+
+	.stat::before {
+		background: linear-gradient(
+			90deg,
+			transparent,
+			hsl(var(--color-accent-h) 88% 62%),
+			transparent
+		);
+		block-size: 1px;
+		content: '';
+		inline-size: 56px;
+		inset-block-start: -14px;
+		inset-inline-start: calc(50% - 28px);
+		opacity: 0.42;
+		position: absolute;
 	}
 
 	.stat strong {
 		font-family: var(--font-display);
 		font-size: clamp(1.75rem, 3vw, 2.5rem);
 		font-weight: 600;
-		letter-spacing: -0.02em;
+		font-variant-numeric: tabular-nums;
+		letter-spacing: 0;
 		line-height: 1;
 	}
 
-	.stat span {
+	.stat-flow-wrap {
+		--number-flow-mask-height: 0.18em;
+		--number-flow-mask-width: 0.32em;
+		color: var(--color-text);
+		display: inline-block;
+		line-height: 0.88;
+		text-shadow: 0 0 24px hsl(var(--color-accent-h) 90% 58% / 0.24);
+	}
+
+	.sr-only {
+		block-size: 1px;
+		clip: rect(0, 0, 0, 0);
+		clip-path: inset(50%);
+		inline-size: 1px;
+		overflow: hidden;
+		position: absolute;
+		white-space: nowrap;
+	}
+
+	.stat > span {
 		color: var(--color-text-muted);
 		font-size: 0.875rem;
 	}
