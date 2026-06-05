@@ -1,185 +1,183 @@
 # Clarifyst
 
-Clarifyst is a free, interactive learning platform for self-guided study. It combines short lessons, structured quizzes, spaced review, progress tracking, XP, streaks, leaderboards, and AI-generated curriculum pipelines so learners can follow guided paths across many subjects.
+Clarifyst is a free learning website for self-study.
+
+It gives learners short lessons, quizzes, review, XP, streaks, and leaderboards. It also has an AI content system that can create new learning paths from a topic brief.
 
 - Live site: [clarifist.com](https://clarifist.com)
-- Product app: `apps/web`
-- Content generation system: `packages/content-pipeline`
-- Demo/component workspace: `packages/ui` and `apps/demo`
+- Main app: `apps/web`
+- Content system: `packages/content-pipeline`
+- Shared UI: `packages/ui`
 
-## Problem and Insight
+## Problem
 
-People need better ways to learn independently. Free resources are scattered, videos and articles are often passive, and chatbots can answer questions but usually do not organize a learner into a durable path with practice, review, and progress.
+People can find a lot of free learning material online. The hard part is knowing what to learn next, practising it, and remembering it later.
 
-Existing learning tools cover different parts of the problem:
+Chatbots are good for asking questions. They are less good at giving a full learning path with lessons, quizzes, review, and long-term study history.
 
-- Duolingo, Khan Academy, and Brilliant provide high-quality guided paths, but only for the subjects they have explicitly built.
-- Quizlet and user-generated study tools cover more topics, but the quality varies and the format is usually limited to flashcards or quizzes.
-- ChatGPT and other LLM chatbots can explain almost anything, but they do not naturally provide a coherent curriculum, reliable assessment loop, spaced repetition, or long-term motivation system.
+Apps like Duolingo, Khan Academy, and Brilliant give better paths. But they only cover the topics their teams have already made.
 
-Clarifyst is built around the idea that AI should do more than answer questions. It should help create better learning systems: structured pathways, interactive practice, review schedules, and high-quality learning content across many domains.
+Quizlet has more user-made content. But the quality varies, and the format is often limited.
 
-## What Clarifyst Does
+Clarifyst tries to sit between these options. It uses AI to create structured learning paths, then puts them into a guided app.
 
-The learner-facing app is designed for short, repeatable study sessions:
+## Core Idea
 
-- Browse subjects and topics.
-- Follow topic learning paths made of lessons, concept checks, and quizzes.
-- Answer reliably gradable question types, including multiple choice, multi-select, ordering, math, short-answer-style structured prompts, and other schema-backed formats.
-- Receive instant feedback after practice questions.
-- Track lesson completion, quiz attempts, confidence, skill progress, XP, streaks, daily goals, achievements, and leaderboard progress.
-- Use spaced repetition and review recommendations to revisit weak or aging material.
+AI should do more than answer one question at a time.
 
-The current app supports authenticated learning flows: users can sign in, view available content, open lessons, complete learning paths, take quizzes, and persist progress.
+It can help make a full learning system:
 
-## Technical Work
+- short lessons
+- concept checks
+- quizzes with instant feedback
+- review based on past answers
+- visible study history
+- motivation through XP, streaks, and achievements
 
-Clarifyst has two major systems: the web app where users learn, and the content generation/release system that creates and validates curriculum before it enters the app.
+## What Works Now
 
-### Web App
+Users can sign in, browse topics, open lessons, and take quizzes.
 
-The app is a SvelteKit application deployed to Cloudflare Workers. Supabase provides Auth, Postgres, Object Storage, and local/staging/production-style environments.
+The app stores quiz attempts, answers, lesson results, XP, streaks, and review data in Supabase.
 
-Implemented product areas include:
+Supabase is the database and auth service. Auth means sign-in. The database stores content and learner data.
 
-- SvelteKit app UI and route structure in `apps/web`
-- Supabase Auth integration and protected app routes
-- Supabase Postgres schema for content, releases, attempts, answers, mastery, spaced repetition, XP, streaks, rewards, achievements, leaderboards, and admin review
-- server-side quiz grading and answer validation
-- topic enrollment, lesson progress, quiz attempts, review scheduling, and daily plan logic
-- gamified UI details including progress states, feedback, micro-interactions, confetti, and sound-oriented interaction design
-- shared design tokens and reusable Svelte components in `packages/ui`
-- Storybook workspace for developing and reviewing reusable UI components
+Clarifyst currently includes learning content for:
 
-### Content Generation Pipeline
+- AI Literacy for Work and School
+- California Driving Test
+- Cybersecurity Essentials for Everyone
+- Data Literacy and Charts
+- Ethics of Artificial Intelligence
+- Foundational Digital Skills for Work
+- Linear Algebra
+- Personal Finance Foundations
+- Python for Beginners and Automation
+- Reading Comprehension and Evidence
+- Workplace English / ESL
 
-The most technically substantial part of the project is the content pipeline in `packages/content-pipeline`.
+This content workspace has about:
 
-The pipeline is a custom AI agent system built on the open-source Pi Agent SDK. An admin provides a topic brief and optional sources. The system then produces a structured learning path through a top-down process:
+- 462 lessons
+- 918 quizzes
+- 8,289 questions
+- 897 skills
 
-1. A modules agent breaks the topic into modules.
-2. Syllabus agents define what each lesson and quiz should cover.
-3. Lesson agents generate short instructional content.
-4. Quiz and question agents generate structured practice.
-5. Interaction agents create interactive lesson checks where appropriate.
-6. Review agents check clarity, accuracy, structure, consistency, and learning value.
-7. The bundler emits versioned JSONL artifacts and a manifest for validation, diffing, upload, and import.
-
-Generated content does not write directly to the production database. It becomes a versioned content bundle, is validated against schemas, can be diffed against previous releases, uploaded to Supabase Object Storage, imported into a Supabase database, reviewed, and then published through release controls.
-
-## Current Content
-
-The repository includes multiple content runs under `curriculum-artifacts/runs`:
-
-- English Literary Devices v1 and v2
-- Mathematics: Linear Equations v1
-- Exam Prep: California Driving Test v1
-
-The current committed bundles include:
-
-- 4 content manifests
-- 13 JSON schemas for curriculum and release artifacts
-- 32 Supabase migrations
-- 24 test files across the app, content tools, and content pipeline
-- 171 Git commits at the time this README was written
-
-Example committed topic sizes:
-
-- English Literary Devices v2: 3 lessons, 3 quizzes, 45 questions, 10 skills
-- Mathematics Linear Equations v1: 3 lessons, 3 quizzes, 12 questions, 3 skills
-- California Driving Test v1: 2 lessons, 2 quizzes, 8 questions, 4 skills
-
-## Evaluation and Evidence
-
-Clarifyst has not yet been evaluated with real learner usage because the project pivoted late from an earlier AI-writing direction into this learning-platform direction. The evidence so far is mostly technical, validation-oriented, and process-oriented.
-
-Current evidence includes:
-
-- strict JSON schema validation for generated curriculum artifacts
-- repair loops when agent output does not match expected structure
-- review-agent passes for clarity, accuracy, consistency, and learning value
-- content diff reports before ingestion so changes can be inspected before publication
-- local Supabase testing flow for migrations, imports, topic discovery, enrollment, lessons, quizzes, progress, and adaptive review
-- cloud Supabase environment support for staging/production-style release operations
-- server-side tests for quiz mapping, answer validation, content loading, issue reporting, review scheduling, achievements, profiles, recommendations, release controls, and content-pipeline behavior
-- Storybook and shared UI packages for isolated component development
-- visible development history through the Git commit log
-
-This is not a substitute for a real user study. The next evaluation step should be to watch self-guided learners use the product, measure completion/drop-off across lessons and quizzes, compare generated content quality against hand-authored baselines, and collect expert review on topic accuracy.
-
-## Iteration History
-
-The project changed substantially over time.
-
-The original direction was an AI writing improvement project, including exploration around fine-tuning. That direction proved hard to evaluate because writing quality is difficult to measure objectively and consistently. During that work, effective prompting and synthetic data experiments showed that LLMs could produce clear explanations for technical material when guided carefully.
-
-That led to the current pivot: instead of using AI only to improve writing, Clarifyst uses agentic generation to create structured learning content. The app then turns that content into lessons, quizzes, review loops, and motivation systems.
-
-Major iteration points included:
-
-- moving from a writing-quality project to a self-guided learning platform
-- shifting from one-off chatbot explanations to full learning paths
-- adding schema-first content artifacts so AI output can be checked before import
-- separating generation, validation, storage, ingestion, review, and publication
-- expanding from a narrow hand-authored content slice to generated bundles for math and exam-prep topics
-- improving the app from basic lesson/quiz flows into a richer gamified experience with XP, streaks, review, achievements, and leaderboards
-
-## Limitations
-
-Clarifyst is functional, but still early.
-
-- The product has not launched to real users yet.
-- There is no meaningful usage dataset or controlled learner outcome study.
-- The pivot happened late, so evaluation is stronger on technical validation than on learning efficacy.
-- AI-generated curriculum still requires validation and human review before publication.
-- Current content coverage is small compared with the long-term goal.
-- The content pipeline can produce structured bundles, but fully autonomous production publishing is intentionally out of scope.
-- Personalization exists through progress and spaced repetition, but future work should generate extra practice from each learner's weak skills.
-
-## Future Work
-
-Near-term priorities:
-
-- user-requested content generation so learners can ask for new learning paths
-- stronger expert review workflows for generated topics
-- more generated subjects and deeper topic coverage
-- personalized review questions and explanations based on weak skills
-- learner feedback collection, completion analytics, and content-quality scoring
-- clearer public demo/video walkthrough for evaluators
-
-## AI Usage, Sources, and Collaboration
+## What I Built
 
 This was a solo project.
 
-AI was used extensively and intentionally:
+I built the SvelteKit app UI, Supabase setup, quiz engine, spaced review, XP, streaks, achievements, and leaderboard logic.
 
-- Codex and Cursor were used for code generation, debugging, refactoring, implementation planning, and documentation drafting.
-- AI agents are part of the product's content generation pipeline.
-- Curriculum generation uses AI to produce modules, syllabi, lessons, quizzes, interaction drafts, and review passes.
-- Generated curriculum is treated as draft/release content, not as automatically trusted production content.
+I also spent a lot of time on the small app details. This includes quiz feedback, animations, sound-related design, confetti, and other game-like parts.
 
-The repository was not forked from another project. The codebase was created for Clarifyst. The content pipeline uses the open-source Pi Agent SDK packages, and the app uses standard open-source framework and infrastructure dependencies including SvelteKit, Supabase, Cloudflare, Turborepo, PNPM, Zod, Vitest, Oxlint, and Storybook.
+The largest technical part is the content system.
 
-No external collaborators contributed code. Any future borrowed content, source documents, templates, generated media, or third-party datasets should be cited in the relevant content manifest and release notes.
+It uses AI agents to turn a topic brief into lessons, quizzes, questions, and review files. An agent is a program that asks an AI model to do one narrow job.
 
-## Repository Layout
+## Content System
+
+The content system is in `packages/content-pipeline`.
+
+It uses the open-source Pi Agent SDK. An admin gives it a topic brief and optional source files.
+
+The system works in stages:
+
+1. Break the topic into modules.
+2. Write a syllabus for each module.
+3. Write lessons.
+4. Write quizzes and questions.
+5. Add interactive checks where useful.
+6. Review the output for clarity, accuracy, and learning value.
+7. Save the result as JSONL files and a manifest.
+
+JSONL means one JSON object per line. A manifest is a file that lists the content files in a run.
+
+The content system does not write straight to the live database. It creates files first.
+
+Those files are checked, compared with earlier versions, uploaded to Supabase Storage, and then imported into Supabase Postgres.
+
+## Evidence
+
+Clarifyst does not yet have real user data. The project changed direction late, so the current evidence is mostly technical.
+
+Current evidence includes:
+
+- 13 completed generated runs in `~/LearnAnythingContent`
+- 4 smaller content manifests in this repo
+- 13 JSON schemas for content files
+- 32 Supabase migrations
+- 24 test files
+- 171 Git commits when this README was updated
+- schema checks for generated content
+- AI repair loops when generated files have the wrong shape
+- review agents that check generated lessons and quizzes
+- content diff reports before database import
+- local Supabase testing for sign-in, lessons, quizzes, review, and learner data
+- tests for quiz logic, answer checks, content loading, review scheduling, achievements, profiles, and release controls
+
+A schema is a set of rules for what a file must contain. The schema checks help catch broken AI output before it reaches the app.
+
+## Iteration
+
+The project started as an AI writing project. I explored fine-tuning and ways to make AI better at writing.
+
+That was hard to judge. Writing quality is subjective, and it was difficult to measure well.
+
+During that work, I found that careful prompts could make AI explain technical topics clearly. That led to the current version of Clarifyst.
+
+The project changed from improving writing to making learning paths.
+
+Important changes included:
+
+- moving from writing feedback to guided learning
+- moving from chatbot answers to full study paths
+- adding strict file formats for AI content
+- adding checks before content reaches the database
+- adding generated math and exam-prep topics
+- adding XP, streaks, review, achievements, and leaderboards
+
+## Limits
+
+Clarifyst is working, but it is early.
+
+- It has not launched to real users yet.
+- There is no user study or learning outcome data yet.
+- The content set is still small.
+- AI-made content still needs review before use.
+- The app has review based on past answers, but it does not yet create extra practice for each learner's weak skills.
+- The content system can make structured files, but live publishing still needs human approval.
+
+## AI Use and Credits
+
+AI was used throughout the project.
+
+Codex and Cursor were used for coding, debugging, refactoring, planning, and README writing.
+
+AI is also part of the product. The content system uses AI agents to make modules, syllabi, lessons, quizzes, questions, and review notes.
+
+The repo was not forked from another project. No external person contributed code.
+
+Clarifyst uses open-source tools and services, including SvelteKit, Supabase, Cloudflare, Turborepo, PNPM, Zod, Vitest, Oxlint, Storybook, and the Pi Agent SDK.
+
+## Repo Layout
 
 ```txt
-apps/web                  SvelteKit product app
-apps/demo                 demo app for package/component development
-packages/content-pipeline AI-agent curriculum generation pipeline
-packages/ui               shared Svelte component library and Storybook workspace
-packages/tokens           design tokens exported as CSS custom properties
-packages/config           shared Prettier, Oxlint, and Vite helpers
-content-schemas           JSON schemas for importable curriculum artifacts
-curriculum-artifacts      committed content runs, manifests, validation, and diff reports
-content-sources           source briefs and topic inputs
-supabase                  local Supabase config, migrations, and seeds
-tools/content             content validation, diff, upload, download, import, and verification tools
-plans                     planning documents and historical product architecture notes
+apps/web                  SvelteKit app
+apps/demo                 demo app
+packages/content-pipeline AI content system
+packages/ui               shared Svelte components
+packages/tokens           design tokens
+packages/config           shared config
+content-schemas           JSON schemas
+curriculum-artifacts      content runs and reports
+content-sources           topic briefs and source notes
+supabase                  database config, migrations, and seeds
+tools/content             content check and import scripts
+plans                     planning notes
 ```
 
-## Running Locally
+## Run Locally
 
 Use Node `26.2.0` from `.nvmrc` and PNPM `10.15.0` through Corepack.
 
@@ -188,58 +186,34 @@ nvm use
 corepack pnpm install
 ```
 
-Create local environment files from the examples:
+Create local env files:
 
 ```sh
 cp .env.example .env.local
 cp apps/web/.env.example apps/web/.env.local
 ```
 
-Start or reset local Supabase:
+Start Supabase:
 
 ```sh
 corepack pnpm exec supabase start
 corepack pnpm exec supabase db reset
 ```
 
-Update the Supabase keys in the local env files using the values from `supabase status`, then import a content bundle:
+Copy the local Supabase keys from `supabase status` into the env files.
+
+Import content and run the app:
 
 ```sh
 corepack pnpm content:import:local
-```
-
-Run the app:
-
-```sh
 corepack pnpm dev
 ```
 
-Common checks:
+Checks:
 
 ```sh
 corepack pnpm check
 corepack pnpm lint
 corepack pnpm test
 corepack pnpm build-storybook
-```
-
-## Content Commands
-
-Validate and diff a generated run:
-
-```sh
-node tools/content/validate-run.mjs <path-to-manifest.json> --base none
-node tools/content/diff-run.mjs <path-to-manifest.json> --base none
-```
-
-Generate a new topic with the content pipeline:
-
-```sh
-corepack pnpm --filter @learn-anything/content-pipeline content-pipeline generate <topic-dir>
-```
-
-Import a reviewed run:
-
-```sh
-node tools/content/import-run.mjs <path-to-manifest.json> --target local
 ```
